@@ -36,7 +36,7 @@ public class SchemaGenerator {
         LOG.info("Service Registry created.");
         var entities = scanForEntities("org.iecr.diocesedashboard.domain.objects");
         LOG.info("Found classes: ");
-        entities.forEach(cls -> LOG.info( "--- " + cls));
+        entities.forEach(cls -> LOG.info("--- " + cls));
         LOG.info("Found Schema entities " + entities.size());
         MetadataSources metadataSources = new MetadataSources(serviceRegistry);
         entities.forEach(metadataSources::addAnnotatedClass);
@@ -51,7 +51,7 @@ public class SchemaGenerator {
         LOG.info("Schema export created");
     }
 
-    private Set<Class<?>> scanForEntities(String pkg)  {
+    private Set<Class<?>> scanForEntities(String pkg) {
         var reflections = new Reflections(pkg, new SubTypesScanner(false), new TypeAnnotationsScanner());
         reflections.getConfiguration().shouldExpandSuperTypes();
         LOG.info("Scanning for entities in package " + pkg);
