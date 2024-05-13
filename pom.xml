@@ -130,6 +130,15 @@
 						<version>1.6.0</version>
 					</dependency>
 				</dependencies>
+				<executions>
+					<execution>
+						<phase>process-sources</phase>
+						<id>apply-code-style</id>
+						<goals>
+							<goal>runNoFork</goal>
+						</goals>
+					</execution>
+				</executions>
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
