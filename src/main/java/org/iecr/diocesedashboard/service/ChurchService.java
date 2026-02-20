@@ -11,31 +11,30 @@ import java.util.Optional;
 @Service
 public class ChurchService {
 
-    private final ChurchRepository churchRepository;
+  private final ChurchRepository churchRepository;
 
-    @Autowired
-    public ChurchService(ChurchRepository churchRepository) {
-        this.churchRepository = churchRepository;
-    }
+  @Autowired
+  public ChurchService(ChurchRepository churchRepository) {
+    this.churchRepository = churchRepository;
+  }
 
-    public List<Church> findAll() {
-        return churchRepository.findAll();
-    }
+  public List<Church> findAll() {
+    return churchRepository.findAll();
+  }
 
-    public Optional<Church> findById(String name) {
-        return churchRepository.findById(name);
-    }
+  public Optional<Church> findById(String name) {
+    return churchRepository.findById(name);
+  }
 
-    public Church save(Church church) {
-        return churchRepository.save(church);
-    }
+  public Church save(Church church) {
+    return churchRepository.save(church);
+  }
 
-    public void deleteById(String name) {
-        churchRepository.deleteById(name);
-    }
+  public void deleteById(String name) {
+    churchRepository.deleteById(name);
+  }
 
-    public boolean existsById(String name) {
-        return churchRepository.existsById(name);
-    }
+  public boolean existsById(String name) {
+    return churchRepository.existsById(name);
+  }
 }
-

@@ -1,6 +1,6 @@
 # Diocese Dashboard - Copilot Instructions
 
-Spring Boot 3.2.5 / Java 22 web application for church service reporting for the Episcopal Church in Costa Rica. Replaces a Google Forms workflow.
+Spring Boot 3.2.5 / Java 21 web application for church service reporting for the Episcopal Church in Costa Rica. Replaces a Google Forms workflow.
 
 ## Build & Run Commands
 
@@ -95,4 +95,4 @@ Services are thin pass-throughs to repositories — no business logic currently 
 ### Dependency Injection
 
 - Constructor injection with `@Autowired` is used throughout
-- Lombok is available (`@Data`, `@Builder`, etc.) — use it for boilerplate reduction in entities/DTOs
+- Manual getters/setters and constructors are used in entities/DTOs (Lombok was removed for Java 21+ compatibility)

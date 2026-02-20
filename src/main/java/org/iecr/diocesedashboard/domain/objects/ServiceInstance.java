@@ -8,6 +8,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
+
 import java.util.Set;
 
 @Entity
@@ -29,23 +30,43 @@ public class ServiceInstance {
   @ManyToMany(mappedBy = "servicesCelebrated")
   private Set<Celebrant> celebrants;
 
-  public ServiceInstance() {}
+  public ServiceInstance() {
+  }
 
-  public Long getId() { return id; }
-  public void setId(Long id) { this.id = id; }
+  public Long getId() {
+    return id;
+  }
 
-  public Church getChurch() { return church; }
-  public void setChurch(Church church) { this.church = church; }
+  public void setId(Long id) {
+    this.id = id;
+  }
 
-  public ServiceTemplate getServiceTemplate() { return serviceTemplate; }
-  public void setServiceTemplate(ServiceTemplate serviceTemplate) { this.serviceTemplate = serviceTemplate; }
+  public Church getChurch() {
+    return church;
+  }
 
-  public Set<Celebrant> getCelebrants() { return celebrants; }
-  public void setCelebrants(Set<Celebrant> celebrants) { this.celebrants = celebrants; }
+  public void setChurch(Church church) {
+    this.church = church;
+  }
+
+  public ServiceTemplate getServiceTemplate() {
+    return serviceTemplate;
+  }
+
+  public void setServiceTemplate(ServiceTemplate serviceTemplate) {
+    this.serviceTemplate = serviceTemplate;
+  }
+
+  public Set<Celebrant> getCelebrants() {
+    return celebrants;
+  }
+
+  public void setCelebrants(Set<Celebrant> celebrants) {
+    this.celebrants = celebrants;
+  }
 
   @Override
   public String toString() {
     return "ServiceInstance{id=" + id + "}";
   }
 }
-

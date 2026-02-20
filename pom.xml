@@ -129,6 +129,7 @@
 				<configuration>
 					<activeRecipes>
 						<recipe>org.openrewrite.staticanalysis.CodeCleanup</recipe>
+						<recipe>org.openrewrite.java.format.AutoFormat</recipe>
 					</activeRecipes>
 				</configuration>
 				<dependencies>

@@ -27,24 +27,43 @@ public class ServiceInfoItemResponse {
   @Column
   private String responseValue;
 
-  public ServiceInfoItemResponse() {}
+  public ServiceInfoItemResponse() {
+  }
 
-  public Long getId() { return id; }
-  public void setId(Long id) { this.id = id; }
+  public Long getId() {
+    return id;
+  }
 
-  public ServiceInfoItem getServiceInfoItem() { return serviceInfoItem; }
-  public void setServiceInfoItem(ServiceInfoItem serviceInfoItem) { this.serviceInfoItem = serviceInfoItem; }
+  public void setId(Long id) {
+    this.id = id;
+  }
 
-  public ServiceInstance getServiceInstance() { return serviceInstance; }
-  public void setServiceInstance(ServiceInstance serviceInstance) { this.serviceInstance = serviceInstance; }
+  public ServiceInfoItem getServiceInfoItem() {
+    return serviceInfoItem;
+  }
 
-  public String getResponseValue() { return responseValue; }
-  public void setResponseValue(String responseValue) { this.responseValue = responseValue; }
+  public void setServiceInfoItem(ServiceInfoItem serviceInfoItem) {
+    this.serviceInfoItem = serviceInfoItem;
+  }
+
+  public ServiceInstance getServiceInstance() {
+    return serviceInstance;
+  }
+
+  public void setServiceInstance(ServiceInstance serviceInstance) {
+    this.serviceInstance = serviceInstance;
+  }
+
+  public String getResponseValue() {
+    return responseValue;
+  }
+
+  public void setResponseValue(String responseValue) {
+    this.responseValue = responseValue;
+  }
 
   @Override
   public String toString() {
     return "ServiceInfoItemResponse{id=" + id + ", responseValue='" + responseValue + "'}";
   }
 }
-
-
