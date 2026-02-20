@@ -9,16 +9,8 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import java.util.Set;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
 
 @Entity
-@NoArgsConstructor
-@ToString
-@Getter
-@Setter
 public class ServiceInfoItem {
 
   @Id
@@ -40,4 +32,30 @@ public class ServiceInfoItem {
 
   @OneToMany(mappedBy = "serviceInfoItem")
   private Set<ServiceInfoItemResponse> responses;
+
+  public ServiceInfoItem() {}
+
+  public Long getId() { return id; }
+  public void setId(Long id) { this.id = id; }
+
+  public String getQuestionId() { return questionId; }
+  public void setQuestionId(String questionId) { this.questionId = questionId; }
+
+  public ServiceTemplate getServiceTemplate() { return serviceTemplate; }
+  public void setServiceTemplate(ServiceTemplate serviceTemplate) { this.serviceTemplate = serviceTemplate; }
+
+  public Boolean getRequired() { return required; }
+  public void setRequired(Boolean required) { this.required = required; }
+
+  public ServiceInfoItemType getServiceInfoItemType() { return serviceInfoItemType; }
+  public void setServiceInfoItemType(ServiceInfoItemType serviceInfoItemType) { this.serviceInfoItemType = serviceInfoItemType; }
+
+  public Set<ServiceInfoItemResponse> getResponses() { return responses; }
+  public void setResponses(Set<ServiceInfoItemResponse> responses) { this.responses = responses; }
+
+  @Override
+  public String toString() {
+    return "ServiceInfoItem{id=" + id + ", questionId='" + questionId + "'}";
+  }
 }
+

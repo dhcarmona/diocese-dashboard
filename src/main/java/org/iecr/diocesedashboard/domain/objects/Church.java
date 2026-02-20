@@ -6,16 +6,8 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import java.util.Set;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
 
 @Entity
-@NoArgsConstructor
-@ToString
-@Getter
-@Setter
 public class Church {
 
   @Id
@@ -29,4 +21,24 @@ public class Church {
 
   @OneToMany(mappedBy = "church")
   private Set<ServiceInstance> services;
+
+  public Church() {}
+
+  public String getName() { return name; }
+  public void setName(String name) { this.name = name; }
+
+  public String getLocation() { return location; }
+  public void setLocation(String location) { this.location = location; }
+
+  public Celebrant getMainCelebrant() { return mainCelebrant; }
+  public void setMainCelebrant(Celebrant mainCelebrant) { this.mainCelebrant = mainCelebrant; }
+
+  public Set<ServiceInstance> getServices() { return services; }
+  public void setServices(Set<ServiceInstance> services) { this.services = services; }
+
+  @Override
+  public String toString() {
+    return "Church{name='" + name + "', location='" + location + "'}";
+  }
 }
+
