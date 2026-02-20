@@ -1,5 +1,6 @@
 package org.iecr.diocesedashboard.domain.objects;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -20,6 +21,7 @@ public class ServiceTemplate {
   @Column(unique = true, nullable = false)
   private String serviceTemplateName;
 
+  @JsonIgnore
   @OneToMany(mappedBy = "serviceTemplate")
   private Set<ServiceInstance> serviceInstances;
 

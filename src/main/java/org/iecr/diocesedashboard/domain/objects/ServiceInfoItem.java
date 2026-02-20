@@ -1,5 +1,7 @@
 package org.iecr.diocesedashboard.domain.objects;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -22,6 +24,7 @@ public class ServiceInfoItem {
   @Column(unique = true, nullable = false)
   private String questionId;
 
+  @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
   @ManyToOne
   @JoinColumn(nullable = false)
   private ServiceTemplate serviceTemplate;
@@ -31,6 +34,7 @@ public class ServiceInfoItem {
   @Column(nullable = false)
   private ServiceInfoItemType serviceInfoItemType;
 
+  @JsonIgnore
   @OneToMany(mappedBy = "serviceInfoItem")
   private Set<ServiceInfoItemResponse> responses;
 
