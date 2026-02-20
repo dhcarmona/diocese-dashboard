@@ -6,4 +6,3 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface ChurchRepository extends JpaRepository<Church, String> {
     // ...basic CRUD methods provided by JpaRepository...
 }
-

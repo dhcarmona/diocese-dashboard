@@ -58,4 +58,3 @@ public class ServiceInfoItem {
     return "ServiceInfoItem{id=" + id + ", questionId='" + questionId + "'}";
   }
 }
-
