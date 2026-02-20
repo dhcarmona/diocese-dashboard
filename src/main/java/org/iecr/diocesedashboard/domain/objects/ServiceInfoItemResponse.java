@@ -6,17 +6,9 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
+import jakarta.persistence.ManyToOne;
 
 @Entity
-@NoArgsConstructor
-@ToString
-@Getter
-@Setter
 public class ServiceInfoItemResponse {
 
   @Id
@@ -25,6 +17,34 @@ public class ServiceInfoItemResponse {
   private Long id;
 
   @ManyToOne
-  @JoinColumn(name = "service_id", nullable = false)
+  @JoinColumn(name = "service_info_item_id", nullable = false)
   private ServiceInfoItem serviceInfoItem;
+
+  @ManyToOne
+  @JoinColumn(name = "service_instance_id", nullable = false)
+  private ServiceInstance serviceInstance;
+
+  @Column
+  private String responseValue;
+
+  public ServiceInfoItemResponse() {}
+
+  public Long getId() { return id; }
+  public void setId(Long id) { this.id = id; }
+
+  public ServiceInfoItem getServiceInfoItem() { return serviceInfoItem; }
+  public void setServiceInfoItem(ServiceInfoItem serviceInfoItem) { this.serviceInfoItem = serviceInfoItem; }
+
+  public ServiceInstance getServiceInstance() { return serviceInstance; }
+  public void setServiceInstance(ServiceInstance serviceInstance) { this.serviceInstance = serviceInstance; }
+
+  public String getResponseValue() { return responseValue; }
+  public void setResponseValue(String responseValue) { this.responseValue = responseValue; }
+
+  @Override
+  public String toString() {
+    return "ServiceInfoItemResponse{id=" + id + ", responseValue='" + responseValue + "'}";
+  }
 }
+
+
