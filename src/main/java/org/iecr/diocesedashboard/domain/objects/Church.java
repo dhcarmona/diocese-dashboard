@@ -1,5 +1,6 @@
 package org.iecr.diocesedashboard.domain.objects;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
@@ -20,6 +21,7 @@ public class Church {
   @JoinColumn(name = "main_celebrant_id")
   private Celebrant mainCelebrant;
 
+  @JsonIgnore
   @OneToMany(mappedBy = "church")
   private Set<ServiceInstance> services;
 
