@@ -9,6 +9,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 
+import java.time.LocalDate;
 import java.util.Set;
 
 @Entity
@@ -29,6 +30,8 @@ public class ServiceInstance {
 
   @ManyToMany(mappedBy = "servicesCelebrated")
   private Set<Celebrant> celebrants;
+
+  private LocalDate serviceDate;
 
   public ServiceInstance() {
   }
@@ -63,6 +66,14 @@ public class ServiceInstance {
 
   public void setCelebrants(Set<Celebrant> celebrants) {
     this.celebrants = celebrants;
+  }
+
+  public LocalDate getServiceDate() {
+    return serviceDate;
+  }
+
+  public void setServiceDate(LocalDate serviceDate) {
+    this.serviceDate = serviceDate;
   }
 
   @Override
