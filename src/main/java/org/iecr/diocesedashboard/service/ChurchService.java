@@ -38,4 +38,3 @@ public class ChurchService {
         return churchRepository.existsById(name);
     }
 }
-

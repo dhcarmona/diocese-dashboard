@@ -44,4 +44,3 @@ public class ServiceTemplate {
     return "ServiceTemplate{id=" + id + ", serviceTemplateName='" + serviceTemplateName + "'}";
   }
 }
-

@@ -38,4 +38,3 @@ public class CelebrantService {
         return celebrantRepository.existsById(id);
     }
 }
-

@@ -41,4 +41,3 @@ public class Church {
     return "Church{name='" + name + "', location='" + location + "'}";
   }
 }
-

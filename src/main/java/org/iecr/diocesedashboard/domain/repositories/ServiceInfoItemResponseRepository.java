@@ -6,4 +6,3 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface ServiceInfoItemResponseRepository extends JpaRepository<ServiceInfoItemResponse, Long> {
     // ...basic CRUD methods provided by JpaRepository...
 }
-

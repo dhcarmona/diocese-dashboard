@@ -47,4 +47,3 @@ public class Celebrant {
     return "Celebrant{id=" + id + ", name='" + name + "'}";
   }
 }
-

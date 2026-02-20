@@ -46,5 +46,3 @@ public class ServiceInfoItemResponse {
     return "ServiceInfoItemResponse{id=" + id + ", responseValue='" + responseValue + "'}";
   }
 }
-
-

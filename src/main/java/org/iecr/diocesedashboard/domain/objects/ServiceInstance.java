@@ -48,4 +48,3 @@ public class ServiceInstance {
     return "ServiceInstance{id=" + id + "}";
   }
 }
-

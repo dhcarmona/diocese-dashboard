@@ -38,4 +38,3 @@ public class ServiceTemplateService {
         return repository.existsById(id);
     }
 }
-
