@@ -1,9 +1,6 @@
 package org.iecr.diocesedashboard.webapp;
 
 import jakarta.persistence.Entity;
-import java.util.EnumSet;
-import java.util.Set;
-import java.util.logging.Logger;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
@@ -14,6 +11,10 @@ import org.iecr.diocesedashboard.domain.objects.Celebrant;
 import org.reflections.Reflections;
 import org.reflections.scanners.SubTypesScanner;
 import org.reflections.scanners.TypeAnnotationsScanner;
+
+import java.util.EnumSet;
+import java.util.Set;
+import java.util.logging.Logger;
 
 public class SchemaGenerator {
 

@@ -11,31 +11,30 @@ import java.util.Optional;
 @Service
 public class CelebrantService {
 
-    private final CelebrantRepository celebrantRepository;
+  private final CelebrantRepository celebrantRepository;
 
-    @Autowired
-    public CelebrantService(CelebrantRepository celebrantRepository) {
-        this.celebrantRepository = celebrantRepository;
-    }
+  @Autowired
+  public CelebrantService(CelebrantRepository celebrantRepository) {
+    this.celebrantRepository = celebrantRepository;
+  }
 
-    public List<Celebrant> findAll() {
-        return celebrantRepository.findAll();
-    }
+  public List<Celebrant> findAll() {
+    return celebrantRepository.findAll();
+  }
 
-    public Optional<Celebrant> findById(Long id) {
-        return celebrantRepository.findById(id);
-    }
+  public Optional<Celebrant> findById(Long id) {
+    return celebrantRepository.findById(id);
+  }
 
-    public Celebrant save(Celebrant celebrant) {
-        return celebrantRepository.save(celebrant);
-    }
+  public Celebrant save(Celebrant celebrant) {
+    return celebrantRepository.save(celebrant);
+  }
 
-    public void deleteById(Long id) {
-        celebrantRepository.deleteById(id);
-    }
+  public void deleteById(Long id) {
+    celebrantRepository.deleteById(id);
+  }
 
-    public boolean existsById(Long id) {
-        return celebrantRepository.existsById(id);
-    }
+  public boolean existsById(Long id) {
+    return celebrantRepository.existsById(id);
+  }
 }
-

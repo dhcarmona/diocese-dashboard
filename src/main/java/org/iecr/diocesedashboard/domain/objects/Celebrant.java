@@ -8,6 +8,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.OneToOne;
+
 import java.util.Set;
 
 @Entity
@@ -28,23 +29,43 @@ public class Celebrant {
   @JoinTable(name = "celebrant_service")
   private Set<ServiceInstance> servicesCelebrated;
 
-  public Celebrant() {}
+  public Celebrant() {
+  }
 
-  public Long getId() { return id; }
-  public void setId(Long id) { this.id = id; }
+  public Long getId() {
+    return id;
+  }
 
-  public String getName() { return name; }
-  public void setName(String name) { this.name = name; }
+  public void setId(Long id) {
+    this.id = id;
+  }
 
-  public Church getMainChurch() { return mainChurch; }
-  public void setMainChurch(Church mainChurch) { this.mainChurch = mainChurch; }
+  public String getName() {
+    return name;
+  }
 
-  public Set<ServiceInstance> getServicesCelebrated() { return servicesCelebrated; }
-  public void setServicesCelebrated(Set<ServiceInstance> servicesCelebrated) { this.servicesCelebrated = servicesCelebrated; }
+  public void setName(String name) {
+    this.name = name;
+  }
+
+  public Church getMainChurch() {
+    return mainChurch;
+  }
+
+  public void setMainChurch(Church mainChurch) {
+    this.mainChurch = mainChurch;
+  }
+
+  public Set<ServiceInstance> getServicesCelebrated() {
+    return servicesCelebrated;
+  }
+
+  public void setServicesCelebrated(Set<ServiceInstance> servicesCelebrated) {
+    this.servicesCelebrated = servicesCelebrated;
+  }
 
   @Override
   public String toString() {
     return "Celebrant{id=" + id + ", name='" + name + "'}";
   }
 }
-

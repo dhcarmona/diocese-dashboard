@@ -1,5 +1,9 @@
 package org.iecr.diocesedashboard.service;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import org.iecr.diocesedashboard.domain.objects.Celebrant;
 import org.iecr.diocesedashboard.domain.repositories.CelebrantRepository;
 import org.junit.jupiter.api.Test;
@@ -11,79 +15,76 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.List;
 import java.util.Optional;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.*;
-
 @ExtendWith(MockitoExtension.class)
 class CelebrantServiceTest {
 
-    @Mock
-    private CelebrantRepository celebrantRepository;
+  @Mock
+  private CelebrantRepository celebrantRepository;
 
-    @InjectMocks
-    private CelebrantService celebrantService;
+  @InjectMocks
+  private CelebrantService celebrantService;
 
-    @Test
-    void findAll_returnsAllCelebrants() {
-        Celebrant c1 = new Celebrant();
-        Celebrant c2 = new Celebrant();
-        when(celebrantRepository.findAll()).thenReturn(List.of(c1, c2));
+  @Test
+  void findAll_returnsAllCelebrants() {
+    Celebrant c1 = new Celebrant();
+    Celebrant c2 = new Celebrant();
+    when(celebrantRepository.findAll()).thenReturn(List.of(c1, c2));
 
-        List<Celebrant> result = celebrantService.findAll();
+    List<Celebrant> result = celebrantService.findAll();
 
-        assertThat(result).hasSize(2);
-        verify(celebrantRepository).findAll();
-    }
+    assertThat(result).hasSize(2);
+    verify(celebrantRepository).findAll();
+  }
 
-    @Test
-    void findById_returnsPresent_whenExists() {
-        Celebrant celebrant = new Celebrant();
-        when(celebrantRepository.findById(1L)).thenReturn(Optional.of(celebrant));
+  @Test
+  void findById_returnsPresent_whenExists() {
+    Celebrant celebrant = new Celebrant();
+    when(celebrantRepository.findById(1L)).thenReturn(Optional.of(celebrant));
 
-        Optional<Celebrant> result = celebrantService.findById(1L);
+    Optional<Celebrant> result = celebrantService.findById(1L);
 
-        assertThat(result).isPresent().contains(celebrant);
-        verify(celebrantRepository).findById(1L);
-    }
+    assertThat(result).isPresent().contains(celebrant);
+    verify(celebrantRepository).findById(1L);
+  }
 
-    @Test
-    void findById_returnsEmpty_whenNotExists() {
-        when(celebrantRepository.findById(99L)).thenReturn(Optional.empty());
+  @Test
+  void findById_returnsEmpty_whenNotExists() {
+    when(celebrantRepository.findById(99L)).thenReturn(Optional.empty());
 
-        Optional<Celebrant> result = celebrantService.findById(99L);
+    Optional<Celebrant> result = celebrantService.findById(99L);
 
-        assertThat(result).isEmpty();
-    }
+    assertThat(result).isEmpty();
+  }
 
-    @Test
-    void save_returnsSavedCelebrant() {
-        Celebrant celebrant = new Celebrant();
-        when(celebrantRepository.save(celebrant)).thenReturn(celebrant);
+  @Test
+  void save_returnsSavedCelebrant() {
+    Celebrant celebrant = new Celebrant();
+    when(celebrantRepository.save(celebrant)).thenReturn(celebrant);
 
-        Celebrant result = celebrantService.save(celebrant);
+    Celebrant result = celebrantService.save(celebrant);
 
-        assertThat(result).isEqualTo(celebrant);
-        verify(celebrantRepository).save(celebrant);
-    }
+    assertThat(result).isEqualTo(celebrant);
+    verify(celebrantRepository).save(celebrant);
+  }
 
-    @Test
-    void deleteById_delegatesToRepository() {
-        celebrantService.deleteById(1L);
+  @Test
+  void deleteById_delegatesToRepository() {
+    celebrantService.deleteById(1L);
 
-        verify(celebrantRepository).deleteById(1L);
-    }
+    verify(celebrantRepository).deleteById(1L);
+  }
 
-    @Test
-    void existsById_returnsTrue_whenExists() {
-        when(celebrantRepository.existsById(1L)).thenReturn(true);
+  @Test
+  void existsById_returnsTrue_whenExists() {
+    when(celebrantRepository.existsById(1L)).thenReturn(true);
 
-        assertThat(celebrantService.existsById(1L)).isTrue();
-    }
+    assertThat(celebrantService.existsById(1L)).isTrue();
+  }
 
-    @Test
-    void existsById_returnsFalse_whenNotExists() {
-        when(celebrantRepository.existsById(99L)).thenReturn(false);
+  @Test
+  void existsById_returnsFalse_whenNotExists() {
+    when(celebrantRepository.existsById(99L)).thenReturn(false);
 
-        assertThat(celebrantService.existsById(99L)).isFalse();
-    }
+    assertThat(celebrantService.existsById(99L)).isFalse();
+  }
 }
