@@ -1,5 +1,6 @@
 package org.iecr.diocesedashboard.webapp.controller;
 
+import jakarta.validation.Valid;
 import org.iecr.diocesedashboard.domain.objects.Celebrant;
 import org.iecr.diocesedashboard.service.CelebrantService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -58,7 +59,7 @@ public class CelebrantController {
    * @return 201 with the created celebrant
    */
   @PostMapping
-  public ResponseEntity<Celebrant> create(@RequestBody Celebrant celebrant) {
+  public ResponseEntity<Celebrant> create(@RequestBody @Valid Celebrant celebrant) {
     return ResponseEntity.status(HttpStatus.CREATED).body(celebrantService.save(celebrant));
   }
 
@@ -70,7 +71,7 @@ public class CelebrantController {
    * @return 200 with the updated celebrant, or 404 if not found
    */
   @PutMapping("/{id}")
-  public ResponseEntity<Celebrant> update(@PathVariable Long id, @RequestBody Celebrant celebrant) {
+  public ResponseEntity<Celebrant> update(@PathVariable Long id, @RequestBody @Valid Celebrant celebrant) {
     if (!celebrantService.existsById(id)) {
       return ResponseEntity.notFound().build();
     }

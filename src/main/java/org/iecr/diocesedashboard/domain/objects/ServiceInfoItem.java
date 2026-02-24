@@ -24,7 +24,7 @@ public class ServiceInfoItem {
   @Column(unique = true, nullable = false)
   private String questionId;
 
-  @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+  @JsonProperty(access = JsonProperty.Access.READ_ONLY)
   @ManyToOne
   @JoinColumn(nullable = false)
   private ServiceTemplate serviceTemplate;

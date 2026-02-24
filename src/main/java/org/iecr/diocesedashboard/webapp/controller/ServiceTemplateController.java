@@ -1,5 +1,6 @@
 package org.iecr.diocesedashboard.webapp.controller;
 
+import jakarta.validation.Valid;
 import org.iecr.diocesedashboard.domain.objects.ServiceInstance;
 import org.iecr.diocesedashboard.domain.objects.ServiceTemplate;
 import org.iecr.diocesedashboard.service.ServiceSubmissionService;
@@ -63,7 +64,7 @@ public class ServiceTemplateController {
    * @return 201 with the created template
    */
   @PostMapping
-  public ResponseEntity<ServiceTemplate> create(@RequestBody ServiceTemplate template) {
+  public ResponseEntity<ServiceTemplate> create(@RequestBody @Valid ServiceTemplate template) {
     return ResponseEntity.status(HttpStatus.CREATED).body(serviceTemplateService.save(template));
   }
 
@@ -76,9 +77,13 @@ public class ServiceTemplateController {
    */
   @PutMapping("/{id}")
   public ResponseEntity<ServiceTemplate> update(@PathVariable Long id,
-      @RequestBody ServiceTemplate template) {
+      @RequestBody @Valid ServiceTemplate template) {
     if (!serviceTemplateService.existsById(id)) {
       return ResponseEntity.notFound().build();
+    }
+    Long bodyId = template.getId();
+    if (bodyId != null && !bodyId.equals(id)) {
+      return ResponseEntity.badRequest().build();
     }
     template.setId(id);
     return ResponseEntity.ok(serviceTemplateService.save(template));
@@ -109,7 +114,7 @@ public class ServiceTemplateController {
    */
   @PostMapping("/{id}/submit")
   public ResponseEntity<ServiceInstance> submit(@PathVariable Long id,
-      @RequestBody ServiceInstanceRequest request) {
+      @RequestBody @Valid ServiceInstanceRequest request) {
     ServiceInstance created = serviceSubmissionService.submit(id, request);
     return ResponseEntity.status(HttpStatus.CREATED).body(created);
   }
