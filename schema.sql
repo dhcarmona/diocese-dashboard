@@ -38,6 +38,7 @@
     create table ServiceInstance (
         id bigint not null,
         church_id varchar(255) not null,
+        serviceDate date,
         template_id bigint not null,
         primary key (id)
     );

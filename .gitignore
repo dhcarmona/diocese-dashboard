@@ -36,5 +36,4 @@ build/
 mvnw*
 .mvn/*
 
-## Generated schema
-schema.sql
+
