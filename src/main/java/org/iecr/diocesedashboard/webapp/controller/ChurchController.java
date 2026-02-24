@@ -1,5 +1,6 @@
 package org.iecr.diocesedashboard.webapp.controller;
 
+import jakarta.validation.Valid;
 import org.iecr.diocesedashboard.domain.objects.Church;
 import org.iecr.diocesedashboard.service.ChurchService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -58,7 +59,7 @@ public class ChurchController {
    * @return 201 with the created church
    */
   @PostMapping
-  public ResponseEntity<Church> create(@RequestBody Church church) {
+  public ResponseEntity<Church> create(@RequestBody @Valid Church church) {
     return ResponseEntity.status(HttpStatus.CREATED).body(churchService.save(church));
   }
 
@@ -70,7 +71,7 @@ public class ChurchController {
    * @return 200 with the updated church, or 404 if not found
    */
   @PutMapping("/{name}")
-  public ResponseEntity<Church> update(@PathVariable String name, @RequestBody Church church) {
+  public ResponseEntity<Church> update(@PathVariable String name, @RequestBody @Valid Church church) {
     if (!churchService.existsById(name)) {
       return ResponseEntity.notFound().build();
     }

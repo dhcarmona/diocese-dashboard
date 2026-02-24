@@ -20,16 +20,16 @@ import org.springframework.security.web.SecurityFilterChain;
 @EnableWebSecurity
 public class SecurityConfig {
 
-  @Value("${DASHBOARD_ADMIN_USERNAME}")
+  @Value("${dashboard.security.admin.username}")
   private String adminUsername;
 
-  @Value("${DASHBOARD_ADMIN_PASSWORD}")
+  @Value("${dashboard.security.admin.password}")
   private String adminPassword;
 
-  @Value("${DASHBOARD_USER_USERNAME}")
+  @Value("${dashboard.security.user.username}")
   private String userUsername;
 
-  @Value("${DASHBOARD_USER_PASSWORD}")
+  @Value("${dashboard.security.user.password}")
   private String userPassword;
 
   /**
@@ -44,9 +44,10 @@ public class SecurityConfig {
   public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
     http
         // CSRF is disabled intentionally: this is a stateless REST API secured with HTTP Basic
-        // Auth. Clients authenticate via the Authorization header (never cookies), so browsers
-        // cannot forge cross-site requests. If cookie/session-based auth is added in the future,
-        // CSRF protection must be re-enabled (e.g. CookieCsrfTokenRepository).
+        // Auth and is currently intended for non-browser API clients that send credentials
+        // explicitly in the Authorization header (never cookies). If a browser-based frontend
+        // on the same origin starts calling these endpoints, or if cookie/session-based auth is
+        // added in the future, CSRF protection must be re-enabled (e.g. CookieCsrfTokenRepository).
         .csrf(csrf -> csrf.disable())
         .authorizeHttpRequests(auth -> auth
                 .requestMatchers(HttpMethod.GET, "/api/churches").hasAnyRole("ADMIN", "USER")
@@ -70,14 +71,14 @@ public class SecurityConfig {
   }
 
   /**
-   * In-memory user store backed by environment variables.
+   * In-memory user store backed by Spring properties.
    *
-   * <p>Required environment variables:
+   * <p>Required properties (set via environment variables or external config):
    * <ul>
-   *   <li>DASHBOARD_ADMIN_USERNAME</li>
-   *   <li>DASHBOARD_ADMIN_PASSWORD</li>
-   *   <li>DASHBOARD_USER_USERNAME</li>
-   *   <li>DASHBOARD_USER_PASSWORD</li>
+   *   <li>dashboard.security.admin.username</li>
+   *   <li>dashboard.security.admin.password</li>
+   *   <li>dashboard.security.user.username</li>
+   *   <li>dashboard.security.user.password</li>
    * </ul>
    */
   @Bean

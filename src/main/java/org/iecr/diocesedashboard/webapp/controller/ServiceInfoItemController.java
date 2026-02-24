@@ -1,5 +1,6 @@
 package org.iecr.diocesedashboard.webapp.controller;
 
+import jakarta.validation.Valid;
 import org.iecr.diocesedashboard.domain.objects.ServiceInfoItem;
 import org.iecr.diocesedashboard.service.ServiceInfoItemService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -58,7 +59,7 @@ public class ServiceInfoItemController {
    * @return 201 with the created item
    */
   @PostMapping
-  public ResponseEntity<ServiceInfoItem> create(@RequestBody ServiceInfoItem item) {
+  public ResponseEntity<ServiceInfoItem> create(@RequestBody @Valid ServiceInfoItem item) {
     return ResponseEntity.status(HttpStatus.CREATED).body(serviceInfoItemService.save(item));
   }
 
@@ -71,7 +72,7 @@ public class ServiceInfoItemController {
    */
   @PutMapping("/{id}")
   public ResponseEntity<ServiceInfoItem> update(@PathVariable Long id,
-      @RequestBody ServiceInfoItem item) {
+      @RequestBody @Valid ServiceInfoItem item) {
     if (!serviceInfoItemService.existsById(id)) {
       return ResponseEntity.notFound().build();
     }

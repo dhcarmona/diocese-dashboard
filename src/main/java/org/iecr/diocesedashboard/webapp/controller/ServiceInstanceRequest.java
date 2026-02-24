@@ -1,5 +1,11 @@
 package org.iecr.diocesedashboard.webapp.controller;
 
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.PastOrPresent;
+
 import java.time.LocalDate;
 import java.util.List;
 
@@ -7,14 +13,16 @@ import java.util.List;
  * Request body for submitting a new Service Instance against a Service Template.
  */
 public record ServiceInstanceRequest(
-String churchName,
-List<Long> celebrantIds,
-LocalDate serviceDate,
-List<ResponseEntry> responses) {
+  @NotBlank String churchName,
+  List<Long> celebrantIds,
+  @NotNull @PastOrPresent LocalDate serviceDate,
+  @NotEmpty @Valid List<ResponseEntry> responses) {
 
   /**
    * A single answer to one Service Info Item question.
    */
-  public record ResponseEntry(Long serviceInfoItemId, String responseValue) {
+  public record ResponseEntry(
+    @NotNull Long serviceInfoItemId,
+    @NotBlank String responseValue) {
   }
 }

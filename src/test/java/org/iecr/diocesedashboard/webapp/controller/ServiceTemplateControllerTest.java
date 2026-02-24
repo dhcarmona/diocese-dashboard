@@ -19,6 +19,7 @@ import org.iecr.diocesedashboard.domain.objects.ServiceTemplate;
 import org.iecr.diocesedashboard.service.ServiceSubmissionService;
 import org.iecr.diocesedashboard.service.ServiceTemplateService;
 import org.iecr.diocesedashboard.webapp.SecurityConfig;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -48,6 +49,11 @@ class ServiceTemplateControllerTest {
 
   @MockBean
   private ServiceSubmissionService serviceSubmissionService;
+
+  @BeforeEach
+  void setUp() {
+    objectMapper.registerModule(new JavaTimeModule());
+  }
 
   private ServiceTemplate buildTemplate(Long id, String name) {
     ServiceTemplate t = new ServiceTemplate();
@@ -199,8 +205,6 @@ class ServiceTemplateControllerTest {
     when(serviceSubmissionService.submit(eq(1L), any(ServiceInstanceRequest.class)))
         .thenReturn(instance);
 
-    objectMapper.registerModule(new JavaTimeModule());
-
     mockMvc.perform(post("/api/service-templates/1/submit")
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(buildRequest())))
@@ -216,8 +220,6 @@ class ServiceTemplateControllerTest {
     when(serviceSubmissionService.submit(eq(1L), any(ServiceInstanceRequest.class)))
         .thenReturn(instance);
 
-    objectMapper.registerModule(new JavaTimeModule());
-
     mockMvc.perform(post("/api/service-templates/1/submit")
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(buildRequest())))
@@ -230,8 +232,6 @@ class ServiceTemplateControllerTest {
     when(serviceSubmissionService.submit(eq(99L), any(ServiceInstanceRequest.class)))
         .thenThrow(new ResponseStatusException(NOT_FOUND, "Template not found"));
 
-    objectMapper.registerModule(new JavaTimeModule());
-
     mockMvc.perform(post("/api/service-templates/99/submit")
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(buildRequest())))
@@ -240,8 +240,6 @@ class ServiceTemplateControllerTest {
 
   @Test
   void submit_unauthenticated_returns401() throws Exception {
-    objectMapper.registerModule(new JavaTimeModule());
-
     mockMvc.perform(post("/api/service-templates/1/submit")
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(buildRequest())))
