@@ -79,6 +79,7 @@ class ServiceSubmissionServiceTest {
     Church church = buildChurch();
     Celebrant celebrant = buildCelebrant(10L);
     ServiceInfoItem infoItem = buildInfoItem(5L);
+    infoItem.setServiceTemplate(template);
 
     ServiceInstance savedInstance = new ServiceInstance();
     savedInstance.setId(99L);

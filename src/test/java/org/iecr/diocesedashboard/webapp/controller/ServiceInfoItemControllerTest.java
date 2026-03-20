@@ -13,7 +13,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.iecr.diocesedashboard.domain.objects.ServiceInfoItem;
 import org.iecr.diocesedashboard.domain.objects.ServiceInfoItemType;
+import org.iecr.diocesedashboard.domain.objects.ServiceTemplate;
 import org.iecr.diocesedashboard.service.ServiceInfoItemService;
+import org.iecr.diocesedashboard.service.ServiceTemplateService;
 import org.iecr.diocesedashboard.webapp.SecurityConfig;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,6 +41,9 @@ class ServiceInfoItemControllerTest {
 
   @MockBean
   private ServiceInfoItemService serviceInfoItemService;
+
+  @MockBean
+  private ServiceTemplateService serviceTemplateService;
 
   private ServiceInfoItem buildItem(Long id, String questionId) {
     ServiceInfoItem item = new ServiceInfoItem();
@@ -102,9 +107,13 @@ class ServiceInfoItemControllerTest {
   @WithMockUser(roles = "ADMIN")
   void create_asAdmin_returns201() throws Exception {
     ServiceInfoItem item = buildItem(1L, "attendance");
+    ServiceTemplate template = new ServiceTemplate();
+    template.setId(1L);
+    when(serviceTemplateService.findById(1L)).thenReturn(Optional.of(template));
     when(serviceInfoItemService.save(any(ServiceInfoItem.class))).thenReturn(item);
 
     mockMvc.perform(post("/api/service-info-items")
+        .param("templateId", "1")
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(item)))
         .andExpect(status().isCreated())
@@ -126,10 +135,14 @@ class ServiceInfoItemControllerTest {
   @WithMockUser(roles = "ADMIN")
   void update_exists_returns200() throws Exception {
     ServiceInfoItem item = buildItem(1L, "attendance");
+    ServiceTemplate template = new ServiceTemplate();
+    template.setId(1L);
     when(serviceInfoItemService.existsById(1L)).thenReturn(true);
+    when(serviceTemplateService.findById(1L)).thenReturn(Optional.of(template));
     when(serviceInfoItemService.save(any(ServiceInfoItem.class))).thenReturn(item);
 
     mockMvc.perform(put("/api/service-info-items/1")
+        .param("templateId", "1")
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(item)))
         .andExpect(status().isOk())
@@ -142,6 +155,7 @@ class ServiceInfoItemControllerTest {
     when(serviceInfoItemService.existsById(99L)).thenReturn(false);
 
     mockMvc.perform(put("/api/service-info-items/99")
+        .param("templateId", "1")
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(buildItem(99L, "x"))))
         .andExpect(status().isNotFound());
