@@ -2,7 +2,9 @@ package org.iecr.diocesedashboard.webapp.controller;
 
 import jakarta.validation.Valid;
 import org.iecr.diocesedashboard.domain.objects.ServiceInfoItem;
+import org.iecr.diocesedashboard.domain.objects.ServiceTemplate;
 import org.iecr.diocesedashboard.service.ServiceInfoItemService;
+import org.iecr.diocesedashboard.service.ServiceTemplateService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,7 +15,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -23,10 +27,13 @@ import java.util.List;
 public class ServiceInfoItemController {
 
   private final ServiceInfoItemService serviceInfoItemService;
+  private final ServiceTemplateService serviceTemplateService;
 
   @Autowired
-  public ServiceInfoItemController(ServiceInfoItemService serviceInfoItemService) {
+  public ServiceInfoItemController(ServiceInfoItemService serviceInfoItemService,
+      ServiceTemplateService serviceTemplateService) {
     this.serviceInfoItemService = serviceInfoItemService;
+    this.serviceTemplateService = serviceTemplateService;
   }
 
   /**
@@ -53,30 +60,42 @@ public class ServiceInfoItemController {
   }
 
   /**
-   * Creates a new service info item.
+   * Creates a new service info item, associated with the given template.
    *
+   * @param templateId the ID of the owning service template
    * @param item the item to create
-   * @return 201 with the created item
+   * @return 201 with the created item, or 404 if the template is not found
    */
   @PostMapping
-  public ResponseEntity<ServiceInfoItem> create(@RequestBody @Valid ServiceInfoItem item) {
+  public ResponseEntity<ServiceInfoItem> create(@RequestParam Long templateId,
+      @RequestBody @Valid ServiceInfoItem item) {
+    ServiceTemplate template = serviceTemplateService.findById(templateId)
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+            "ServiceTemplate not found: " + templateId));
+    item.setServiceTemplate(template);
     return ResponseEntity.status(HttpStatus.CREATED).body(serviceInfoItemService.save(item));
   }
 
   /**
    * Updates the service info item with the given ID.
    *
-   * @param id   the service info item ID
-   * @param item the updated item data
+   * @param id         the service info item ID
+   * @param templateId the ID of the owning service template
+   * @param item       the updated item data
    * @return 200 with the updated item, or 404 if not found
    */
   @PutMapping("/{id}")
   public ResponseEntity<ServiceInfoItem> update(@PathVariable Long id,
+      @RequestParam Long templateId,
       @RequestBody @Valid ServiceInfoItem item) {
     if (!serviceInfoItemService.existsById(id)) {
       return ResponseEntity.notFound().build();
     }
+    ServiceTemplate template = serviceTemplateService.findById(templateId)
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+            "ServiceTemplate not found: " + templateId));
     item.setId(id);
+    item.setServiceTemplate(template);
     return ResponseEntity.ok(serviceInfoItemService.save(item));
   }
 

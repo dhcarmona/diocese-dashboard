@@ -84,6 +84,12 @@ public class ServiceSubmissionService {
         ServiceInfoItem item = serviceInfoItemService.findById(entry.serviceInfoItemId())
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                 "ServiceInfoItem not found: " + entry.serviceInfoItemId()));
+        if (item.getServiceTemplate() == null
+            || !item.getServiceTemplate().getId().equals(template.getId())) {
+          throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+              "ServiceInfoItem " + entry.serviceInfoItemId()
+                  + " does not belong to template " + template.getId());
+        }
         ServiceInfoItemResponse response = new ServiceInfoItemResponse();
         response.setServiceInfoItem(item);
         response.setServiceInstance(saved);
