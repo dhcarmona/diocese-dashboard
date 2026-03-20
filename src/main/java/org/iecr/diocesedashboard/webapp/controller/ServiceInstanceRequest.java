@@ -2,7 +2,6 @@ package org.iecr.diocesedashboard.webapp.controller;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PastOrPresent;
 
@@ -16,7 +15,7 @@ public record ServiceInstanceRequest(
   @NotBlank String churchName,
   List<Long> celebrantIds,
   @NotNull @PastOrPresent LocalDate serviceDate,
-  @NotEmpty @Valid List<ResponseEntry> responses) {
+  @Valid List<ResponseEntry> responses) {
 
   /**
    * A single answer to one Service Info Item question.

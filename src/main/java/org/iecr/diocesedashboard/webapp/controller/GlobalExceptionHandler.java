@@ -7,7 +7,14 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Map;
 
-/** Global exception handler that standardizes error response bodies across all controllers. */
+/**
+ * Global exception handler for {@link ResponseStatusException} thrown by controllers or services.
+ *
+ * <p>Only errors signalled by throwing {@code ResponseStatusException} produce a standardized JSON
+ * error body. Controllers that return {@link org.springframework.http.ResponseEntity} instances
+ * directly (for example, {@code ResponseEntity.notFound().build()}) are not handled here and will
+ * produce empty response bodies.
+ */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
