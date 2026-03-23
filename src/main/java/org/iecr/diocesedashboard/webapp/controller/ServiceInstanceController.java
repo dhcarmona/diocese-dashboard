@@ -1,9 +1,13 @@
 package org.iecr.diocesedashboard.webapp.controller;
 
+import org.iecr.diocesedashboard.domain.objects.DashboardUser;
 import org.iecr.diocesedashboard.domain.objects.ServiceInstance;
+import org.iecr.diocesedashboard.domain.objects.UserRole;
 import org.iecr.diocesedashboard.service.ServiceInstanceService;
+import org.iecr.diocesedashboard.webapp.DashboardUserDetails;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -25,24 +29,34 @@ public class ServiceInstanceController {
   }
 
   /**
-   * Returns all service instances.
+   * Returns all service instances visible to the authenticated user.
+   * REPORTER users only see instances for their assigned church.
    *
-   * @return list of all service instances
+   * @param auth the current authentication
+   * @return list of visible service instances
    */
   @GetMapping
-  public List<ServiceInstance> getAll() {
+  public List<ServiceInstance> getAll(Authentication auth) {
+    DashboardUser user = ((DashboardUserDetails) auth.getPrincipal()).getDashboardUser();
+    if (user.getRole() == UserRole.REPORTER) {
+      return serviceInstanceService.findByChurch(user.getChurch());
+    }
     return serviceInstanceService.findAll();
   }
 
   /**
    * Returns the service instance with the given ID.
+   * REPORTER users receive 404 if the instance does not belong to their church.
    *
-   * @param id the service instance ID
-   * @return 200 with the instance, or 404 if not found
+   * @param id   the service instance ID
+   * @param auth the current authentication
+   * @return 200 with the instance, or 404 if not found or not accessible
    */
   @GetMapping("/{id}")
-  public ResponseEntity<ServiceInstance> getById(@PathVariable Long id) {
+  public ResponseEntity<ServiceInstance> getById(@PathVariable Long id, Authentication auth) {
+    DashboardUser user = ((DashboardUserDetails) auth.getPrincipal()).getDashboardUser();
     return serviceInstanceService.findById(id)
+        .filter(inst -> isAccessible(inst, user))
         .map(ResponseEntity::ok)
         .orElse(ResponseEntity.notFound().build());
   }
@@ -60,5 +74,13 @@ public class ServiceInstanceController {
     }
     serviceInstanceService.deleteById(id);
     return ResponseEntity.noContent().build();
+  }
+
+  private boolean isAccessible(ServiceInstance instance, DashboardUser user) {
+    if (user.getRole() == UserRole.ADMIN) {
+      return true;
+    }
+    return user.getChurch() != null
+        && user.getChurch().getName().equals(instance.getChurch().getName());
   }
 }

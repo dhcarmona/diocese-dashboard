@@ -1,5 +1,6 @@
 package org.iecr.diocesedashboard.service;
 
+import org.iecr.diocesedashboard.domain.objects.Church;
 import org.iecr.diocesedashboard.domain.objects.ServiceInstance;
 import org.iecr.diocesedashboard.domain.repositories.ServiceInstanceRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,6 +20,10 @@ public class ServiceInstanceService {
 
   public List<ServiceInstance> findAll() {
     return repository.findAll();
+  }
+
+  public List<ServiceInstance> findByChurch(Church church) {
+    return repository.findByChurch(church);
   }
 
   public Optional<ServiceInstance> findById(Long id) {

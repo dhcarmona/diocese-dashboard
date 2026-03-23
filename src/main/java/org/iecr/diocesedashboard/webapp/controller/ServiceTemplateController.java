@@ -1,13 +1,17 @@
 package org.iecr.diocesedashboard.webapp.controller;
 
 import jakarta.validation.Valid;
+import org.iecr.diocesedashboard.domain.objects.DashboardUser;
 import org.iecr.diocesedashboard.domain.objects.ServiceInstance;
 import org.iecr.diocesedashboard.domain.objects.ServiceTemplate;
+import org.iecr.diocesedashboard.domain.objects.UserRole;
 import org.iecr.diocesedashboard.service.ServiceSubmissionService;
 import org.iecr.diocesedashboard.service.ServiceTemplateService;
+import org.iecr.diocesedashboard.webapp.DashboardUserDetails;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -16,6 +20,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -107,14 +112,24 @@ public class ServiceTemplateController {
   /**
    * The unique URL for each Service Template. Regular users navigate to this endpoint
    * to submit a new Service Instance for the given template.
+   * REPORTER users may only submit for their assigned church.
    *
    * @param id      the template ID
    * @param request the submission request body
+   * @param auth    the current authentication
    * @return 201 with the created service instance
    */
   @PostMapping("/{id}/submit")
   public ResponseEntity<ServiceInstance> submit(@PathVariable Long id,
-      @RequestBody @Valid ServiceInstanceRequest request) {
+      @RequestBody @Valid ServiceInstanceRequest request, Authentication auth) {
+    DashboardUser user = ((DashboardUserDetails) auth.getPrincipal()).getDashboardUser();
+    if (user.getRole() == UserRole.REPORTER) {
+      if (user.getChurch() == null
+          || !user.getChurch().getName().equals(request.churchName())) {
+        throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+            "Reporters may only submit for their assigned church");
+      }
+    }
     ServiceInstance created = serviceSubmissionService.submit(id, request);
     return ResponseEntity.status(HttpStatus.CREATED).body(created);
   }

@@ -60,7 +60,7 @@ class CelebrantControllerTest {
   }
 
   @Test
-  @WithMockUser(roles = "USER")
+  @WithMockUser(roles = "REPORTER")
   void getAll_asUser_returns200() throws Exception {
     when(celebrantService.findAll()).thenReturn(List.of());
 

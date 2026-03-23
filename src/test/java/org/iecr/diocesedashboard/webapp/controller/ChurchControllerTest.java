@@ -60,7 +60,7 @@ class ChurchControllerTest {
   }
 
   @Test
-  @WithMockUser(roles = "USER")
+  @WithMockUser(roles = "REPORTER")
   void getAll_asUser_returns200() throws Exception {
     when(churchService.findAll()).thenReturn(List.of());
 

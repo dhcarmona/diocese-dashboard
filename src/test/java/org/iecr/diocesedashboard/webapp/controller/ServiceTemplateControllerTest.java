@@ -16,9 +16,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.iecr.diocesedashboard.domain.objects.ServiceInstance;
 import org.iecr.diocesedashboard.domain.objects.ServiceTemplate;
+import org.iecr.diocesedashboard.domain.objects.UserRole;
 import org.iecr.diocesedashboard.service.ServiceSubmissionService;
 import org.iecr.diocesedashboard.service.ServiceTemplateService;
 import org.iecr.diocesedashboard.webapp.SecurityConfig;
+import org.iecr.diocesedashboard.webapp.WithMockDashboardUser;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -106,7 +108,7 @@ class ServiceTemplateControllerTest {
   }
 
   @Test
-  @WithMockUser(roles = "USER")
+  @WithMockUser(roles = "REPORTER")
   void getById_asUser_exists_returns200() throws Exception {
     when(serviceTemplateService.findById(1L)).thenReturn(Optional.of(buildTemplate(1L, "Sunday Mass")));
 
@@ -198,7 +200,7 @@ class ServiceTemplateControllerTest {
   // --- POST /api/service-templates/{id}/submit ---
 
   @Test
-  @WithMockUser(roles = "USER")
+  @WithMockDashboardUser(role = UserRole.REPORTER, churchName = "Trinity")
   void submit_asUser_validRequest_returns201() throws Exception {
     ServiceInstance instance = new ServiceInstance();
     instance.setId(42L);
@@ -213,7 +215,7 @@ class ServiceTemplateControllerTest {
   }
 
   @Test
-  @WithMockUser(roles = "ADMIN")
+  @WithMockDashboardUser
   void submit_asAdmin_validRequest_returns201() throws Exception {
     ServiceInstance instance = new ServiceInstance();
     instance.setId(7L);
@@ -227,7 +229,7 @@ class ServiceTemplateControllerTest {
   }
 
   @Test
-  @WithMockUser(roles = "USER")
+  @WithMockDashboardUser(role = UserRole.REPORTER, churchName = "Trinity")
   void submit_templateNotFound_returns404() throws Exception {
     when(serviceSubmissionService.submit(eq(99L), any(ServiceInstanceRequest.class)))
         .thenThrow(new ResponseStatusException(NOT_FOUND, "Template not found"));
@@ -244,5 +246,14 @@ class ServiceTemplateControllerTest {
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(buildRequest())))
         .andExpect(status().isUnauthorized());
+  }
+
+  @Test
+  @WithMockDashboardUser(role = UserRole.REPORTER, churchName = "OtherChurch")
+  void submit_asReporter_wrongChurch_returns403() throws Exception {
+    mockMvc.perform(post("/api/service-templates/1/submit")
+        .contentType(MediaType.APPLICATION_JSON)
+        .content(objectMapper.writeValueAsString(buildRequest())))
+        .andExpect(status().isForbidden());
   }
 }
