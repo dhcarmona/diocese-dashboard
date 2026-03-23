@@ -55,4 +55,8 @@ To run the code that generates the schema. The SQL will be generated in a schema
 
 ## TODO
 
-- Generate a **unique shareable URL** for each Service Template to distribute to Reporter users, instead of requiring them to know the template ID.
+- Build the **reporter-facing UI form** that a reporter sees upon following a reporter link token
+  (i.e., a browser page at `/r/{token}` that the login page redirects to after authentication,
+  pre-loads the linked service template's fields, and lets the reporter fill in and submit the
+  report without any API knowledge).
+- Add a **link management UI** for ADMIN users to create, list, copy, and revoke reporter links.
