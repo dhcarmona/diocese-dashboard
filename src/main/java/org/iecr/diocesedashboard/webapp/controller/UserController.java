@@ -71,7 +71,9 @@ public class UserController {
           "Password is required when creating a user");
     }
     Church church = resolveChurch(request.churchName());
-    if (request.role() == UserRole.REPORTER && church == null) {
+    if (request.role() == UserRole.ADMIN) {
+      church = null;
+    } else if (request.role() == UserRole.REPORTER && church == null) {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
           "churchName is required for REPORTER role");
     }
@@ -94,7 +96,9 @@ public class UserController {
       return ResponseEntity.notFound().build();
     }
     Church church = resolveChurch(request.churchName());
-    if (request.role() == UserRole.REPORTER && church == null) {
+    if (request.role() == UserRole.ADMIN) {
+      church = null;
+    } else if (request.role() == UserRole.REPORTER && church == null) {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
           "churchName is required for REPORTER role");
     }
