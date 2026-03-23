@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
 
@@ -43,8 +44,16 @@ public class ReporterLinkRedirectController {
     if (!reporterLinkService.existsByToken(token)) {
       return ResponseEntity.notFound().build();
     }
+    URI loginRedirect = UriComponentsBuilder.fromPath("/login")
+        .queryParam("redirect", UriComponentsBuilder.fromPath("/r/{token}")
+            .buildAndExpand(token)
+            .encode()
+            .toUriString())
+        .build()
+        .encode()
+        .toUri();
     HttpHeaders headers = new HttpHeaders();
-    headers.setLocation(URI.create("/login?redirect=/r/" + token));
+    headers.setLocation(loginRedirect);
     return new ResponseEntity<>(headers, HttpStatus.FOUND);
   }
 }

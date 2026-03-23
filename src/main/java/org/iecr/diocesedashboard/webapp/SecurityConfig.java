@@ -34,6 +34,7 @@ public class SecurityConfig {
         .csrf(csrf -> csrf.disable())
         .authorizeHttpRequests(auth -> auth
                 .requestMatchers(HttpMethod.GET, "/r/*").permitAll()
+                .requestMatchers(HttpMethod.GET, "/login").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/churches").hasAnyRole("ADMIN", "REPORTER")
                 .requestMatchers(HttpMethod.GET, "/api/celebrants").hasAnyRole("ADMIN", "REPORTER")
                 .requestMatchers(HttpMethod.GET, "/api/service-templates").hasAnyRole("ADMIN", "REPORTER")
@@ -42,10 +43,11 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/service-instances").hasAnyRole("ADMIN", "REPORTER")
                 .requestMatchers(HttpMethod.GET, "/api/service-instances/*").hasAnyRole("ADMIN", "REPORTER")
                 .requestMatchers(HttpMethod.GET, "/api/reporter-links/*").hasAnyRole("ADMIN", "REPORTER")
-                .requestMatchers(HttpMethod.POST, "/api/reporter-links/*/submit").hasAnyRole("ADMIN", "REPORTER")
+                .requestMatchers(HttpMethod.POST, "/api/reporter-links/*/submit").hasRole("REPORTER")
                 .anyRequest().hasRole("ADMIN")
         )
-        .httpBasic(Customizer.withDefaults());
+        .httpBasic(Customizer.withDefaults())
+        .formLogin(form -> form.permitAll());
     return http.build();
   }
 

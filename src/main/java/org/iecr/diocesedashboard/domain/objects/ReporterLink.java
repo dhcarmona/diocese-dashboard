@@ -69,8 +69,15 @@ public class ReporterLink {
     this.serviceTemplate = serviceTemplate;
   }
 
+  private String getMaskedToken() {
+    if (token == null || token.length() <= 4) {
+      return "****";
+    }
+    return token.substring(0, 4) + "****";
+  }
+
   @Override
   public String toString() {
-    return "ReporterLink{id=" + id + ", token='" + token + "'}";
+    return "ReporterLink{id=" + id + ", token='" + getMaskedToken() + "'}";
   }
 }

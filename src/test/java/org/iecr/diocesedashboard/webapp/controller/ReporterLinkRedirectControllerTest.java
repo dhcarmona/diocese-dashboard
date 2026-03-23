@@ -1,5 +1,9 @@
 package org.iecr.diocesedashboard.webapp.controller;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
@@ -21,6 +25,9 @@ class ReporterLinkRedirectControllerTest {
   @Autowired
   private MockMvc mockMvc;
 
+  @Autowired
+  private ReporterLinkRedirectController controller;
+
   @MockBean
   private ReporterLinkService reporterLinkService;
 
@@ -33,6 +40,23 @@ class ReporterLinkRedirectControllerTest {
     mockMvc.perform(get("/r/" + TOKEN))
         .andExpect(status().isFound())
         .andExpect(header().string("Location", "/login?redirect=/r/" + TOKEN));
+  }
+
+  @Test
+  void redirect_reservedCharactersInToken_areEncodedInRedirectTarget() throws Exception {
+    String reservedToken = "abc?next=/foo&admin=true";
+    when(reporterLinkService.existsByToken(reservedToken)).thenReturn(true);
+
+    var response = controller.redirect(reservedToken);
+    String location = response.getHeaders().getLocation().toString();
+
+    assertEquals(302, response.getStatusCode().value());
+    assertNotNull(response.getHeaders().getLocation());
+    assertTrue(location.startsWith("/login?redirect=/r/abc"));
+    assertTrue(location.contains("%3F") || location.contains("%253F"));
+    assertTrue(location.contains("%26") || location.contains("%2526"));
+    assertFalse(location.contains("/r/abc?next="));
+    assertFalse(location.contains("&admin=true"));
   }
 
   @Test
@@ -50,5 +74,11 @@ class ReporterLinkRedirectControllerTest {
     // No auth headers — should still get 302, not 401
     mockMvc.perform(get("/r/" + TOKEN))
         .andExpect(status().isFound());
+  }
+
+  @Test
+  void loginPage_publiclyAccessible() throws Exception {
+    mockMvc.perform(get("/login"))
+        .andExpect(status().isOk());
   }
 }

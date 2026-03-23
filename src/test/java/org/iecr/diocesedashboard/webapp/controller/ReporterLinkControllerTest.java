@@ -103,7 +103,12 @@ class ReporterLinkControllerTest {
 
     mockMvc.perform(get("/api/reporter-links"))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.length()").value(1));
+        .andExpect(jsonPath("$.length()").value(1))
+        .andExpect(jsonPath("$[0].token").value(TOKEN))
+        .andExpect(jsonPath("$[0].reporterId").value(5L))
+        .andExpect(jsonPath("$[0].serviceTemplateId").value(2L))
+        .andExpect(jsonPath("$[0].reporter").doesNotExist())
+        .andExpect(jsonPath("$[0].serviceTemplate").doesNotExist());
   }
 
   @Test
@@ -137,7 +142,11 @@ class ReporterLinkControllerTest {
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(request)))
         .andExpect(status().isCreated())
-        .andExpect(jsonPath("$.token").value(TOKEN));
+        .andExpect(jsonPath("$.token").value(TOKEN))
+        .andExpect(jsonPath("$.reporterId").value(5L))
+        .andExpect(jsonPath("$.serviceTemplateId").value(2L))
+        .andExpect(jsonPath("$.reporter").doesNotExist())
+        .andExpect(jsonPath("$.serviceTemplate").doesNotExist());
   }
 
   @Test
@@ -199,7 +208,11 @@ class ReporterLinkControllerTest {
 
     mockMvc.perform(get("/api/reporter-links/" + TOKEN))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.token").value(TOKEN));
+        .andExpect(jsonPath("$.token").value(TOKEN))
+        .andExpect(jsonPath("$.reporterId").value(5L))
+        .andExpect(jsonPath("$.serviceTemplateId").value(2L))
+        .andExpect(jsonPath("$.reporter").doesNotExist())
+        .andExpect(jsonPath("$.serviceTemplate").doesNotExist());
   }
 
   @Test
@@ -287,7 +300,7 @@ class ReporterLinkControllerTest {
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(request)))
         .andExpect(status().isCreated())
-        .andExpect(jsonPath("$.id").value(42));
+        .andExpect(jsonPath("$.serviceInstanceId").value(42));
   }
 
   @Test
@@ -311,6 +324,18 @@ class ReporterLinkControllerTest {
     when(reporterLinkService.findByToken(TOKEN)).thenReturn(
         Optional.of(buildLink(TOKEN, 99L, "Trinity")));
 
+    ReporterLinkSubmitRequest request = new ReporterLinkSubmitRequest(
+        List.of(), LocalDate.of(2024, 1, 14), List.of());
+
+    mockMvc.perform(post("/api/reporter-links/" + TOKEN + "/submit")
+        .contentType(MediaType.APPLICATION_JSON)
+        .content(objectMapper.writeValueAsString(request)))
+        .andExpect(status().isForbidden());
+  }
+
+  @Test
+  @WithMockUser(roles = "ADMIN")
+  void submit_asAdmin_returns403() throws Exception {
     ReporterLinkSubmitRequest request = new ReporterLinkSubmitRequest(
         List.of(), LocalDate.of(2024, 1, 14), List.of());
 
