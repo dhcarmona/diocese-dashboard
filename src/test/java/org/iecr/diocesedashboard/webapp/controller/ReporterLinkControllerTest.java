@@ -4,6 +4,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -139,6 +140,7 @@ class ReporterLinkControllerTest {
 
     ReporterLinkRequest request = new ReporterLinkRequest(5L, 2L);
     mockMvc.perform(post("/api/reporter-links")
+        .with(csrf())
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(request)))
         .andExpect(status().isCreated())
@@ -156,6 +158,7 @@ class ReporterLinkControllerTest {
 
     ReporterLinkRequest request = new ReporterLinkRequest(99L, 2L);
     mockMvc.perform(post("/api/reporter-links")
+        .with(csrf())
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(request)))
         .andExpect(status().isNotFound());
@@ -171,6 +174,7 @@ class ReporterLinkControllerTest {
 
     ReporterLinkRequest request = new ReporterLinkRequest(3L, 2L);
     mockMvc.perform(post("/api/reporter-links")
+        .with(csrf())
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(request)))
         .andExpect(status().isBadRequest());
@@ -184,6 +188,7 @@ class ReporterLinkControllerTest {
 
     ReporterLinkRequest request = new ReporterLinkRequest(5L, 99L);
     mockMvc.perform(post("/api/reporter-links")
+        .with(csrf())
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(request)))
         .andExpect(status().isNotFound());
@@ -194,6 +199,7 @@ class ReporterLinkControllerTest {
   void create_asReporter_returns403() throws Exception {
     ReporterLinkRequest request = new ReporterLinkRequest(5L, 2L);
     mockMvc.perform(post("/api/reporter-links")
+        .with(csrf())
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(request)))
         .andExpect(status().isForbidden());
@@ -257,7 +263,8 @@ class ReporterLinkControllerTest {
   void delete_exists_returns204() throws Exception {
     when(reporterLinkService.existsByToken(TOKEN)).thenReturn(true);
 
-    mockMvc.perform(delete("/api/reporter-links/" + TOKEN))
+    mockMvc.perform(delete("/api/reporter-links/" + TOKEN)
+        .with(csrf()))
         .andExpect(status().isNoContent());
 
     verify(reporterLinkService).deleteByToken(TOKEN);
@@ -268,14 +275,16 @@ class ReporterLinkControllerTest {
   void delete_notFound_returns404() throws Exception {
     when(reporterLinkService.existsByToken("missing")).thenReturn(false);
 
-    mockMvc.perform(delete("/api/reporter-links/missing"))
+    mockMvc.perform(delete("/api/reporter-links/missing")
+        .with(csrf()))
         .andExpect(status().isNotFound());
   }
 
   @Test
   @WithMockUser(roles = "REPORTER")
   void delete_asReporter_returns403() throws Exception {
-    mockMvc.perform(delete("/api/reporter-links/" + TOKEN))
+    mockMvc.perform(delete("/api/reporter-links/" + TOKEN)
+        .with(csrf()))
         .andExpect(status().isForbidden());
   }
 
@@ -297,6 +306,7 @@ class ReporterLinkControllerTest {
         List.of(new ServiceInstanceRequest.ResponseEntry(5L, "120")));
 
     mockMvc.perform(post("/api/reporter-links/" + TOKEN + "/submit")
+        .with(csrf())
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(request)))
         .andExpect(status().isCreated())
@@ -312,6 +322,7 @@ class ReporterLinkControllerTest {
         List.of(), LocalDate.of(2024, 1, 14), List.of());
 
     mockMvc.perform(post("/api/reporter-links/missing/submit")
+        .with(csrf())
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(request)))
         .andExpect(status().isNotFound());
@@ -328,6 +339,7 @@ class ReporterLinkControllerTest {
         List.of(), LocalDate.of(2024, 1, 14), List.of());
 
     mockMvc.perform(post("/api/reporter-links/" + TOKEN + "/submit")
+        .with(csrf())
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(request)))
         .andExpect(status().isForbidden());
@@ -340,6 +352,7 @@ class ReporterLinkControllerTest {
         List.of(), LocalDate.of(2024, 1, 14), List.of());
 
     mockMvc.perform(post("/api/reporter-links/" + TOKEN + "/submit")
+        .with(csrf())
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(request)))
         .andExpect(status().isForbidden());
@@ -351,6 +364,7 @@ class ReporterLinkControllerTest {
         List.of(), LocalDate.of(2024, 1, 14), List.of());
 
     mockMvc.perform(post("/api/reporter-links/" + TOKEN + "/submit")
+        .with(csrf())
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(request)))
         .andExpect(status().isUnauthorized());

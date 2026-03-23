@@ -16,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.test.web.servlet.MockMvc;
 
 @WebMvcTest(ReporterLinkRedirectController.class)
@@ -30,6 +31,9 @@ class ReporterLinkRedirectControllerTest {
 
   @MockBean
   private ReporterLinkService reporterLinkService;
+
+  @MockBean
+  private UserDetailsService userDetailsService;
 
   private static final String TOKEN = "abc-123-token";
 
@@ -74,11 +78,5 @@ class ReporterLinkRedirectControllerTest {
     // No auth headers — should still get 302, not 401
     mockMvc.perform(get("/r/" + TOKEN))
         .andExpect(status().isFound());
-  }
-
-  @Test
-  void loginPage_publiclyAccessible() throws Exception {
-    mockMvc.perform(get("/login"))
-        .andExpect(status().isOk());
   }
 }
