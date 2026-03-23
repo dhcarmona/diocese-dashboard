@@ -1,5 +1,6 @@
 package org.iecr.diocesedashboard.webapp.controller;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -7,9 +8,12 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import org.iecr.diocesedashboard.domain.objects.Church;
 import org.iecr.diocesedashboard.domain.objects.ServiceInstance;
+import org.iecr.diocesedashboard.domain.objects.UserRole;
 import org.iecr.diocesedashboard.service.ServiceInstanceService;
 import org.iecr.diocesedashboard.webapp.SecurityConfig;
+import org.iecr.diocesedashboard.webapp.WithMockDashboardUser;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -37,10 +41,19 @@ class ServiceInstanceControllerTest {
     return i;
   }
 
+  private ServiceInstance buildInstanceForChurch(Long id, String churchName) {
+    Church church = new Church();
+    church.setName(churchName);
+    ServiceInstance i = new ServiceInstance();
+    i.setId(id);
+    i.setChurch(church);
+    return i;
+  }
+
   // --- GET /api/service-instances ---
 
   @Test
-  @WithMockUser(roles = "ADMIN")
+  @WithMockDashboardUser
   void getAll_asAdmin_returns200WithList() throws Exception {
     when(serviceInstanceService.findAll()).thenReturn(
         List.of(buildInstance(1L), buildInstance(2L)));
@@ -58,6 +71,18 @@ class ServiceInstanceControllerTest {
   }
 
   @Test
+  @WithMockDashboardUser(role = UserRole.REPORTER, churchName = "Trinity")
+  void getAll_asReporter_returnsOnlyOwnChurchInstances() throws Exception {
+    when(serviceInstanceService.findByChurch(any(Church.class))).thenReturn(
+        List.of(buildInstanceForChurch(1L, "Trinity")));
+
+    mockMvc.perform(get("/api/service-instances"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.length()").value(1))
+        .andExpect(jsonPath("$[0].id").value(1));
+  }
+
+  @Test
   void getAll_unauthenticated_returns401() throws Exception {
     mockMvc.perform(get("/api/service-instances"))
         .andExpect(status().isUnauthorized());
@@ -66,7 +91,7 @@ class ServiceInstanceControllerTest {
   // --- GET /api/service-instances/{id} ---
 
   @Test
-  @WithMockUser(roles = "ADMIN")
+  @WithMockDashboardUser
   void getById_exists_returns200() throws Exception {
     when(serviceInstanceService.findById(1L)).thenReturn(Optional.of(buildInstance(1L)));
 
@@ -76,7 +101,7 @@ class ServiceInstanceControllerTest {
   }
 
   @Test
-  @WithMockUser(roles = "ADMIN")
+  @WithMockDashboardUser
   void getById_notFound_returns404() throws Exception {
     when(serviceInstanceService.findById(99L)).thenReturn(Optional.empty());
 
@@ -89,6 +114,27 @@ class ServiceInstanceControllerTest {
   void getById_asUser_returns403() throws Exception {
     mockMvc.perform(get("/api/service-instances/1"))
         .andExpect(status().isForbidden());
+  }
+
+  @Test
+  @WithMockDashboardUser(role = UserRole.REPORTER, churchName = "Trinity")
+  void getById_asReporter_ownChurch_returns200() throws Exception {
+    when(serviceInstanceService.findById(1L))
+        .thenReturn(Optional.of(buildInstanceForChurch(1L, "Trinity")));
+
+    mockMvc.perform(get("/api/service-instances/1"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.id").value(1));
+  }
+
+  @Test
+  @WithMockDashboardUser(role = UserRole.REPORTER, churchName = "Trinity")
+  void getById_asReporter_otherChurch_returns404() throws Exception {
+    when(serviceInstanceService.findById(2L))
+        .thenReturn(Optional.of(buildInstanceForChurch(2L, "StPaul")));
+
+    mockMvc.perform(get("/api/service-instances/2"))
+        .andExpect(status().isNotFound());
   }
 
   // --- DELETE /api/service-instances/{id} ---
