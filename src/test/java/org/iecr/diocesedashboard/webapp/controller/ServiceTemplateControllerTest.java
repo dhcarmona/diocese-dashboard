@@ -5,6 +5,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -28,6 +29,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.server.ResponseStatusException;
@@ -51,6 +53,9 @@ class ServiceTemplateControllerTest {
 
   @MockBean
   private ServiceSubmissionService serviceSubmissionService;
+
+  @MockBean
+  private UserDetailsService userDetailsService;
 
   @BeforeEach
   void setUp() {
@@ -145,6 +150,7 @@ class ServiceTemplateControllerTest {
     when(serviceTemplateService.save(any(ServiceTemplate.class))).thenReturn(template);
 
     mockMvc.perform(post("/api/service-templates")
+        .with(csrf())
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(template)))
         .andExpect(status().isCreated())
@@ -155,6 +161,7 @@ class ServiceTemplateControllerTest {
   @WithMockUser(roles = "USER")
   void create_asUser_returns403() throws Exception {
     mockMvc.perform(post("/api/service-templates")
+        .with(csrf())
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(buildTemplate(1L, "X"))))
         .andExpect(status().isForbidden());
@@ -170,6 +177,7 @@ class ServiceTemplateControllerTest {
     when(serviceTemplateService.save(any(ServiceTemplate.class))).thenReturn(template);
 
     mockMvc.perform(put("/api/service-templates/1")
+        .with(csrf())
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(template)))
         .andExpect(status().isOk());
@@ -181,6 +189,7 @@ class ServiceTemplateControllerTest {
     when(serviceTemplateService.existsById(99L)).thenReturn(false);
 
     mockMvc.perform(put("/api/service-templates/99")
+        .with(csrf())
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(buildTemplate(99L, "X"))))
         .andExpect(status().isNotFound());
@@ -193,7 +202,7 @@ class ServiceTemplateControllerTest {
   void delete_exists_returns204() throws Exception {
     when(serviceTemplateService.existsById(1L)).thenReturn(true);
 
-    mockMvc.perform(delete("/api/service-templates/1"))
+    mockMvc.perform(delete("/api/service-templates/1").with(csrf()))
         .andExpect(status().isNoContent());
 
     verify(serviceTemplateService).deleteById(1L);
@@ -204,7 +213,7 @@ class ServiceTemplateControllerTest {
   void delete_notFound_returns404() throws Exception {
     when(serviceTemplateService.existsById(99L)).thenReturn(false);
 
-    mockMvc.perform(delete("/api/service-templates/99"))
+    mockMvc.perform(delete("/api/service-templates/99").with(csrf()))
         .andExpect(status().isNotFound());
   }
 
@@ -219,6 +228,7 @@ class ServiceTemplateControllerTest {
         .thenReturn(instance);
 
     mockMvc.perform(post("/api/service-templates/1/submit")
+        .with(csrf())
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(buildRequest())))
         .andExpect(status().isCreated())
@@ -234,6 +244,7 @@ class ServiceTemplateControllerTest {
         .thenReturn(instance);
 
     mockMvc.perform(post("/api/service-templates/1/submit")
+        .with(csrf())
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(buildRequest())))
         .andExpect(status().isCreated());
@@ -246,6 +257,7 @@ class ServiceTemplateControllerTest {
         .thenThrow(new ResponseStatusException(NOT_FOUND, "Template not found"));
 
     mockMvc.perform(post("/api/service-templates/99/submit")
+        .with(csrf())
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(buildRequest())))
         .andExpect(status().isNotFound());
@@ -254,6 +266,7 @@ class ServiceTemplateControllerTest {
   @Test
   void submit_unauthenticated_returns401() throws Exception {
     mockMvc.perform(post("/api/service-templates/1/submit")
+        .with(csrf())
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(buildRequest())))
         .andExpect(status().isUnauthorized());
@@ -263,6 +276,7 @@ class ServiceTemplateControllerTest {
   @WithMockDashboardUser(role = UserRole.REPORTER, churchName = "OtherChurch")
   void submit_asReporter_wrongChurch_returns403() throws Exception {
     mockMvc.perform(post("/api/service-templates/1/submit")
+        .with(csrf())
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(buildRequest())))
         .andExpect(status().isForbidden());

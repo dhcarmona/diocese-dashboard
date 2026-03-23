@@ -42,7 +42,49 @@ The following environment variables are required to start the application:
 
 ## Authentication
 
-The API uses HTTP Basic Auth. All endpoints require authentication. An Admin account must be created directly in the database before first use — after that, additional accounts can be managed via `POST /api/users`.
+The app uses session-based login. Visit `/login` in the browser and sign in with your credentials. An Admin account must be created directly in the database before first use — after that, additional accounts can be managed via `POST /api/users`.
+
+## Running Locally
+
+### Option A — UI only (no backend required)
+
+Useful for reviewing and developing the frontend without a running database or Spring Boot instance.
+
+```bash
+cd frontend
+npm run dev
+```
+
+Open **http://localhost:5173**. The login page will render, but submitting the form will fail since there is no backend. API calls are proxied to `localhost:8080` when running this way.
+
+### Option B — Full stack
+
+Requires PostgreSQL. The quickest way to start one with Docker:
+
+```bash
+docker run -d \
+  --name diocese-db \
+  -e POSTGRES_DB=diocese \
+  -e POSTGRES_USER=diocese \
+  -e POSTGRES_PASSWORD=secret \
+  -p 5432:5432 \
+  postgres:16
+```
+
+Then set the required environment variables and start Spring Boot:
+
+```bash
+export POSTGRESQL_PORT=5432
+export SPRING_DATABASE_NAME=diocese
+export SPRING_DATASOURCE_USERNAME=diocese
+export SPRING_DATASOURCE_PASSWORD=secret
+
+mvn spring-boot:run
+```
+
+Open **http://localhost:8080**. Spring Boot serves the pre-built React app from `src/main/resources/static/`.
+
+> **Note:** The schema is recreated on every startup. The database starts empty — you must seed an initial Admin user directly in the database before you can log in. See the schema for the `DashboardUser` table structure.
 
 ## Generating the schema
 

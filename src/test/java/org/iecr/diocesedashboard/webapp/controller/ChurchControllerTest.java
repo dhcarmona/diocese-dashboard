@@ -4,6 +4,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -21,6 +22,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -39,6 +41,9 @@ class ChurchControllerTest {
 
   @MockBean
   private ChurchService churchService;
+
+  @MockBean
+  private UserDetailsService userDetailsService;
 
   private Church buildChurch(String name) {
     Church c = new Church();
@@ -112,6 +117,7 @@ class ChurchControllerTest {
     when(churchService.save(any(Church.class))).thenReturn(church);
 
     mockMvc.perform(post("/api/churches")
+        .with(csrf())
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(church)))
         .andExpect(status().isCreated())
@@ -122,6 +128,7 @@ class ChurchControllerTest {
   @WithMockUser(roles = "USER")
   void create_asUser_returns403() throws Exception {
     mockMvc.perform(post("/api/churches")
+        .with(csrf())
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(buildChurch("X"))))
         .andExpect(status().isForbidden());
@@ -137,6 +144,7 @@ class ChurchControllerTest {
     when(churchService.save(any(Church.class))).thenReturn(church);
 
     mockMvc.perform(put("/api/churches/Trinity")
+        .with(csrf())
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(church)))
         .andExpect(status().isOk())
@@ -149,6 +157,7 @@ class ChurchControllerTest {
     when(churchService.existsById(eq("Ghost"))).thenReturn(false);
 
     mockMvc.perform(put("/api/churches/Ghost")
+        .with(csrf())
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(buildChurch("Ghost"))))
         .andExpect(status().isNotFound());
@@ -161,7 +170,7 @@ class ChurchControllerTest {
   void delete_exists_returns204() throws Exception {
     when(churchService.existsById("Trinity")).thenReturn(true);
 
-    mockMvc.perform(delete("/api/churches/Trinity"))
+    mockMvc.perform(delete("/api/churches/Trinity").with(csrf()))
         .andExpect(status().isNoContent());
 
     verify(churchService).deleteById("Trinity");
@@ -172,7 +181,7 @@ class ChurchControllerTest {
   void delete_notFound_returns404() throws Exception {
     when(churchService.existsById("Ghost")).thenReturn(false);
 
-    mockMvc.perform(delete("/api/churches/Ghost"))
+    mockMvc.perform(delete("/api/churches/Ghost").with(csrf()))
         .andExpect(status().isNotFound());
   }
 }
