@@ -3,6 +3,7 @@ package org.iecr.diocesedashboard.webapp.controller;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -19,6 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -34,6 +36,9 @@ class ServiceInstanceControllerTest {
 
   @MockBean
   private ServiceInstanceService serviceInstanceService;
+
+  @MockBean
+  private UserDetailsService userDetailsService;
 
   private ServiceInstance buildInstance(Long id) {
     ServiceInstance i = new ServiceInstance();
@@ -144,7 +149,7 @@ class ServiceInstanceControllerTest {
   void delete_exists_returns204() throws Exception {
     when(serviceInstanceService.existsById(1L)).thenReturn(true);
 
-    mockMvc.perform(delete("/api/service-instances/1"))
+    mockMvc.perform(delete("/api/service-instances/1").with(csrf()))
         .andExpect(status().isNoContent());
 
     verify(serviceInstanceService).deleteById(1L);
@@ -155,14 +160,14 @@ class ServiceInstanceControllerTest {
   void delete_notFound_returns404() throws Exception {
     when(serviceInstanceService.existsById(99L)).thenReturn(false);
 
-    mockMvc.perform(delete("/api/service-instances/99"))
+    mockMvc.perform(delete("/api/service-instances/99").with(csrf()))
         .andExpect(status().isNotFound());
   }
 
   @Test
   @WithMockUser(roles = "USER")
   void delete_asUser_returns403() throws Exception {
-    mockMvc.perform(delete("/api/service-instances/1"))
+    mockMvc.perform(delete("/api/service-instances/1").with(csrf()))
         .andExpect(status().isForbidden());
   }
 }

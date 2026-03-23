@@ -4,6 +4,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -123,6 +124,7 @@ class UserControllerTest {
         .thenReturn(created);
 
     mockMvc.perform(post("/api/users")
+        .with(csrf())
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(adminRequest())))
         .andExpect(status().isCreated())
@@ -142,6 +144,7 @@ class UserControllerTest {
         any(Church.class))).thenReturn(created);
 
     mockMvc.perform(post("/api/users")
+        .with(csrf())
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(reporterRequest())))
         .andExpect(status().isCreated())
@@ -155,6 +158,7 @@ class UserControllerTest {
     UserRequest noPassword = new UserRequest("newuser", null, UserRole.ADMIN, null);
 
     mockMvc.perform(post("/api/users")
+        .with(csrf())
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(noPassword)))
         .andExpect(status().isBadRequest());
@@ -166,6 +170,7 @@ class UserControllerTest {
     UserRequest noChurch = new UserRequest("reporter2", "secret", UserRole.REPORTER, null);
 
     mockMvc.perform(post("/api/users")
+        .with(csrf())
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(noChurch)))
         .andExpect(status().isBadRequest());
@@ -182,6 +187,7 @@ class UserControllerTest {
         eq(UserRole.ADMIN), eq(null))).thenReturn(updated);
 
     mockMvc.perform(put("/api/users/1")
+        .with(csrf())
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(adminRequest())))
         .andExpect(status().isOk())
@@ -194,6 +200,7 @@ class UserControllerTest {
     when(userService.existsById(99L)).thenReturn(false);
 
     mockMvc.perform(put("/api/users/99")
+        .with(csrf())
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(adminRequest())))
         .andExpect(status().isNotFound());
@@ -206,7 +213,7 @@ class UserControllerTest {
   void delete_exists_returns204() throws Exception {
     when(userService.existsById(1L)).thenReturn(true);
 
-    mockMvc.perform(delete("/api/users/1"))
+    mockMvc.perform(delete("/api/users/1").with(csrf()))
         .andExpect(status().isNoContent());
 
     verify(userService).deleteById(1L);
@@ -217,7 +224,7 @@ class UserControllerTest {
   void delete_notFound_returns404() throws Exception {
     when(userService.existsById(99L)).thenReturn(false);
 
-    mockMvc.perform(delete("/api/users/99"))
+    mockMvc.perform(delete("/api/users/99").with(csrf()))
         .andExpect(status().isNotFound());
   }
 }

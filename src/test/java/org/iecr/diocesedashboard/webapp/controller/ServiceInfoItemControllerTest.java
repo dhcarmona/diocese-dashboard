@@ -3,6 +3,7 @@ package org.iecr.diocesedashboard.webapp.controller;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -23,6 +24,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -44,6 +46,9 @@ class ServiceInfoItemControllerTest {
 
   @MockBean
   private ServiceTemplateService serviceTemplateService;
+
+  @MockBean
+  private UserDetailsService userDetailsService;
 
   private ServiceInfoItem buildItem(Long id, String questionId) {
     ServiceInfoItem item = new ServiceInfoItem();
@@ -114,6 +119,7 @@ class ServiceInfoItemControllerTest {
 
     mockMvc.perform(post("/api/service-info-items")
         .param("templateId", "1")
+        .with(csrf())
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(item)))
         .andExpect(status().isCreated())
@@ -124,6 +130,7 @@ class ServiceInfoItemControllerTest {
   @WithMockUser(roles = "USER")
   void create_asUser_returns403() throws Exception {
     mockMvc.perform(post("/api/service-info-items")
+        .with(csrf())
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(buildItem(1L, "x"))))
         .andExpect(status().isForbidden());
@@ -143,6 +150,7 @@ class ServiceInfoItemControllerTest {
 
     mockMvc.perform(put("/api/service-info-items/1")
         .param("templateId", "1")
+        .with(csrf())
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(item)))
         .andExpect(status().isOk())
@@ -156,6 +164,7 @@ class ServiceInfoItemControllerTest {
 
     mockMvc.perform(put("/api/service-info-items/99")
         .param("templateId", "1")
+        .with(csrf())
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(buildItem(99L, "x"))))
         .andExpect(status().isNotFound());
@@ -168,7 +177,7 @@ class ServiceInfoItemControllerTest {
   void delete_exists_returns204() throws Exception {
     when(serviceInfoItemService.existsById(1L)).thenReturn(true);
 
-    mockMvc.perform(delete("/api/service-info-items/1"))
+    mockMvc.perform(delete("/api/service-info-items/1").with(csrf()))
         .andExpect(status().isNoContent());
 
     verify(serviceInfoItemService).deleteById(1L);
@@ -179,7 +188,7 @@ class ServiceInfoItemControllerTest {
   void delete_notFound_returns404() throws Exception {
     when(serviceInfoItemService.existsById(99L)).thenReturn(false);
 
-    mockMvc.perform(delete("/api/service-info-items/99"))
+    mockMvc.perform(delete("/api/service-info-items/99").with(csrf()))
         .andExpect(status().isNotFound());
   }
 }

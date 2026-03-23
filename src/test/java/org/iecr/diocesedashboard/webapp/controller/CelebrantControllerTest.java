@@ -3,6 +3,7 @@ package org.iecr.diocesedashboard.webapp.controller;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -20,6 +21,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -38,6 +40,9 @@ class CelebrantControllerTest {
 
   @MockBean
   private CelebrantService celebrantService;
+
+  @MockBean
+  private UserDetailsService userDetailsService;
 
   private Celebrant buildCelebrant(Long id, String name) {
     Celebrant c = new Celebrant();
@@ -111,6 +116,7 @@ class CelebrantControllerTest {
     when(celebrantService.save(any(Celebrant.class))).thenReturn(celebrant);
 
     mockMvc.perform(post("/api/celebrants")
+        .with(csrf())
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(celebrant)))
         .andExpect(status().isCreated())
@@ -121,6 +127,7 @@ class CelebrantControllerTest {
   @WithMockUser(roles = "USER")
   void create_asUser_returns403() throws Exception {
     mockMvc.perform(post("/api/celebrants")
+        .with(csrf())
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(buildCelebrant(1L, "X"))))
         .andExpect(status().isForbidden());
@@ -136,6 +143,7 @@ class CelebrantControllerTest {
     when(celebrantService.save(any(Celebrant.class))).thenReturn(celebrant);
 
     mockMvc.perform(put("/api/celebrants/1")
+        .with(csrf())
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(celebrant)))
         .andExpect(status().isOk())
@@ -148,6 +156,7 @@ class CelebrantControllerTest {
     when(celebrantService.existsById(99L)).thenReturn(false);
 
     mockMvc.perform(put("/api/celebrants/99")
+        .with(csrf())
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(buildCelebrant(99L, "Ghost"))))
         .andExpect(status().isNotFound());
@@ -160,7 +169,7 @@ class CelebrantControllerTest {
   void delete_exists_returns204() throws Exception {
     when(celebrantService.existsById(1L)).thenReturn(true);
 
-    mockMvc.perform(delete("/api/celebrants/1"))
+    mockMvc.perform(delete("/api/celebrants/1").with(csrf()))
         .andExpect(status().isNoContent());
 
     verify(celebrantService).deleteById(1L);
@@ -171,7 +180,7 @@ class CelebrantControllerTest {
   void delete_notFound_returns404() throws Exception {
     when(celebrantService.existsById(99L)).thenReturn(false);
 
-    mockMvc.perform(delete("/api/celebrants/99"))
+    mockMvc.perform(delete("/api/celebrants/99").with(csrf()))
         .andExpect(status().isNotFound());
   }
 }

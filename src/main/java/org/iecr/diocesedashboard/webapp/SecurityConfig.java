@@ -3,21 +3,42 @@ package org.iecr.diocesedashboard.webapp;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
-import org.springframework.security.config.Customizer;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.HttpStatusEntryPoint;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 
-/** Spring Security configuration: HTTP Basic Auth with role-based access control. */
+/**
+ * Spring Security configuration: form-based login with session cookies
+ * and CSRF protection via {@link CookieCsrfTokenRepository}.
+ */
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
 
+  private final UserDetailsService userDetailsService;
+
   /**
-   * Configures the security filter chain with CSRF disabled, role-based authorization rules,
-   * and HTTP Basic authentication.
+   * Constructs SecurityConfig with the application's {@link UserDetailsService}.
+   *
+   * @param userDetailsService the service used to load users during authentication
+   */
+  public SecurityConfig(UserDetailsService userDetailsService) {
+    this.userDetailsService = userDetailsService;
+  }
+
+  /**
+   * Configures the security filter chain with session-based form login,
+   * CSRF cookie support for the React SPA, and role-based authorization.
    *
    * @param http the {@link HttpSecurity} to configure
    * @return the configured {@link SecurityFilterChain}
@@ -26,29 +47,72 @@ public class SecurityConfig {
   @Bean
   public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
     http
-        // CSRF is disabled intentionally: this is a stateless REST API secured with HTTP Basic
-        // Auth and is currently intended for non-browser API clients that send credentials
-        // explicitly in the Authorization header (never cookies). If a browser-based frontend
-        // on the same origin starts calling these endpoints, or if cookie/session-based auth is
-        // added in the future, CSRF protection must be re-enabled (e.g. CookieCsrfTokenRepository).
-        .csrf(csrf -> csrf.disable())
+        .csrf(csrf -> csrf
+                .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+                .csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler())
+                // Login endpoint is exempt: the CSRF cookie is set on page load before the first login
+                .ignoringRequestMatchers("/api/auth/login")
+        )
         .authorizeHttpRequests(auth -> auth
+                .requestMatchers("/", "/index.html", "/assets/**", "/*.js",
+                    "/*.css", "/*.ico", "/*.svg", "/*.png").permitAll()
                 .requestMatchers(HttpMethod.GET, "/r/*").permitAll()
                 .requestMatchers(HttpMethod.GET, "/login").permitAll()
+                .requestMatchers("/api/auth/login", "/api/auth/logout").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/churches").hasAnyRole("ADMIN", "REPORTER")
                 .requestMatchers(HttpMethod.GET, "/api/celebrants").hasAnyRole("ADMIN", "REPORTER")
                 .requestMatchers(HttpMethod.GET, "/api/service-templates").hasAnyRole("ADMIN", "REPORTER")
                 .requestMatchers(HttpMethod.GET, "/api/service-templates/*").hasAnyRole("ADMIN", "REPORTER")
-                .requestMatchers(HttpMethod.POST, "/api/service-templates/*/submit").hasAnyRole("ADMIN", "REPORTER")
+                .requestMatchers(HttpMethod.POST, "/api/service-templates/*/submit")
+                .hasAnyRole("ADMIN", "REPORTER")
                 .requestMatchers(HttpMethod.GET, "/api/service-instances").hasAnyRole("ADMIN", "REPORTER")
                 .requestMatchers(HttpMethod.GET, "/api/service-instances/*").hasAnyRole("ADMIN", "REPORTER")
                 .requestMatchers(HttpMethod.GET, "/api/reporter-links/*").hasAnyRole("ADMIN", "REPORTER")
                 .requestMatchers(HttpMethod.POST, "/api/reporter-links/*/submit").hasRole("REPORTER")
                 .anyRequest().hasRole("ADMIN")
         )
-        .httpBasic(Customizer.withDefaults())
-        .formLogin(form -> form.permitAll());
+        .formLogin(form -> form
+                .loginProcessingUrl("/api/auth/login")
+                .successHandler((req, res, auth) -> res.setStatus(HttpStatus.OK.value()))
+                .failureHandler((req, res, ex) -> res.setStatus(HttpStatus.UNAUTHORIZED.value()))
+                .permitAll()
+        )
+        .logout(logout -> logout
+                .logoutUrl("/api/auth/logout")
+                .logoutSuccessHandler((req, res, auth) -> res.setStatus(HttpStatus.OK.value()))
+        )
+        .exceptionHandling(ex -> ex
+                .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))
+        )
+        .authenticationProvider(authenticationProvider());
     return http.build();
+  }
+
+  /**
+   * Creates the {@link DaoAuthenticationProvider} backed by the application's
+   * {@link UserDetailsService} and {@link PasswordEncoder}.
+   *
+   * @return configured authentication provider
+   */
+  @Bean
+  public DaoAuthenticationProvider authenticationProvider() {
+    DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
+    provider.setUserDetailsService(userDetailsService);
+    provider.setPasswordEncoder(passwordEncoder());
+    return provider;
+  }
+
+  /**
+   * Exposes the {@link AuthenticationManager} for use in custom auth flows.
+   *
+   * @param config Spring's authentication configuration
+   * @return the authentication manager
+   * @throws Exception if retrieval fails
+   */
+  @Bean
+  public AuthenticationManager authenticationManager(AuthenticationConfiguration config)
+      throws Exception {
+    return config.getAuthenticationManager();
   }
 
   /**

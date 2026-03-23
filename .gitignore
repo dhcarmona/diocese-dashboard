@@ -36,4 +36,9 @@ build/
 mvnw*
 .mvn/*
 
+### Frontend
+frontend/node/
+frontend/node_modules/
+src/main/resources/static/
+
 
