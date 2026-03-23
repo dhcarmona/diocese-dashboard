@@ -83,6 +83,17 @@ class ServiceTemplateControllerTest {
   }
 
   @Test
+  @WithMockUser(roles = "REPORTER")
+  void getAll_asReporter_returns200WithList() throws Exception {
+    when(serviceTemplateService.findAll()).thenReturn(
+        List.of(buildTemplate(1L, "Sunday Mass"), buildTemplate(2L, "Vespers")));
+
+    mockMvc.perform(get("/api/service-templates"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.length()").value(2));
+  }
+
+  @Test
   @WithMockUser(roles = "USER")
   void getAll_asUser_returns403() throws Exception {
     mockMvc.perform(get("/api/service-templates"))
@@ -201,7 +212,7 @@ class ServiceTemplateControllerTest {
 
   @Test
   @WithMockDashboardUser(role = UserRole.REPORTER, churchName = "Trinity")
-  void submit_asUser_validRequest_returns201() throws Exception {
+  void submit_asReporter_validRequest_returns201() throws Exception {
     ServiceInstance instance = new ServiceInstance();
     instance.setId(42L);
     when(serviceSubmissionService.submit(eq(1L), any(ServiceInstanceRequest.class)))

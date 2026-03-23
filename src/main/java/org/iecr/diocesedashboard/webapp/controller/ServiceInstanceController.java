@@ -6,6 +6,7 @@ import org.iecr.diocesedashboard.domain.objects.UserRole;
 import org.iecr.diocesedashboard.service.ServiceInstanceService;
 import org.iecr.diocesedashboard.webapp.DashboardUserDetails;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -39,6 +41,10 @@ public class ServiceInstanceController {
   public List<ServiceInstance> getAll(Authentication auth) {
     DashboardUser user = ((DashboardUserDetails) auth.getPrincipal()).getDashboardUser();
     if (user.getRole() == UserRole.REPORTER) {
+      if (user.getChurch() == null) {
+        throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+            "Reporter account has no church assigned");
+      }
       return serviceInstanceService.findByChurch(user.getChurch());
     }
     return serviceInstanceService.findAll();
