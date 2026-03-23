@@ -52,18 +52,20 @@ public class ReporterLinkController {
    * @return list of all reporter links
    */
   @GetMapping
-  public List<ReporterLink> getAll() {
-    return reporterLinkService.findAll();
+  public List<ReporterLinkResponse> getAll() {
+    return reporterLinkService.findAll().stream()
+        .map(ReporterLinkResponse::from)
+        .toList();
   }
 
   /**
    * Creates a new reporter link for a specific REPORTER user and service template. ADMIN only.
    *
    * @param request the creation request containing reporterId and serviceTemplateId
-   * @return 201 with the created {@link ReporterLink}
+   * @return 201 with the created reporter link details
    */
   @PostMapping
-  public ResponseEntity<ReporterLink> create(@RequestBody @Valid ReporterLinkRequest request) {
+  public ResponseEntity<ReporterLinkResponse> create(@RequestBody @Valid ReporterLinkRequest request) {
     DashboardUser reporter = userService.findById(request.reporterId())
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
             "User not found: " + request.reporterId()));
@@ -75,7 +77,7 @@ public class ReporterLinkController {
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
             "Service template not found: " + request.serviceTemplateId()));
     ReporterLink created = reporterLinkService.createLink(reporter, template);
-    return ResponseEntity.status(HttpStatus.CREATED).body(created);
+    return ResponseEntity.status(HttpStatus.CREATED).body(ReporterLinkResponse.from(created));
   }
 
   /**
@@ -87,9 +89,11 @@ public class ReporterLinkController {
    * @return 200 with the link, or 404 if not found
    */
   @GetMapping("/{token}")
-  public ResponseEntity<ReporterLink> getByToken(@PathVariable String token, Authentication auth) {
+  public ResponseEntity<ReporterLinkResponse> getByToken(@PathVariable String token,
+      Authentication auth) {
     return reporterLinkService.findByToken(token)
         .filter(link -> canAccess(link, auth))
+        .map(ReporterLinkResponse::from)
         .map(ResponseEntity::ok)
         .orElse(ResponseEntity.notFound().build());
   }
@@ -117,10 +121,10 @@ public class ReporterLinkController {
    * @param token   the link token
    * @param request the submission data (celebrants, date, responses)
    * @param auth    the current authentication
-   * @return 201 with the created service instance
+   * @return 201 with the created service instance identifier
    */
   @PostMapping("/{token}/submit")
-  public ResponseEntity<ServiceInstance> submit(@PathVariable String token,
+  public ResponseEntity<ReporterLinkSubmissionResponse> submit(@PathVariable String token,
       @RequestBody @Valid ReporterLinkSubmitRequest request, Authentication auth) {
     DashboardUser user = ((DashboardUserDetails) auth.getPrincipal()).getDashboardUser();
     ReporterLink link = reporterLinkService.findByToken(token)
@@ -141,7 +145,8 @@ public class ReporterLinkController {
         request.responses());
     ServiceInstance created = serviceSubmissionService.submit(
         link.getServiceTemplate().getId(), instanceRequest);
-    return ResponseEntity.status(HttpStatus.CREATED).body(created);
+    return ResponseEntity.status(HttpStatus.CREATED)
+        .body(ReporterLinkSubmissionResponse.from(created));
   }
 
   private boolean canAccess(ReporterLink link, Authentication auth) {
