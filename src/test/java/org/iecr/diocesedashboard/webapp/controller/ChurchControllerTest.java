@@ -66,7 +66,7 @@ class ChurchControllerTest {
 
   @Test
   @WithMockUser(roles = "REPORTER")
-  void getAll_asUser_returns200() throws Exception {
+  void getAll_asReporter_returns200() throws Exception {
     when(churchService.findAll()).thenReturn(List.of());
 
     mockMvc.perform(get("/api/churches"))
