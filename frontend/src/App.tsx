@@ -12,6 +12,7 @@ import { AuthProvider } from './auth/AuthProvider';
 import { useAuth } from './auth/auth-context';
 import AppShell from './components/AppShell';
 import LoginPage from './pages/LoginPage';
+import CelebrantManagementPage from './pages/CelebrantManagementPage';
 import FeaturePlaceholderPage from './pages/FeaturePlaceholderPage';
 import HomePage from './pages/HomePage';
 import TemplateSelectionPage from './pages/TemplateSelectionPage';
@@ -138,12 +139,7 @@ function AppRoutes() {
             />
             <Route
               path="/celebrants/manage"
-              element={
-                <FeaturePlaceholderPage
-                  titleKey="areas.celebrants.title"
-                  descriptionKey="areas.celebrants.description"
-                />
-              }
+              element={<CelebrantManagementPage />}
             />
             <Route
               path="/churches/manage"

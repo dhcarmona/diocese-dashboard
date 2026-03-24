@@ -95,6 +95,49 @@
       "description": "Esta área permitirá a los administradores crear enlaces para un reportero, una iglesia y una plantilla de servicio."
     }
   },
+  "celebrants": {
+    "subtitle": "Agregue, actualice y elimine celebrantes.",
+    "summary": {
+      "total": "Total de celebrantes"
+    },
+    "actions": {
+      "add": "Agregar celebrante",
+      "clearSearch": "Limpiar búsqueda",
+      "edit": "Editar",
+      "create": "Crear celebrante",
+      "save": "Guardar cambios",
+      "reset": "Comenzar nuevo",
+      "delete": "Eliminar celebrante"
+    },
+    "search": {
+      "label": "Buscar celebrantes",
+      "placeholder": "Buscar por nombre"
+    },
+    "list": {
+      "title": "Directorio de celebrantes",
+      "loading": "Cargando celebrantes...",
+      "loadError": "No se pudieron cargar los celebrantes en este momento.",
+      "empty": "Todavía no se han agregado celebrantes.",
+      "noMatches": "Ningún celebrante coincide con la búsqueda actual.",
+      "identifier": "Registro #{{id}}"
+    },
+    "form": {
+      "createTitle": "Agregar celebrante",
+      "editTitle": "Editar celebrante",
+      "nameLabel": "Nombre del celebrante",
+      "namePlaceholder": "Ingrese el nombre completo del celebrante"
+    },
+    "feedback": {
+      "created": "Se creó {{name}}.",
+      "updated": "Se actualizó {{name}}.",
+      "deleted": "Se eliminó {{name}}.",
+      "saveError": "No se pudo guardar el celebrante en este momento.",
+      "deleteError": "No se pudo eliminar el celebrante en este momento."
+    },
+    "validation": {
+      "nameRequired": "Ingrese un nombre de celebrante antes de guardar."
+    }
+  },
   "placeholder": {
     "title": "Esta área está lista para el siguiente paso de la interfaz.",
     "description": "El diseño de la página y la navegación ya están preparados para que el resto del flujo se agregue de forma consistente.",

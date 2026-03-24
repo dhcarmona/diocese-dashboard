@@ -40,11 +40,15 @@ export async function ensureCsrfToken(): Promise<void> {
   csrfToken = response.data.token;
 }
 
-export async function logout(): Promise<void> {
+export async function getCsrfHeaders(): Promise<Record<string, string>> {
   await ensureCsrfToken();
+  return { [csrfHeaderName ?? 'X-CSRF-TOKEN']: csrfToken ?? '' };
+}
+
+export async function logout(): Promise<void> {
   try {
     await api.post('/api/auth/logout', undefined, {
-      headers: { [csrfHeaderName ?? 'X-CSRF-TOKEN']: csrfToken ?? '' },
+      headers: await getCsrfHeaders(),
     });
   } finally {
     csrfHeaderName = null;
