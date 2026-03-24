@@ -11,13 +11,19 @@ import Typography from '@mui/material/Typography';
 import { useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { login } from '../api/auth';
+import { isBackendUnavailableError, isUnauthorizedError } from '../api/auth';
+import { useAuth } from '../auth/auth-context';
+import LanguageSwitcher from '../components/LanguageSwitcher';
 
-type LoginErrorKey = 'login.invalidCredentials';
+type LoginErrorKey =
+  | 'login.invalidCredentials'
+  | 'login.genericError'
+  | 'auth.backendUnavailable';
 
 export default function LoginPage() {
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const { signIn, status, authErrorKey } = useAuth();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -28,26 +34,25 @@ export default function LoginPage() {
     setErrorKey(null);
     setLoading(true);
     try {
-      await login(username, password);
+      await signIn(username, password);
       navigate('/');
-    } catch {
-      setErrorKey('login.invalidCredentials');
+    } catch (error) {
+      if (isUnauthorizedError(error)) {
+        setErrorKey('login.invalidCredentials');
+      } else if (isBackendUnavailableError(error)) {
+        setErrorKey('auth.backendUnavailable');
+      } else {
+        setErrorKey('login.genericError');
+      }
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <Box
-      sx={{
-        minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        bgcolor: 'grey.100',
-      }}
-    >
-      <Card sx={{ width: 400, p: 2 }} elevation={4}>
+    <Box sx={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: 'grey.100', px: 2 }}>
+      <LanguageSwitcher />
+      <Card sx={{ width: 420, p: 2 }} elevation={4}>
         <CardContent>
           <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 3 }}>
             <Avatar sx={{ bgcolor: 'primary.main', mb: 1 }}>
@@ -60,6 +65,12 @@ export default function LoginPage() {
               {t('login.subtitle')}
             </Typography>
           </Box>
+
+          {status === 'error' && (
+            <Alert severity="error" sx={{ mb: 2 }}>
+              {t(authErrorKey ?? 'auth.sessionLoadFailed')}
+            </Alert>
+          )}
 
           {errorKey && (
             <Alert severity="error" sx={{ mb: 2 }}>
@@ -92,11 +103,11 @@ export default function LoginPage() {
             />
             <Button
               type="submit"
-              fullWidth
-              variant="contained"
-              size="large"
-              sx={{ mt: 3 }}
-              disabled={loading || !username || !password}
+               fullWidth
+               variant="contained"
+               size="large"
+               sx={{ mt: 3 }}
+               disabled={loading || !username || !password}
             >
               {loading ? <CircularProgress size={24} color="inherit" /> : t('login.signIn')}
             </Button>

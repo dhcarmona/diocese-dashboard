@@ -206,4 +206,12 @@ class UserServiceTest {
     assertThat(userService.existsByUsername("admin")).isTrue();
     verify(userRepository).existsByUsername("admin");
   }
+
+  @Test
+  void existsByRole_delegatesToRepository() {
+    when(userRepository.existsByRole(UserRole.ADMIN)).thenReturn(true);
+
+    assertThat(userService.existsByRole(UserRole.ADMIN)).isTrue();
+    verify(userRepository).existsByRole(UserRole.ADMIN);
+  }
 }

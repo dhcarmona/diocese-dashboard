@@ -4,9 +4,15 @@ import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 import type { MouseEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 
+interface LanguageSwitcherProps {
+  placement?: 'fixed' | 'static';
+}
+
 /** Unobtrusive fixed language toggle shown on every page. */
-export default function LanguageSwitcher() {
-  const { i18n } = useTranslation();
+export default function LanguageSwitcher({
+  placement = 'fixed',
+}: Readonly<LanguageSwitcherProps>) {
+  const { i18n, t } = useTranslation();
   const current = i18n.language.startsWith('es') ? 'es' : 'en';
 
   function handleChange(_e: MouseEvent<HTMLElement>, lang: string | null) {
@@ -14,12 +20,18 @@ export default function LanguageSwitcher() {
   }
 
   return (
-    <Box sx={{ position: 'fixed', top: 16, right: 16, zIndex: 1300 }}>
+    <Box
+      sx={
+        placement === 'fixed'
+          ? { position: 'fixed', top: 16, right: 16, zIndex: 1300 }
+          : undefined
+      }
+    >
       <ToggleButtonGroup value={current} exclusive onChange={handleChange} size="small">
-        <ToggleButton value="en" aria-label="English">
+        <ToggleButton value="en" aria-label={t('language.english')}>
           EN
         </ToggleButton>
-        <ToggleButton value="es" aria-label="Spanish">
+        <ToggleButton value="es" aria-label={t('language.spanish')}>
           ES
         </ToggleButton>
       </ToggleButtonGroup>

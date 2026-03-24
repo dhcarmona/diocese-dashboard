@@ -34,7 +34,7 @@ describe('LanguageSwitcher', () => {
   it('marks ES as selected after switching to Spanish', async () => {
     await i18n.changeLanguage('es');
     render(<LanguageSwitcher />);
-    expect(screen.getByRole('button', { name: 'Spanish' })).toHaveAttribute('aria-pressed', 'true');
-    expect(screen.getByRole('button', { name: 'English' })).toHaveAttribute('aria-pressed', 'false');
+    expect(screen.getByRole('button', { name: 'Español' })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('button', { name: 'Inglés' })).toHaveAttribute('aria-pressed', 'false');
   });
 });

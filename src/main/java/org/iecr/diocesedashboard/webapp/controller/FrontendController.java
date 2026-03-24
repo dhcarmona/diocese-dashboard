@@ -4,19 +4,27 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 
 /**
- * Forwards all non-API, non-static GET requests to the React SPA's index.html,
- * enabling client-side routing via React Router.
+ * Forwards known React SPA routes to index.html, enabling client-side routing
+ * without intercepting static asset requests.
  */
 @Controller
 public class FrontendController {
 
   /**
-   * Catches any path segment without a file extension and forwards to index.html.
-   * Static assets (e.g. /assets/main.js) are excluded because they contain a dot.
+   * Forwards supported SPA routes to index.html.
    *
    * @return a forward directive to index.html
    */
-  @GetMapping(value = {"/{path:[^\\.]*}", "/{path:[^\\.]*}/**"})
+  @GetMapping(value = {
+      "/login",
+      "/reports/new",
+      "/submit/service-templates/{templateId}",
+      "/service-templates/manage",
+      "/users/manage",
+      "/celebrants/manage",
+      "/churches/manage",
+      "/reporter-links/manage"
+  })
   public String forwardToIndex() {
     return "forward:/index.html";
   }

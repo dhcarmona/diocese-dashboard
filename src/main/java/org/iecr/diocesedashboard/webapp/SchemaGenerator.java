@@ -56,6 +56,9 @@ public class SchemaGenerator {
   private void configureOfflineSchemaExport(Configuration cfg) {
     cfg.setProperty("hibernate.boot.allow_jdbc_metadata_access", "false");
     cfg.setProperty("hibernate.dialect", "org.hibernate.dialect.PostgreSQLDialect");
+    cfg.setProperty(
+        "hibernate.physical_naming_strategy",
+        "org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy");
     removeConnectionProperty(cfg, "connection.driver_class");
     removeConnectionProperty(cfg, "connection.url");
     removeConnectionProperty(cfg, "connection.username");

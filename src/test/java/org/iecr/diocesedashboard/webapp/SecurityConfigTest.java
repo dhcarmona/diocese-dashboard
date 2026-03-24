@@ -6,26 +6,33 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.iecr.diocesedashboard.domain.objects.DashboardUser;
 import org.iecr.diocesedashboard.domain.objects.UserRole;
+import org.iecr.diocesedashboard.webapp.controller.AuthController;
 import org.iecr.diocesedashboard.webapp.controller.FrontendController;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
+import org.springframework.mock.web.MockHttpSession;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 
 /**
  * Integration tests for {@link SecurityConfig} authorization rules, login/logout
  * behavior, static asset access, and CSRF enforcement.
  */
-@WebMvcTest(FrontendController.class)
+@WebMvcTest({FrontendController.class, AuthController.class})
 @Import(SecurityConfig.class)
 class SecurityConfigTest {
+
+  private final ObjectMapper objectMapper = new ObjectMapper();
 
   @Autowired
   private MockMvc mockMvc;
@@ -103,6 +110,12 @@ class SecurityConfigTest {
         .andExpect(status().isUnauthorized());
   }
 
+  @Test
+  void unauthenticatedCurrentUserRequest_returns401NotRedirect() throws Exception {
+    mockMvc.perform(get("/api/auth/me"))
+        .andExpect(status().isUnauthorized());
+  }
+
   // ---------------------------------------------------------------------------
   // Static assets and public pages are accessible without authentication
   // ---------------------------------------------------------------------------
@@ -122,6 +135,17 @@ class SecurityConfigTest {
     mockMvc.perform(get("/login")).andExpect(status().isOk());
   }
 
+  @Test
+  void nestedSpaRoute_noAuth_returns200() throws Exception {
+    mockMvc.perform(get("/users/manage")).andExpect(status().isOk());
+  }
+
+  @Test
+  void missingAsset_noAuth_returns404InsteadOfSpaHtml() throws Exception {
+    mockMvc.perform(get("/assets/does-not-exist.js"))
+        .andExpect(status().isNotFound());
+  }
+
   // ---------------------------------------------------------------------------
   // anyRequest() catch-all requires ADMIN
   // ---------------------------------------------------------------------------
@@ -137,6 +161,13 @@ class SecurityConfigTest {
   void unknownEndpoint_reporter_returns403() throws Exception {
     mockMvc.perform(get("/v1.0/some-endpoint"))
         .andExpect(status().isForbidden());
+  }
+
+  @Test
+  @WithMockDashboardUser(role = UserRole.REPORTER)
+  void currentUser_reporter_passesSecurityLayer() throws Exception {
+    mockMvc.perform(get("/api/auth/me"))
+        .andExpect(status().isOk());
   }
 
   @Test
@@ -162,10 +193,10 @@ class SecurityConfigTest {
   @Test
   @WithMockDashboardUser
   void postWithCsrfToken_passesSecurityLayer() throws Exception {
-    // 405 means security allowed it through — FrontendController only handles GET,
-    // so Spring rejects the POST method rather than returning 403/401
+    // 404 means security allowed it through — this slice test does not load
+    // ChurchController, so Spring reports that no handler exists.
     mockMvc.perform(post("/api/churches").with(csrf()))
-        .andExpect(status().isMethodNotAllowed());
+        .andExpect(status().isNotFound());
   }
 
   @Test
@@ -178,6 +209,21 @@ class SecurityConfigTest {
         .param("username", "nobody")
         .param("password", "anything"))
         .andExpect(status().isUnauthorized()); // 401, not 403 — CSRF did not block it
+  }
+
+  @Test
+  @WithMockDashboardUser
+  void logout_withBootstrapCsrfToken_returns200() throws Exception {
+    MvcResult csrfResult = mockMvc.perform(get("/api/auth/csrf"))
+        .andExpect(status().isOk())
+        .andReturn();
+    MockHttpSession session = (MockHttpSession) csrfResult.getRequest().getSession(false);
+    JsonNode csrfPayload = objectMapper.readTree(csrfResult.getResponse().getContentAsString());
+
+    mockMvc.perform(post("/api/auth/logout")
+        .session(session)
+        .header(csrfPayload.get("headerName").asText(), csrfPayload.get("token").asText()))
+        .andExpect(status().isOk());
   }
 
   // ---------------------------------------------------------------------------

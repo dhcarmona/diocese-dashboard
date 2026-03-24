@@ -1,10 +1,103 @@
 {
+  "auth": {
+    "sessionLoadFailed": "We could not load your session.",
+    "backendUnavailable": "We cannot reach the server right now. If you are running the app locally, start the backend with \"mvn package spring-boot:run\" and try again.",
+    "loading": "Loading...",
+    "tryAgain": "Try Again"
+  },
+  "common": {
+    "appName": "Diocese Dashboard",
+    "signOut": "Sign Out"
+  },
+  "shell": {
+    "signedInAs": "Signed in as {{username}}"
+  },
+  "language": {
+    "english": "English",
+    "spanish": "Spanish"
+  },
   "login": {
     "title": "Diocese Dashboard",
     "subtitle": "Episcopal Church in Costa Rica",
     "username": "Username",
     "password": "Password",
     "signIn": "Sign In",
-    "invalidCredentials": "Invalid username or password."
+    "invalidCredentials": "Invalid username or password.",
+    "genericError": "We could not sign you in right now. Please try again."
+  },
+  "navigation": {
+    "home": "Home"
+  },
+  "home": {
+    "title": "Home",
+    "subtitleReporter": "Choose the service report you want to submit.",
+    "subtitleAdmin": "Choose the task you want to complete.",
+    "tiles": {
+      "submitReport": {
+        "title": "Submit a Service Report",
+        "description": "Choose a service template and enter a new report."
+      },
+      "createServiceTemplates": {
+        "title": "Create Service Templates",
+        "description": "Add or update the templates used for service reports."
+      },
+      "createReporterUsers": {
+        "title": "Create Reporter Users",
+        "description": "Create and manage reporter accounts for each church."
+      },
+      "manageCelebrants": {
+        "title": "Manage Celebrants",
+        "description": "Add, update, or remove celebrants."
+      },
+      "manageChurches": {
+        "title": "Manage Churches",
+        "description": "Add, update, or remove churches."
+      },
+      "createReporterLinks": {
+        "title": "Create Reporter Links",
+        "description": "Create links for a specific reporter, church, and template."
+      }
+    }
+  },
+  "reports": {
+    "templateSelection": {
+      "title": "Choose a Service Template",
+      "subtitle": "Select the type of service you want to report.",
+      "loading": "Loading templates...",
+      "loadError": "We could not load the service templates.",
+      "empty": "There are no service templates available yet.",
+      "tileDescription": "Open this template and continue with the report."
+    }
+  },
+  "areas": {
+    "submitService": {
+      "title": "Submit Service Report",
+      "description": "This is where the selected template's report form will appear."
+    },
+    "serviceTemplates": {
+      "title": "Service Templates",
+      "description": "This area will let administrators create and manage service templates."
+    },
+    "users": {
+      "title": "Reporter Users",
+      "description": "This area will let administrators create and manage reporter users."
+    },
+    "celebrants": {
+      "title": "Celebrants",
+      "description": "This area will let administrators add, edit, and remove celebrants."
+    },
+    "churches": {
+      "title": "Churches",
+      "description": "This area will let administrators add, edit, and remove churches."
+    },
+    "reporterLinks": {
+      "title": "Reporter Links",
+      "description": "This area will let administrators create links for a reporter, church, and service template."
+    }
+  },
+  "placeholder": {
+    "title": "This area is ready for the next UI step.",
+    "description": "The page layout and navigation are in place so the rest of the workflow can be added consistently.",
+    "backHome": "Back to Home"
   }
 }

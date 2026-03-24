@@ -2,6 +2,7 @@ package org.iecr.diocesedashboard.webapp;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -10,12 +11,11 @@ import org.springframework.security.config.annotation.authentication.configurati
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
-import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
+import org.springframework.security.web.csrf.HttpSessionCsrfTokenRepository;
 
 /**
  * Spring Security configuration: form-based login with session cookies
@@ -23,17 +23,21 @@ import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
  */
 @Configuration
 @EnableWebSecurity
+@Import(PasswordConfig.class)
 public class SecurityConfig {
 
   private final UserDetailsService userDetailsService;
+  private final PasswordEncoder passwordEncoder;
 
   /**
    * Constructs SecurityConfig with the application's {@link UserDetailsService}.
    *
    * @param userDetailsService the service used to load users during authentication
+   * @param passwordEncoder the password encoder used for authentication
    */
-  public SecurityConfig(UserDetailsService userDetailsService) {
+  public SecurityConfig(UserDetailsService userDetailsService, PasswordEncoder passwordEncoder) {
     this.userDetailsService = userDetailsService;
+    this.passwordEncoder = passwordEncoder;
   }
 
   /**
@@ -46,9 +50,11 @@ public class SecurityConfig {
    */
   @Bean
   public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    HttpSessionCsrfTokenRepository csrfTokenRepository = new HttpSessionCsrfTokenRepository();
+    csrfTokenRepository.setHeaderName("X-CSRF-TOKEN");
     http
         .csrf(csrf -> csrf
-                .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+                .csrfTokenRepository(csrfTokenRepository)
                 .csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler())
                 // Login endpoint is exempt: the CSRF cookie is set on page load before the first login
                 .ignoringRequestMatchers("/api/auth/login")
@@ -57,8 +63,16 @@ public class SecurityConfig {
                 .requestMatchers("/", "/index.html", "/assets/**", "/*.js",
                     "/*.css", "/*.ico", "/*.svg", "/*.png").permitAll()
                 .requestMatchers(HttpMethod.GET, "/r/*").permitAll()
-                .requestMatchers(HttpMethod.GET, "/login").permitAll()
+                .requestMatchers(HttpMethod.GET, "/login", "/reports/new").permitAll()
+                .requestMatchers(HttpMethod.GET, "/submit/service-templates/*").permitAll()
+                .requestMatchers(HttpMethod.GET, "/service-templates/manage").permitAll()
+                .requestMatchers(HttpMethod.GET, "/users/manage").permitAll()
+                .requestMatchers(HttpMethod.GET, "/celebrants/manage").permitAll()
+                .requestMatchers(HttpMethod.GET, "/churches/manage").permitAll()
+                .requestMatchers(HttpMethod.GET, "/reporter-links/manage").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/auth/csrf").permitAll()
                 .requestMatchers("/api/auth/login", "/api/auth/logout").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/auth/me").hasAnyRole("ADMIN", "REPORTER")
                 .requestMatchers(HttpMethod.GET, "/api/churches").hasAnyRole("ADMIN", "REPORTER")
                 .requestMatchers(HttpMethod.GET, "/api/celebrants").hasAnyRole("ADMIN", "REPORTER")
                 .requestMatchers(HttpMethod.GET, "/api/service-templates").hasAnyRole("ADMIN", "REPORTER")
@@ -98,7 +112,7 @@ public class SecurityConfig {
   public DaoAuthenticationProvider authenticationProvider() {
     DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
     provider.setUserDetailsService(userDetailsService);
-    provider.setPasswordEncoder(passwordEncoder());
+    provider.setPasswordEncoder(passwordEncoder);
     return provider;
   }
 
@@ -113,16 +127,6 @@ public class SecurityConfig {
   public AuthenticationManager authenticationManager(AuthenticationConfiguration config)
       throws Exception {
     return config.getAuthenticationManager();
-  }
-
-  /**
-   * Returns a BCrypt password encoder.
-   *
-   * @return a {@link BCryptPasswordEncoder} instance
-   */
-  @Bean
-  public PasswordEncoder passwordEncoder() {
-    return new BCryptPasswordEncoder();
   }
 
 }
