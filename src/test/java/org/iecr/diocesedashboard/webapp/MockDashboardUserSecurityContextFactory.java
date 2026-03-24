@@ -22,23 +22,33 @@ public class MockDashboardUserSecurityContextFactory
     user.setPasswordHash("$2a$10$mockhash");
     user.setRole(annotation.role());
     user.setEnabled(true);
-    Set<Church> churches = new LinkedHashSet<>();
-    if (!annotation.churchName().isEmpty()) {
-      Church church = new Church();
-      church.setName(annotation.churchName());
-      churches.add(church);
-    }
-    for (String churchName : annotation.churchNames()) {
-      Church church = new Church();
-      church.setName(churchName);
-      churches.add(church);
-    }
-    user.setAssignedChurches(churches);
+    user.setAssignedChurches(buildChurches(annotation));
     DashboardUserDetails details = new DashboardUserDetails(user);
     UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
         details, "password", details.getAuthorities());
     SecurityContext context = SecurityContextHolder.createEmptyContext();
     context.setAuthentication(auth);
     return context;
+  }
+
+  private Set<Church> buildChurches(WithMockDashboardUser annotation) {
+    Set<String> churchNames = new LinkedHashSet<>();
+    addChurchName(churchNames, annotation.churchName());
+    for (String churchName : annotation.churchNames()) {
+      addChurchName(churchNames, churchName);
+    }
+    Set<Church> churches = new LinkedHashSet<>();
+    for (String churchName : churchNames) {
+      Church church = new Church();
+      church.setName(churchName);
+      churches.add(church);
+    }
+    return churches;
+  }
+
+  private void addChurchName(Set<String> churchNames, String churchName) {
+    if (churchName != null && !churchName.isBlank()) {
+      churchNames.add(churchName);
+    }
   }
 }

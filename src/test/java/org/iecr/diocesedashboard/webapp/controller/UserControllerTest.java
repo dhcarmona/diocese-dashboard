@@ -29,7 +29,6 @@ import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -202,13 +201,18 @@ class UserControllerTest {
     when(churchService.findById("Trinity")).thenReturn(Optional.of(church));
     when(userService.createUser(eq("reporter1"), eq("secret123"), eq(UserRole.REPORTER),
         anySet())).thenReturn(created);
-    UserRequest request = new UserRequest("reporter1", "secret123", UserRole.REPORTER,
-        new LinkedHashSet<>(List.of("Trinity", "Trinity")));
 
     mockMvc.perform(post("/api/users")
         .with(csrf())
         .contentType(MediaType.APPLICATION_JSON)
-        .content(objectMapper.writeValueAsString(request)))
+        .content("""
+            {
+              "username": "reporter1",
+              "password": "secret123",
+              "role": "REPORTER",
+              "churchNames": ["Trinity", "Trinity"]
+            }
+            """))
         .andExpect(status().isCreated());
 
     verify(userService).createUser(eq("reporter1"), eq("secret123"), eq(UserRole.REPORTER),
