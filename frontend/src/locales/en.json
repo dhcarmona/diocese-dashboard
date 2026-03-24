@@ -95,6 +95,49 @@
       "description": "This area will let administrators create links for a reporter, church, and service template."
     }
   },
+  "celebrants": {
+    "subtitle": "Add, update, and remove celebrants.",
+    "summary": {
+      "total": "Total celebrants"
+    },
+    "actions": {
+      "add": "Add Celebrant",
+      "clearSearch": "Clear Search",
+      "edit": "Edit",
+      "create": "Create Celebrant",
+      "save": "Save Changes",
+      "reset": "Start New",
+      "delete": "Delete Celebrant"
+    },
+    "search": {
+      "label": "Search celebrants",
+      "placeholder": "Search by name"
+    },
+    "list": {
+      "title": "Celebrant directory",
+      "loading": "Loading celebrants...",
+      "loadError": "We could not load the celebrants right now.",
+      "empty": "No celebrants have been added yet.",
+      "noMatches": "No celebrants match the current search.",
+      "identifier": "Record #{{id}}"
+    },
+    "form": {
+      "createTitle": "Add Celebrant",
+      "editTitle": "Edit Celebrant",
+      "nameLabel": "Celebrant name",
+      "namePlaceholder": "Enter the celebrant's full name"
+    },
+    "feedback": {
+      "created": "{{name}} was created.",
+      "updated": "{{name}} was updated.",
+      "deleted": "{{name}} was removed.",
+      "saveError": "We could not save the celebrant right now.",
+      "deleteError": "We could not delete the celebrant right now."
+    },
+    "validation": {
+      "nameRequired": "Enter a celebrant name before saving."
+    }
+  },
   "placeholder": {
     "title": "This area is ready for the next UI step.",
     "description": "The page layout and navigation are in place so the rest of the workflow can be added consistently.",
