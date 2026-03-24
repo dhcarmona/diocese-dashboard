@@ -19,7 +19,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 /** REST controller for managing user accounts (ADMIN only). */
 @RestController
@@ -70,15 +72,15 @@ public class UserController {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
           "Password is required when creating a user");
     }
-    Church church = resolveChurch(request.churchName());
+    Set<Church> churches = resolveChurches(request.churchNames());
     if (request.role() == UserRole.ADMIN) {
-      church = null;
-    } else if (request.role() == UserRole.REPORTER && church == null) {
+      churches = Set.of();
+    } else if (request.role() == UserRole.REPORTER && churches.isEmpty()) {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-          "churchName is required for REPORTER role");
+          "churchNames is required for REPORTER role");
     }
     DashboardUser created = userService.createUser(
-        request.username(), request.password(), request.role(), church);
+        request.username(), request.password(), request.role(), churches);
     return ResponseEntity.status(HttpStatus.CREATED).body(created);
   }
 
@@ -95,15 +97,15 @@ public class UserController {
     if (!userService.existsById(id)) {
       return ResponseEntity.notFound().build();
     }
-    Church church = resolveChurch(request.churchName());
+    Set<Church> churches = resolveChurches(request.churchNames());
     if (request.role() == UserRole.ADMIN) {
-      church = null;
-    } else if (request.role() == UserRole.REPORTER && church == null) {
+      churches = Set.of();
+    } else if (request.role() == UserRole.REPORTER && churches.isEmpty()) {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-          "churchName is required for REPORTER role");
+          "churchNames is required for REPORTER role");
     }
     DashboardUser updated = userService.updateUser(
-        id, request.username(), request.password(), request.role(), church);
+        id, request.username(), request.password(), request.role(), churches);
     return ResponseEntity.ok(updated);
   }
 
@@ -122,12 +124,21 @@ public class UserController {
     return ResponseEntity.noContent().build();
   }
 
-  private Church resolveChurch(String churchName) {
-    if (churchName == null || churchName.isBlank()) {
-      return null;
+  private Set<Church> resolveChurches(Set<String> churchNames) {
+    Set<Church> churches = new LinkedHashSet<>();
+    if (churchNames == null) {
+      return churches;
     }
-    return churchService.findById(churchName)
-        .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
-            "Church not found: " + churchName));
+    for (String churchName : churchNames) {
+      if (churchName == null || churchName.isBlank()) {
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+            "churchNames may not contain blank values");
+      }
+      Church church = churchService.findById(churchName)
+          .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
+              "Church not found: " + churchName));
+      churches.add(church);
+    }
+    return churches;
   }
 }

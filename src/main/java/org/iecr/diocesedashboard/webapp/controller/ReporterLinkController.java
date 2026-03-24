@@ -1,10 +1,12 @@
 package org.iecr.diocesedashboard.webapp.controller;
 
 import jakarta.validation.Valid;
+import org.iecr.diocesedashboard.domain.objects.Church;
 import org.iecr.diocesedashboard.domain.objects.DashboardUser;
 import org.iecr.diocesedashboard.domain.objects.ReporterLink;
 import org.iecr.diocesedashboard.domain.objects.ServiceInstance;
 import org.iecr.diocesedashboard.domain.objects.UserRole;
+import org.iecr.diocesedashboard.service.ChurchService;
 import org.iecr.diocesedashboard.service.ReporterLinkService;
 import org.iecr.diocesedashboard.service.ServiceSubmissionService;
 import org.iecr.diocesedashboard.service.ServiceTemplateService;
@@ -32,16 +34,18 @@ public class ReporterLinkController {
 
   private final ReporterLinkService reporterLinkService;
   private final UserService userService;
+  private final ChurchService churchService;
   private final ServiceTemplateService serviceTemplateService;
   private final ServiceSubmissionService serviceSubmissionService;
 
   @Autowired
   public ReporterLinkController(ReporterLinkService reporterLinkService,
-      UserService userService,
+      UserService userService, ChurchService churchService,
       ServiceTemplateService serviceTemplateService,
       ServiceSubmissionService serviceSubmissionService) {
     this.reporterLinkService = reporterLinkService;
     this.userService = userService;
+    this.churchService = churchService;
     this.serviceTemplateService = serviceTemplateService;
     this.serviceSubmissionService = serviceSubmissionService;
   }
@@ -73,10 +77,17 @@ public class ReporterLinkController {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
           "Target user must have the REPORTER role");
     }
+    Church church = churchService.findById(request.churchName())
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
+            "Church not found: " + request.churchName()));
+    if (!reporter.isAssignedToChurch(church)) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+          "Reporter is not assigned to church: " + request.churchName());
+    }
     var template = serviceTemplateService.findById(request.serviceTemplateId())
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
             "Service template not found: " + request.serviceTemplateId()));
-    ReporterLink created = reporterLinkService.createLink(reporter, template);
+    ReporterLink created = reporterLinkService.createLink(reporter, church, template);
     return ResponseEntity.status(HttpStatus.CREATED).body(ReporterLinkResponse.from(created));
   }
 
@@ -115,8 +126,8 @@ public class ReporterLinkController {
 
   /**
    * Submits a new service instance via the reporter link identified by the given token.
-   * The service template is resolved from the link; the church is taken from the
-   * authenticated reporter's profile. Only the reporter named in the link may submit.
+   * The service template and church are resolved from the link itself. Only the reporter
+   * named in the link may submit.
    *
    * @param token   the link token
    * @param request the submission data (celebrants, date, responses)
@@ -134,12 +145,12 @@ public class ReporterLinkController {
       throw new ResponseStatusException(HttpStatus.FORBIDDEN,
           "This link does not belong to the authenticated user");
     }
-    if (user.getChurch() == null) {
+    if (!user.isAssignedToChurch(link.getChurch())) {
       throw new ResponseStatusException(HttpStatus.FORBIDDEN,
-          "Reporter account has no church assigned");
+          "Reporter account is not assigned to this church");
     }
     ServiceInstanceRequest instanceRequest = new ServiceInstanceRequest(
-        user.getChurch().getName(),
+        link.getChurch().getName(),
         request.celebrantIds(),
         request.serviceDate(),
         request.responses());

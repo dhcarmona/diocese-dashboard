@@ -9,4 +9,6 @@ import java.util.List;
 public interface ServiceInstanceRepository extends JpaRepository<ServiceInstance, Long> {
 
   List<ServiceInstance> findByChurch(Church church);
+
+  List<ServiceInstance> findByChurchIn(Iterable<Church> churches);
 }

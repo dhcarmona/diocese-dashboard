@@ -1,5 +1,6 @@
 package org.iecr.diocesedashboard.service;
 
+import org.iecr.diocesedashboard.domain.objects.Church;
 import org.iecr.diocesedashboard.domain.objects.DashboardUser;
 import org.iecr.diocesedashboard.domain.objects.ReporterLink;
 import org.iecr.diocesedashboard.domain.objects.ServiceTemplate;
@@ -28,13 +29,16 @@ public class ReporterLinkService {
    * A unique UUID token is generated automatically.
    *
    * @param reporter        the REPORTER user to link
+   * @param church          the church this link is valid for
    * @param serviceTemplate the service template to associate with the link
    * @return the saved {@link ReporterLink}
    */
-  public ReporterLink createLink(DashboardUser reporter, ServiceTemplate serviceTemplate) {
+  public ReporterLink createLink(DashboardUser reporter, Church church,
+      ServiceTemplate serviceTemplate) {
     ReporterLink link = new ReporterLink();
     link.setToken(UUID.randomUUID().toString());
     link.setReporter(reporter);
+    link.setChurch(church);
     link.setServiceTemplate(serviceTemplate);
     return reporterLinkRepository.save(link);
   }

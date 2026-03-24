@@ -7,6 +7,9 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.test.context.support.WithSecurityContextFactory;
 
+import java.util.LinkedHashSet;
+import java.util.Set;
+
 /** Factory that builds a {@link SecurityContext} containing a {@link DashboardUserDetails}. */
 public class MockDashboardUserSecurityContextFactory
     implements WithSecurityContextFactory<WithMockDashboardUser> {
@@ -19,11 +22,18 @@ public class MockDashboardUserSecurityContextFactory
     user.setPasswordHash("$2a$10$mockhash");
     user.setRole(annotation.role());
     user.setEnabled(true);
+    Set<Church> churches = new LinkedHashSet<>();
     if (!annotation.churchName().isEmpty()) {
       Church church = new Church();
       church.setName(annotation.churchName());
-      user.setChurch(church);
+      churches.add(church);
     }
+    for (String churchName : annotation.churchNames()) {
+      Church church = new Church();
+      church.setName(churchName);
+      churches.add(church);
+    }
+    user.setAssignedChurches(churches);
     DashboardUserDetails details = new DashboardUserDetails(user);
     UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
         details, "password", details.getAuthorities());

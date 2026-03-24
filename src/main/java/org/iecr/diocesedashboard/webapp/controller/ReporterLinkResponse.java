@@ -10,6 +10,7 @@ Long id,
 String token,
 Long reporterId,
 String reporterUsername,
+String churchName,
 Long serviceTemplateId,
 String serviceTemplateName) {
 
@@ -25,6 +26,7 @@ String serviceTemplateName) {
         reporterLink.getToken(),
         reporterLink.getReporter().getId(),
         reporterLink.getReporter().getUsername(),
+        reporterLink.getChurch().getName(),
         reporterLink.getServiceTemplate().getId(),
         reporterLink.getServiceTemplate().getServiceTemplateName());
   }

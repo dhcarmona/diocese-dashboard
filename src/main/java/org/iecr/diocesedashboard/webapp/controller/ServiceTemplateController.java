@@ -112,7 +112,7 @@ public class ServiceTemplateController {
   /**
    * The unique URL for each Service Template. Regular users navigate to this endpoint
    * to submit a new Service Instance for the given template.
-   * REPORTER users may only submit for their assigned church.
+   * REPORTER users may only submit for their assigned churches.
    *
    * @param id      the template ID
    * @param request the submission request body
@@ -123,12 +123,10 @@ public class ServiceTemplateController {
   public ResponseEntity<ServiceInstance> submit(@PathVariable Long id,
       @RequestBody @Valid ServiceInstanceRequest request, Authentication auth) {
     DashboardUser user = ((DashboardUserDetails) auth.getPrincipal()).getDashboardUser();
-    if (user.getRole() == UserRole.REPORTER) {
-      if (user.getChurch() == null
-          || !user.getChurch().getName().equals(request.churchName())) {
-        throw new ResponseStatusException(HttpStatus.FORBIDDEN,
-            "Reporters may only submit for their assigned church");
-      }
+    if (user.getRole() == UserRole.REPORTER
+        && !user.isAssignedToChurchName(request.churchName())) {
+      throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+          "Reporters may only submit for their assigned churches");
     }
     ServiceInstance created = serviceSubmissionService.submit(id, request);
     return ResponseEntity.status(HttpStatus.CREATED).body(created);
