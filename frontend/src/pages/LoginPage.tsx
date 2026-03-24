@@ -13,23 +13,25 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { login } from '../api/auth';
 
+type LoginErrorKey = 'login.invalidCredentials';
+
 export default function LoginPage() {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [errorKey, setErrorKey] = useState<LoginErrorKey | null>(null);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    setError(null);
+    setErrorKey(null);
     setLoading(true);
     try {
       await login(username, password);
       navigate('/');
     } catch {
-      setError(t('login.invalidCredentials'));
+      setErrorKey('login.invalidCredentials');
     } finally {
       setLoading(false);
     }
@@ -59,9 +61,9 @@ export default function LoginPage() {
             </Typography>
           </Box>
 
-          {error && (
+          {errorKey && (
             <Alert severity="error" sx={{ mb: 2 }}>
-              {error}
+              {t(errorKey)}
             </Alert>
           )}
 

@@ -1,7 +1,14 @@
-import { render, screen } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import i18n from 'i18next';
 import { MemoryRouter } from 'react-router-dom';
+import { vi } from 'vitest';
+import { login } from '../api/auth';
 import LoginPage from './LoginPage';
+
+vi.mock('../api/auth', () => ({
+  login: vi.fn(),
+}));
 
 function renderLoginPage() {
   return render(
@@ -12,7 +19,10 @@ function renderLoginPage() {
 }
 
 describe('LoginPage', () => {
+  const mockedLogin = vi.mocked(login);
+
   beforeEach(async () => {
+    mockedLogin.mockReset();
     await i18n.changeLanguage('en');
   });
 
@@ -36,6 +46,27 @@ describe('LoginPage', () => {
       renderLoginPage();
       expect(screen.getByText('Diocese Dashboard')).toBeInTheDocument();
       expect(screen.getByText('Episcopal Church in Costa Rica')).toBeInTheDocument();
+    });
+
+    it('updates the login error when the language changes', async () => {
+      const user = userEvent.setup();
+      mockedLogin.mockRejectedValueOnce(new Error('Invalid credentials'));
+
+      renderLoginPage();
+
+      await user.type(screen.getByLabelText(/username/i), 'demo');
+      await user.type(screen.getByLabelText(/password/i), 'bad-password');
+      await user.click(screen.getByRole('button', { name: /sign in/i }));
+
+      expect(await screen.findByText('Invalid username or password.')).toBeInTheDocument();
+
+      await act(async () => {
+        await i18n.changeLanguage('es');
+      });
+
+      await waitFor(() => {
+        expect(screen.getByText('Usuario o contraseña incorrectos.')).toBeInTheDocument();
+      });
     });
   });
 

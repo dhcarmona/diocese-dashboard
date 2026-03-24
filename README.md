@@ -28,8 +28,13 @@ The application targets two types of users:
 
 ## Building
 
-It's a regular Maven/Spring Boot project. To build and generate the JAR file, run
-  mvn clean package
+It's a regular Maven/Spring Boot project. `mvn clean package` compiles the Java code, **builds the React frontend** (via the `frontend-maven-plugin`), and packages everything into a runnable JAR:
+
+```bash
+mvn clean package
+```
+
+> **Note:** The first run downloads Node.js into `frontend/node/` — this is normal and takes a moment.
 
 The following environment variables are required to start the application:
 
@@ -52,6 +57,7 @@ Useful for reviewing and developing the frontend without a running database or S
 
 ```bash
 cd frontend
+npm install   # first time only
 npm run dev
 ```
 
@@ -79,8 +85,10 @@ export SPRING_DATABASE_NAME=diocese
 export SPRING_DATASOURCE_USERNAME=diocese
 export SPRING_DATASOURCE_PASSWORD=secret
 
-mvn spring-boot:run
+mvn package spring-boot:run
 ```
+
+> **Important:** `mvn spring-boot:run` alone does **not** rebuild the frontend. Always use `mvn package spring-boot:run` (or run `mvn package` first) so the React app is compiled into `src/main/resources/static/` before the server starts. On a fresh checkout this directory will be empty until a build runs.
 
 Open **http://localhost:8080**. Spring Boot serves the pre-built React app from `src/main/resources/static/`.
 
@@ -89,9 +97,12 @@ Open **http://localhost:8080**. Spring Boot serves the pre-built React app from 
 ## Generating the schema
 
 There's a separate main class in charge of generating the schema. Run
-  mvn compile exec:java
 
-To run the code that generates the schema. The SQL will be generated in a schema.sql file in the root folder.
+```bash
+mvn compile exec:java
+```
+
+The SQL will be generated in `schema.sql` in the root folder.
 
 ---
 
