@@ -5,13 +5,18 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
+
+import java.util.HashSet;
+import java.util.Set;
 
 /** A user account for accessing the diocese dashboard. */
 @Entity
@@ -34,9 +39,12 @@ public class DashboardUser {
   @Column(nullable = false)
   private UserRole role;
 
-  @ManyToOne
-  @JoinColumn(name = "church_name")
-  private Church church;
+  @ManyToMany(fetch = FetchType.EAGER)
+  @JoinTable(
+      name = "dashboard_user_church",
+      joinColumns = @JoinColumn(name = "dashboard_user_id"),
+      inverseJoinColumns = @JoinColumn(name = "church_name"))
+  private Set<Church> assignedChurches = new HashSet<>();
 
   @Column(nullable = false)
   private boolean enabled = true;
@@ -77,12 +85,25 @@ public class DashboardUser {
     this.role = role;
   }
 
-  public Church getChurch() {
-    return church;
+  public Set<Church> getAssignedChurches() {
+    return assignedChurches;
   }
 
-  public void setChurch(Church church) {
-    this.church = church;
+  public void setAssignedChurches(Set<Church> assignedChurches) {
+    this.assignedChurches = assignedChurches == null
+        ? new HashSet<>()
+        : new HashSet<>(assignedChurches);
+  }
+
+  public boolean isAssignedToChurch(Church church) {
+    return church != null && isAssignedToChurchName(church.getName());
+  }
+
+  public boolean isAssignedToChurchName(String churchName) {
+    return churchName != null
+        && assignedChurches.stream()
+        .map(Church::getName)
+        .anyMatch(churchName::equals);
   }
 
   public boolean isEnabled() {

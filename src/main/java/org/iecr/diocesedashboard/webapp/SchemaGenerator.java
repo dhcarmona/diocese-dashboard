@@ -31,6 +31,7 @@ public class SchemaGenerator {
   public void generateSchema() {
     LOG.info("Generating Schema");
     Configuration cfg = new Configuration().configure("hibernate.cfg.xml");
+    configureOfflineSchemaExport(cfg);
     var serviceRegistry = new StandardServiceRegistryBuilder()
         .applySettings(cfg.getProperties())
         .build();
@@ -50,6 +51,20 @@ public class SchemaGenerator {
     LOG.info("Running Create Only...");
     schemaExport.createOnly(EnumSet.of(TargetType.SCRIPT, TargetType.STDOUT), metadata);
     LOG.info("Schema export created");
+  }
+
+  private void configureOfflineSchemaExport(Configuration cfg) {
+    cfg.setProperty("hibernate.boot.allow_jdbc_metadata_access", "false");
+    cfg.setProperty("hibernate.dialect", "org.hibernate.dialect.PostgreSQLDialect");
+    removeConnectionProperty(cfg, "connection.driver_class");
+    removeConnectionProperty(cfg, "connection.url");
+    removeConnectionProperty(cfg, "connection.username");
+    removeConnectionProperty(cfg, "connection.password");
+  }
+
+  private void removeConnectionProperty(Configuration cfg, String propertyName) {
+    cfg.getProperties().remove(propertyName);
+    cfg.getProperties().remove("hibernate." + propertyName);
   }
 
   private Set<Class<?>> scanForEntities(String pkg) {

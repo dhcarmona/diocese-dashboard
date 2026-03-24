@@ -24,6 +24,9 @@ public @interface WithMockDashboardUser {
   /** The role to assign to the mock user. Defaults to ADMIN. */
   UserRole role() default UserRole.ADMIN;
 
-  /** The church name to assign. Required when role is REPORTER. Defaults to empty (no church). */
+  /** A single church name to assign. Defaults to empty (no assigned church). */
   String churchName() default "";
+
+  /** Multiple church names to assign to the mock user. */
+  String[] churchNames() default {};
 }

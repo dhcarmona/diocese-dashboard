@@ -5,6 +5,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import org.iecr.diocesedashboard.domain.objects.Church;
 import org.iecr.diocesedashboard.domain.objects.DashboardUser;
 import org.iecr.diocesedashboard.domain.objects.ReporterLink;
 import org.iecr.diocesedashboard.domain.objects.ServiceTemplate;
@@ -19,6 +20,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 @ExtendWith(MockitoExtension.class)
@@ -45,21 +47,30 @@ class ReporterLinkServiceTest {
     return template;
   }
 
+  private Church buildChurch() {
+    Church church = new Church();
+    church.setName("Trinity");
+    return church;
+  }
+
   @Test
   void createLink_savesLinkWithGeneratedToken() {
     DashboardUser reporter = buildReporter();
+    Church church = buildChurch();
     ServiceTemplate template = buildTemplate();
     ReporterLink saved = new ReporterLink();
     saved.setId(1L);
     when(reporterLinkRepository.save(any(ReporterLink.class))).thenReturn(saved);
 
-    ReporterLink result = reporterLinkService.createLink(reporter, template);
+    reporter.setAssignedChurches(Set.of(church));
+    ReporterLink result = reporterLinkService.createLink(reporter, church, template);
 
     ArgumentCaptor<ReporterLink> captor = ArgumentCaptor.forClass(ReporterLink.class);
     verify(reporterLinkRepository).save(captor.capture());
     ReporterLink persisted = captor.getValue();
     assertThat(persisted.getToken()).isNotBlank();
     assertThat(persisted.getReporter()).isEqualTo(reporter);
+    assertThat(persisted.getChurch()).isEqualTo(church);
     assertThat(persisted.getServiceTemplate()).isEqualTo(template);
     assertThat(result.getId()).isEqualTo(1L);
   }
@@ -68,7 +79,8 @@ class ReporterLinkServiceTest {
   void createLink_tokenIsValidUuid() {
     when(reporterLinkRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
-    ReporterLink result = reporterLinkService.createLink(buildReporter(), buildTemplate());
+    ReporterLink result = reporterLinkService.createLink(
+        buildReporter(), buildChurch(), buildTemplate());
 
     // should not throw — UUID.fromString validates the format
     UUID.fromString(result.getToken());

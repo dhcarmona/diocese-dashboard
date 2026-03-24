@@ -32,7 +32,7 @@ public class ServiceInstanceController {
 
   /**
    * Returns all service instances visible to the authenticated user.
-   * REPORTER users only see instances for their assigned church.
+   * REPORTER users only see instances for their assigned churches.
    *
    * @param auth the current authentication
    * @return list of visible service instances
@@ -41,11 +41,11 @@ public class ServiceInstanceController {
   public List<ServiceInstance> getAll(Authentication auth) {
     DashboardUser user = ((DashboardUserDetails) auth.getPrincipal()).getDashboardUser();
     if (user.getRole() == UserRole.REPORTER) {
-      if (user.getChurch() == null) {
+      if (user.getAssignedChurches().isEmpty()) {
         throw new ResponseStatusException(HttpStatus.FORBIDDEN,
-            "Reporter account has no church assigned");
+            "Reporter account has no churches assigned");
       }
-      return serviceInstanceService.findByChurch(user.getChurch());
+      return serviceInstanceService.findByChurches(user.getAssignedChurches());
     }
     return serviceInstanceService.findAll();
   }
@@ -86,7 +86,6 @@ public class ServiceInstanceController {
     if (user.getRole() == UserRole.ADMIN) {
       return true;
     }
-    return user.getChurch() != null
-        && user.getChurch().getName().equals(instance.getChurch().getName());
+    return user.isAssignedToChurch(instance.getChurch());
   }
 }

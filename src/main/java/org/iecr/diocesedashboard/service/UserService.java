@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 /** Service for managing dashboard user accounts and Spring Security authentication. */
 @Service
@@ -48,16 +49,16 @@ public class UserService implements UserDetailsService {
    * @param username    the unique username
    * @param rawPassword the plain-text password to encode and store
    * @param role        the user's role
-   * @param church      the church to assign (required for REPORTER, null for ADMIN)
+   * @param assignedChurches the churches to assign (required for REPORTER, empty for ADMIN)
    * @return the saved {@link DashboardUser}
    */
   public DashboardUser createUser(String username, String rawPassword,
-      UserRole role, Church church) {
+      UserRole role, Set<Church> assignedChurches) {
     DashboardUser user = new DashboardUser();
     user.setUsername(username);
     user.setPasswordHash(passwordEncoder.encode(rawPassword));
     user.setRole(role);
-    user.setChurch(church);
+    user.setAssignedChurches(assignedChurches);
     user.setEnabled(true);
     return userRepository.save(user);
   }
@@ -69,17 +70,17 @@ public class UserService implements UserDetailsService {
    * @param username    the new username
    * @param rawPassword the new plain-text password, or null/blank to keep the existing one
    * @param role        the new role
-   * @param church      the new church assignment (null for ADMIN)
+   * @param assignedChurches the new church assignments (empty for ADMIN)
    * @return the updated {@link DashboardUser}
    * @throws UsernameNotFoundException if no user with the given ID exists
    */
   public DashboardUser updateUser(Long id, String username, String rawPassword,
-      UserRole role, Church church) {
+      UserRole role, Set<Church> assignedChurches) {
     DashboardUser user = userRepository.findById(id)
         .orElseThrow(() -> new UsernameNotFoundException("User not found: " + id));
     user.setUsername(username);
     user.setRole(role);
-    user.setChurch(church);
+    user.setAssignedChurches(assignedChurches);
     if (rawPassword != null && !rawPassword.isBlank()) {
       user.setPasswordHash(passwordEncoder.encode(rawPassword));
     }

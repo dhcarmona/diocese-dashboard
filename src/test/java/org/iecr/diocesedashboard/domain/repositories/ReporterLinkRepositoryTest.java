@@ -2,6 +2,7 @@ package org.iecr.diocesedashboard.domain.repositories;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import org.iecr.diocesedashboard.domain.objects.Church;
 import org.iecr.diocesedashboard.domain.objects.DashboardUser;
 import org.iecr.diocesedashboard.domain.objects.ReporterLink;
 import org.iecr.diocesedashboard.domain.objects.ServiceTemplate;
@@ -13,6 +14,7 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 @DataJpaTest
@@ -25,15 +27,25 @@ class ReporterLinkRepositoryTest {
   private ReporterLinkRepository reporterLinkRepository;
 
   private DashboardUser reporter;
+  private Church church;
+  private Church secondChurch;
   private ServiceTemplate template;
 
   @BeforeEach
   void setUp() {
+    church = new Church();
+    church.setName("Trinity");
+    entityManager.persist(church);
+    secondChurch = new Church();
+    secondChurch.setName("StPaul");
+    entityManager.persist(secondChurch);
+
     reporter = new DashboardUser();
     reporter.setUsername("reporter1");
     reporter.setPasswordHash("$2a$10$hash");
     reporter.setRole(UserRole.REPORTER);
     reporter.setEnabled(true);
+    reporter.setAssignedChurches(Set.of(church, secondChurch));
     entityManager.persist(reporter);
 
     template = new ServiceTemplate();
@@ -44,9 +56,14 @@ class ReporterLinkRepositoryTest {
   }
 
   private ReporterLink buildLink(String token) {
+    return buildLink(token, church);
+  }
+
+  private ReporterLink buildLink(String token, Church reporterChurch) {
     ReporterLink link = new ReporterLink();
     link.setToken(token);
     link.setReporter(reporter);
+    link.setChurch(reporterChurch);
     link.setServiceTemplate(template);
     return link;
   }
@@ -111,5 +128,16 @@ class ReporterLinkRepositoryTest {
     entityManager.flush();
 
     assertThat(reporterLinkRepository.findAll()).hasSize(2);
+  }
+
+  @Test
+  void findAll_allowsSameReporterAndTemplateAcrossDifferentChurches() {
+    entityManager.persist(buildLink(UUID.randomUUID().toString(), church));
+    entityManager.persist(buildLink(UUID.randomUUID().toString(), secondChurch));
+    entityManager.flush();
+
+    assertThat(reporterLinkRepository.findAll())
+        .extracting(link -> link.getChurch().getName())
+        .containsExactlyInAnyOrder("Trinity", "StPaul");
   }
 }

@@ -30,6 +30,10 @@ public class ReporterLink {
   private DashboardUser reporter;
 
   @ManyToOne
+  @JoinColumn(name = "church_name", nullable = false)
+  private Church church;
+
+  @ManyToOne
   @JoinColumn(name = "service_template_id", nullable = false)
   private ServiceTemplate serviceTemplate;
 
@@ -59,6 +63,14 @@ public class ReporterLink {
 
   public void setReporter(DashboardUser reporter) {
     this.reporter = reporter;
+  }
+
+  public Church getChurch() {
+    return church;
+  }
+
+  public void setChurch(Church church) {
+    this.church = church;
   }
 
   public ServiceTemplate getServiceTemplate() {

@@ -26,6 +26,10 @@ public class ServiceInstanceService {
     return repository.findByChurch(church);
   }
 
+  public List<ServiceInstance> findByChurches(Iterable<Church> churches) {
+    return repository.findByChurchIn(churches);
+  }
+
   public Optional<ServiceInstance> findById(Long id) {
     return repository.findById(id);
   }

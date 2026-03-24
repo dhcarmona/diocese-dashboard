@@ -1,6 +1,7 @@
 package org.iecr.diocesedashboard.webapp.controller;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anySet;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -28,8 +29,10 @@ import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @WebMvcTest(UserController.class)
 @Import(SecurityConfig.class)
@@ -61,7 +64,7 @@ class UserControllerTest {
   }
 
   private UserRequest reporterRequest() {
-    return new UserRequest("reporter1", "secret123", UserRole.REPORTER, "Trinity");
+    return new UserRequest("reporter1", "secret123", UserRole.REPORTER, Set.of("Trinity"));
   }
 
   // --- GET /api/users ---
@@ -120,7 +123,7 @@ class UserControllerTest {
   @WithMockUser(roles = "ADMIN")
   void create_adminUser_returns201() throws Exception {
     DashboardUser created = buildUser(1L, "admin2", UserRole.ADMIN);
-    when(userService.createUser(eq("admin2"), eq("secret123"), eq(UserRole.ADMIN), eq(null)))
+    when(userService.createUser(eq("admin2"), eq("secret123"), eq(UserRole.ADMIN), eq(Set.of())))
         .thenReturn(created);
 
     mockMvc.perform(post("/api/users")
@@ -138,10 +141,10 @@ class UserControllerTest {
     Church church = new Church();
     church.setName("Trinity");
     DashboardUser created = buildUser(2L, "reporter1", UserRole.REPORTER);
-    created.setChurch(church);
+    created.setAssignedChurches(Set.of(church));
     when(churchService.findById("Trinity")).thenReturn(Optional.of(church));
     when(userService.createUser(eq("reporter1"), eq("secret123"), eq(UserRole.REPORTER),
-        any(Church.class))).thenReturn(created);
+        anySet())).thenReturn(created);
 
     mockMvc.perform(post("/api/users")
         .with(csrf())
@@ -176,6 +179,42 @@ class UserControllerTest {
         .andExpect(status().isBadRequest());
   }
 
+  @Test
+  @WithMockUser(roles = "ADMIN")
+  void create_reporterWithBlankChurchName_returns400() throws Exception {
+    UserRequest invalid = new UserRequest("reporter2", "secret",
+        UserRole.REPORTER, Set.of(" "));
+
+    mockMvc.perform(post("/api/users")
+        .with(csrf())
+        .contentType(MediaType.APPLICATION_JSON)
+        .content(objectMapper.writeValueAsString(invalid)))
+        .andExpect(status().isBadRequest());
+  }
+
+  @Test
+  @WithMockUser(roles = "ADMIN")
+  void create_reporterWithDuplicateChurchNames_collapsesDuplicates() throws Exception {
+    Church church = new Church();
+    church.setName("Trinity");
+    DashboardUser created = buildUser(2L, "reporter1", UserRole.REPORTER);
+    created.setAssignedChurches(Set.of(church));
+    when(churchService.findById("Trinity")).thenReturn(Optional.of(church));
+    when(userService.createUser(eq("reporter1"), eq("secret123"), eq(UserRole.REPORTER),
+        anySet())).thenReturn(created);
+    UserRequest request = new UserRequest("reporter1", "secret123", UserRole.REPORTER,
+        new LinkedHashSet<>(List.of("Trinity", "Trinity")));
+
+    mockMvc.perform(post("/api/users")
+        .with(csrf())
+        .contentType(MediaType.APPLICATION_JSON)
+        .content(objectMapper.writeValueAsString(request)))
+        .andExpect(status().isCreated());
+
+    verify(userService).createUser(eq("reporter1"), eq("secret123"), eq(UserRole.REPORTER),
+        eq(Set.of(church)));
+  }
+
   // --- PUT /api/users/{id} ---
 
   @Test
@@ -184,7 +223,7 @@ class UserControllerTest {
     DashboardUser updated = buildUser(1L, "admin2", UserRole.ADMIN);
     when(userService.existsById(1L)).thenReturn(true);
     when(userService.updateUser(eq(1L), eq("admin2"), eq("secret123"),
-        eq(UserRole.ADMIN), eq(null))).thenReturn(updated);
+        eq(UserRole.ADMIN), eq(Set.of()))).thenReturn(updated);
 
     mockMvc.perform(put("/api/users/1")
         .with(csrf())
@@ -192,6 +231,31 @@ class UserControllerTest {
         .content(objectMapper.writeValueAsString(adminRequest())))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.username").value("admin2"));
+  }
+
+  @Test
+  @WithMockUser(roles = "ADMIN")
+  void update_reporterReplacesAssignedChurches_returns200() throws Exception {
+    Church oldChurch = new Church();
+    oldChurch.setName("Trinity");
+    Church newChurch = new Church();
+    newChurch.setName("StPaul");
+    DashboardUser updated = buildUser(1L, "reporter1", UserRole.REPORTER);
+    updated.setAssignedChurches(Set.of(newChurch));
+    when(userService.existsById(1L)).thenReturn(true);
+    when(churchService.findById("StPaul")).thenReturn(Optional.of(newChurch));
+    when(userService.updateUser(eq(1L), eq("reporter1"), eq("secret123"),
+        eq(UserRole.REPORTER), eq(Set.of(newChurch)))).thenReturn(updated);
+    UserRequest request = new UserRequest("reporter1", "secret123",
+        UserRole.REPORTER, Set.of("StPaul"));
+
+    mockMvc.perform(put("/api/users/1")
+        .with(csrf())
+        .contentType(MediaType.APPLICATION_JSON)
+        .content(objectMapper.writeValueAsString(request)))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.username").value("reporter1"))
+        .andExpect(jsonPath("$.role").value("REPORTER"));
   }
 
   @Test

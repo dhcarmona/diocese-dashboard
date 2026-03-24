@@ -236,6 +236,22 @@ class ServiceTemplateControllerTest {
   }
 
   @Test
+  @WithMockDashboardUser(role = UserRole.REPORTER, churchNames = {"StPaul", "Trinity"})
+  void submit_asReporterAssignedToMultipleChurches_returns201() throws Exception {
+    ServiceInstance instance = new ServiceInstance();
+    instance.setId(43L);
+    when(serviceSubmissionService.submit(eq(1L), any(ServiceInstanceRequest.class)))
+        .thenReturn(instance);
+
+    mockMvc.perform(post("/api/service-templates/1/submit")
+        .with(csrf())
+        .contentType(MediaType.APPLICATION_JSON)
+        .content(objectMapper.writeValueAsString(buildRequest())))
+        .andExpect(status().isCreated())
+        .andExpect(jsonPath("$.id").value(43));
+  }
+
+  @Test
   @WithMockDashboardUser
   void submit_asAdmin_validRequest_returns201() throws Exception {
     ServiceInstance instance = new ServiceInstance();

@@ -23,6 +23,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @ExtendWith(MockitoExtension.class)
 class UserServiceTest {
@@ -78,7 +79,7 @@ class UserServiceTest {
     when(userRepository.save(any(DashboardUser.class))).thenAnswer(inv -> inv.getArgument(0));
 
     DashboardUser result = userService.createUser("reporter1", "plaintext",
-        UserRole.REPORTER, null);
+        UserRole.REPORTER, Set.of());
 
     verify(passwordEncoder).encode("plaintext");
     assertThat(result.getPasswordHash()).isEqualTo("$2a$10$encoded");
@@ -91,11 +92,12 @@ class UserServiceTest {
     when(passwordEncoder.encode(any())).thenReturn("hash");
     when(userRepository.save(any(DashboardUser.class))).thenAnswer(inv -> inv.getArgument(0));
 
-    DashboardUser result = userService.createUser("rep", "pass", UserRole.REPORTER, church);
+    DashboardUser result = userService.createUser("rep", "pass",
+        UserRole.REPORTER, Set.of(church));
 
     assertThat(result.getUsername()).isEqualTo("rep");
     assertThat(result.getRole()).isEqualTo(UserRole.REPORTER);
-    assertThat(result.getChurch()).isEqualTo(church);
+    assertThat(result.getAssignedChurches()).containsExactly(church);
     assertThat(result.isEnabled()).isTrue();
   }
 
@@ -109,7 +111,7 @@ class UserServiceTest {
     when(userRepository.save(any(DashboardUser.class))).thenAnswer(inv -> inv.getArgument(0));
 
     DashboardUser result = userService.updateUser(1L, "user1", "newpass",
-        UserRole.REPORTER, null);
+        UserRole.REPORTER, Set.of());
 
     verify(passwordEncoder).encode("newpass");
     assertThat(result.getPasswordHash()).isEqualTo("$2a$10$newEncoded");
@@ -122,7 +124,7 @@ class UserServiceTest {
     when(userRepository.save(any(DashboardUser.class))).thenAnswer(inv -> inv.getArgument(0));
 
     DashboardUser result = userService.updateUser(1L, "user1", "",
-        UserRole.REPORTER, null);
+        UserRole.REPORTER, Set.of());
 
     verify(passwordEncoder, never()).encode(any());
     assertThat(result.getPasswordHash()).isEqualTo("$2a$10$existinghash");
@@ -135,17 +137,36 @@ class UserServiceTest {
     when(userRepository.save(any(DashboardUser.class))).thenAnswer(inv -> inv.getArgument(0));
 
     DashboardUser result = userService.updateUser(1L, "user1", null,
-        UserRole.REPORTER, null);
+        UserRole.REPORTER, Set.of());
 
     verify(passwordEncoder, never()).encode(any());
     assertThat(result.getPasswordHash()).isEqualTo("$2a$10$existinghash");
   }
 
   @Test
+  void updateUser_replacesAssignedChurches() {
+    Church oldChurch = new Church();
+    oldChurch.setName("Trinity");
+    Church newChurch = new Church();
+    newChurch.setName("StPaul");
+    DashboardUser existing = buildUser(1L, "user1", UserRole.REPORTER);
+    existing.setAssignedChurches(Set.of(oldChurch));
+    when(userRepository.findById(1L)).thenReturn(Optional.of(existing));
+    when(userRepository.save(any(DashboardUser.class))).thenAnswer(inv -> inv.getArgument(0));
+
+    DashboardUser result = userService.updateUser(1L, "user1", null,
+        UserRole.REPORTER, Set.of(newChurch));
+
+    assertThat(result.getAssignedChurches()).containsExactly(newChurch);
+    assertThat(result.isAssignedToChurchName("Trinity")).isFalse();
+    assertThat(result.isAssignedToChurchName("StPaul")).isTrue();
+  }
+
+  @Test
   void updateUser_notFound_throwsException() {
     when(userRepository.findById(99L)).thenReturn(Optional.empty());
 
-    assertThatThrownBy(() -> userService.updateUser(99L, "x", "pass", UserRole.ADMIN, null))
+    assertThatThrownBy(() -> userService.updateUser(99L, "x", "pass", UserRole.ADMIN, Set.of()))
         .isInstanceOf(UsernameNotFoundException.class)
         .hasMessageContaining("99");
   }

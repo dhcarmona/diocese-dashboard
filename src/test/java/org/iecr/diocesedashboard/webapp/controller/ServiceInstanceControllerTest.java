@@ -78,7 +78,7 @@ class ServiceInstanceControllerTest {
   @Test
   @WithMockDashboardUser(role = UserRole.REPORTER, churchName = "Trinity")
   void getAll_asReporter_returnsOnlyOwnChurchInstances() throws Exception {
-    when(serviceInstanceService.findByChurch(any(Church.class))).thenReturn(
+    when(serviceInstanceService.findByChurches(any())).thenReturn(
         List.of(buildInstanceForChurch(1L, "Trinity")));
 
     mockMvc.perform(get("/api/service-instances"))
@@ -88,9 +88,28 @@ class ServiceInstanceControllerTest {
   }
 
   @Test
+  @WithMockDashboardUser(role = UserRole.REPORTER, churchNames = {"StPaul", "Trinity"})
+  void getAll_asMultiChurchReporter_returnsAssignedChurchInstances() throws Exception {
+    when(serviceInstanceService.findByChurches(any())).thenReturn(
+        List.of(buildInstanceForChurch(1L, "Trinity"),
+            buildInstanceForChurch(2L, "StPaul")));
+
+    mockMvc.perform(get("/api/service-instances"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.length()").value(2));
+  }
+
+  @Test
   void getAll_unauthenticated_returns401() throws Exception {
     mockMvc.perform(get("/api/service-instances"))
         .andExpect(status().isUnauthorized());
+  }
+
+  @Test
+  @WithMockDashboardUser(role = UserRole.REPORTER)
+  void getAll_asReporterWithNoAssignedChurches_returns403() throws Exception {
+    mockMvc.perform(get("/api/service-instances"))
+        .andExpect(status().isForbidden());
   }
 
   // --- GET /api/service-instances/{id} ---
