@@ -1,0 +1,10 @@
+{
+  "login": {
+    "title": "Diocese Dashboard",
+    "subtitle": "Episcopal Church in Costa Rica",
+    "username": "Username",
+    "password": "Password",
+    "signIn": "Sign In",
+    "invalidCredentials": "Invalid username or password."
+  }
+}

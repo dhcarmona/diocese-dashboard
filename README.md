@@ -102,3 +102,40 @@ To run the code that generates the schema. The SQL will be generated in a schema
   pre-loads the linked service template's fields, and lets the reporter fill in and submit the
   report without any API knowledge).
 - Add a **link management UI** for ADMIN users to create, list, copy, and revoke reporter links.
+
+---
+
+## Internationalization (i18n)
+
+The UI is internationalized with [i18next](https://www.i18next.com/) + `react-i18next`. A compact **EN / ES** toggle is pinned to the top-right corner of every page. The selected language is persisted in `localStorage` automatically.
+
+Translation files live in `frontend/src/locales/`:
+
+```
+frontend/src/locales/
+├── en.json   ← English strings
+└── es.json   ← Spanish strings
+```
+
+### Adding a new UI string
+
+1. Add the key under the appropriate section in **both** `en.json` and `es.json`:
+   ```json
+   // en.json
+   { "mySection": { "myKey": "Hello" } }
+
+   // es.json
+   { "mySection": { "myKey": "Hola" } }
+   ```
+2. Use `const { t } = useTranslation()` in your component and reference it with `t('mySection.myKey')`.
+
+### Adding a new language
+
+1. Create `frontend/src/locales/{code}.json` (e.g. `pt.json` for Portuguese) with the same keys as `en.json`.
+2. Import it and register it in `frontend/src/i18n.ts`:
+   ```ts
+   import pt from './locales/pt.json';
+   // inside init resources:
+   resources: { en: { translation: en }, es: { translation: es }, pt: { translation: pt } }
+   ```
+3. Add the new `value`/`aria-label` pair to the `ToggleButtonGroup` in `frontend/src/components/LanguageSwitcher.tsx`.
