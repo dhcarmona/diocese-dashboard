@@ -1,0 +1,21 @@
+services:
+  db:
+    image: postgres:16
+    container_name: diocese-db
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-diocese}
+      POSTGRES_USER: ${POSTGRES_USER:-diocese}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-secret}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - diocese-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-diocese} -d ${POSTGRES_DB:-diocese}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+
+volumes:
+  diocese-db-data:

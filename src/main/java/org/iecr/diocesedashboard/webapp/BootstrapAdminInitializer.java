@@ -33,10 +33,10 @@ public class BootstrapAdminInitializer implements ApplicationRunner {
 
   @Override
   public void run(ApplicationArguments args) {
-    validateConfiguration();
     if (!properties.isEnabled()) {
       return;
     }
+    validateConfiguration();
     if (userService.existsByRole(UserRole.ADMIN)) {
       LOG.info("Skipping bootstrap admin creation because an ADMIN user already exists.");
       return;
@@ -58,7 +58,7 @@ public class BootstrapAdminInitializer implements ApplicationRunner {
       throw new IllegalStateException(
           "Bootstrap admin configuration requires both username and password together.");
     }
-    if (properties.isEnabled() && (!hasUsername || !hasPassword)) {
+    if (!hasUsername || !hasPassword) {
       throw new IllegalStateException(
           "Bootstrap admin is enabled, but username and password are not fully configured.");
     }

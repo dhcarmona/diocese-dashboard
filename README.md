@@ -77,17 +77,11 @@ Open **http://localhost:5173**. The login page will render, but submitting the f
 
 ### Option B — Full stack
 
-Requires PostgreSQL. The quickest way to start one with Docker:
+Requires PostgreSQL. The repository now includes a ready-to-use Docker Compose file,
+so the quickest way to start a local database is:
 
 ```bash
-docker run -d \
-  --name diocese-db \
-  -e POSTGRES_DB=diocese \
-  -e POSTGRES_USER=diocese \
-  -e POSTGRES_PASSWORD=secret \
-  -p 5432:5432 \
-  -v diocese-db-data:/var/lib/postgresql/data \
-  postgres:16
+docker compose up -d db
 ```
 
 Then set the required environment variables and start Spring Boot:
@@ -104,6 +98,13 @@ export DASHBOARD_BOOTSTRAP_ADMIN_PASSWORD=change-me
 mvn package spring-boot:run
 ```
 
+If you prefer different local credentials or a different port, override the Compose defaults:
+
+```bash
+POSTGRES_DB=diocese POSTGRES_USER=diocese POSTGRES_PASSWORD=secret POSTGRES_PORT=5432 \
+  docker compose up -d db
+```
+
 > **Important:** `mvn spring-boot:run` alone does **not** rebuild the frontend. Always use `mvn package spring-boot:run` (or run `mvn package` first) so the React app is compiled into `src/main/resources/static/` before the server starts. On a fresh checkout this directory will be empty until a build runs.
 
 Open **http://localhost:8080**. Spring Boot serves the pre-built React app from `src/main/resources/static/`.
@@ -112,6 +113,30 @@ Open **http://localhost:8080**. Spring Boot serves the pre-built React app from 
 > Flyway migrations, and PostgreSQL data persists as long as you keep the Docker volume (or
 > your regular PostgreSQL data directory). The bootstrap Admin settings are only needed for
 > first-time setup.
+
+To stop the local database:
+
+```bash
+docker compose stop db
+```
+
+To completely reset the local database during development:
+
+```bash
+docker compose down -v
+docker compose up -d db
+```
+
+If Flyway reports a checksum mismatch, prefer creating a new migration (`V2__...sql`,
+`V3__...sql`, etc.) instead of editing an existing applied migration. If you intentionally
+changed an already-applied migration in your local environment, you can repair Flyway once:
+
+```bash
+mvn org.flywaydb:flyway-maven-plugin:10.15.2:repair \
+  -Dflyway.url=jdbc:postgresql://localhost:$POSTGRESQL_PORT/$SPRING_DATABASE_NAME \
+  -Dflyway.user=$SPRING_DATASOURCE_USERNAME \
+  -Dflyway.password=$SPRING_DATASOURCE_PASSWORD
+```
 
 ## Generating the schema
 

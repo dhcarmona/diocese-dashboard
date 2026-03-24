@@ -36,8 +36,8 @@ public class ServiceInfoItem {
   private Boolean required;
 
   @Column(nullable = false)
-  @Enumerated(EnumType.ORDINAL)
-  @JdbcTypeCode(SqlTypes.SMALLINT)
+  @Enumerated(EnumType.STRING)
+  @JdbcTypeCode(SqlTypes.VARCHAR)
   private ServiceInfoItemType serviceInfoItemType;
 
   @JsonIgnore

@@ -19,7 +19,7 @@ import org.springframework.security.web.csrf.HttpSessionCsrfTokenRepository;
 
 /**
  * Spring Security configuration: form-based login with session cookies
- * and CSRF protection via {@link CookieCsrfTokenRepository}.
+ * and CSRF protection via {@link HttpSessionCsrfTokenRepository}.
  */
 @Configuration
 @EnableWebSecurity
@@ -42,7 +42,7 @@ public class SecurityConfig {
 
   /**
    * Configures the security filter chain with session-based form login,
-   * CSRF cookie support for the React SPA, and role-based authorization.
+   * session-backed CSRF protection for the React SPA, and role-based authorization.
    *
    * @param http the {@link HttpSecurity} to configure
    * @return the configured {@link SecurityFilterChain}
@@ -56,7 +56,8 @@ public class SecurityConfig {
         .csrf(csrf -> csrf
                 .csrfTokenRepository(csrfTokenRepository)
                 .csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler())
-                // Login endpoint is exempt: the CSRF cookie is set on page load before the first login
+                // Login remains exempt because the SPA fetches its CSRF token from /api/auth/csrf
+                // after the initial page load and only needs that token for protected writes.
                 .ignoringRequestMatchers("/api/auth/login")
         )
         .authorizeHttpRequests(auth -> auth
