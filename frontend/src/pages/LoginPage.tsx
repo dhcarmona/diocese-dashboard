@@ -9,11 +9,13 @@ import CircularProgress from '@mui/material/CircularProgress';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import { useState, type FormEvent } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { login } from '../api/auth';
 
 export default function LoginPage() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -27,7 +29,7 @@ export default function LoginPage() {
       await login(username, password);
       navigate('/');
     } catch {
-      setError('Invalid username or password.');
+      setError(t('login.invalidCredentials'));
     } finally {
       setLoading(false);
     }
@@ -50,10 +52,10 @@ export default function LoginPage() {
               <LockOutlinedIcon />
             </Avatar>
             <Typography variant="h5" fontWeight={600}>
-              Diocese Dashboard
+              {t('login.title')}
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              Episcopal Church in Costa Rica
+              {t('login.subtitle')}
             </Typography>
           </Box>
 
@@ -65,7 +67,7 @@ export default function LoginPage() {
 
           <Box component="form" onSubmit={handleSubmit} noValidate>
             <TextField
-              label="Username"
+              label={t('login.username')}
               fullWidth
               required
               margin="normal"
@@ -76,7 +78,7 @@ export default function LoginPage() {
               disabled={loading}
             />
             <TextField
-              label="Password"
+              label={t('login.password')}
               type="password"
               fullWidth
               required
@@ -94,7 +96,7 @@ export default function LoginPage() {
               sx={{ mt: 3 }}
               disabled={loading || !username || !password}
             >
-              {loading ? <CircularProgress size={24} color="inherit" /> : 'Sign In'}
+              {loading ? <CircularProgress size={24} color="inherit" /> : t('login.signIn')}
             </Button>
           </Box>
         </CardContent>
