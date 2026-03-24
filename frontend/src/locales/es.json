@@ -1,10 +1,103 @@
 {
+  "auth": {
+    "sessionLoadFailed": "No se pudo cargar su sesión.",
+    "backendUnavailable": "No se puede establecer conexión con el servidor en este momento. Si está ejecutando la aplicación localmente, inicie el backend con \"mvn package spring-boot:run\" y vuelva a intentarlo.",
+    "loading": "Cargando...",
+    "tryAgain": "Intentar de nuevo"
+  },
+  "common": {
+    "appName": "Diocese Dashboard",
+    "signOut": "Cerrar sesión"
+  },
+  "shell": {
+    "signedInAs": "Sesión iniciada como {{username}}"
+  },
+  "language": {
+    "english": "Inglés",
+    "spanish": "Español"
+  },
   "login": {
     "title": "Diocese Dashboard",
     "subtitle": "Iglesia Episcopal en Costa Rica",
     "username": "Usuario",
     "password": "Contraseña",
     "signIn": "Iniciar sesión",
-    "invalidCredentials": "Usuario o contraseña incorrectos."
+    "invalidCredentials": "Usuario o contraseña incorrectos.",
+    "genericError": "No se pudo iniciar la sesión en este momento. Inténtelo de nuevo."
+  },
+  "navigation": {
+    "home": "Inicio"
+  },
+  "home": {
+    "title": "Inicio",
+    "subtitleReporter": "Elija el reporte de servicio que desea enviar.",
+    "subtitleAdmin": "Elija la tarea que desea completar.",
+    "tiles": {
+      "submitReport": {
+        "title": "Enviar un reporte de servicio",
+        "description": "Elija una plantilla de servicio e ingrese un nuevo reporte."
+      },
+      "createServiceTemplates": {
+        "title": "Crear plantillas de servicio",
+        "description": "Agregue o actualice las plantillas usadas para los reportes."
+      },
+      "createReporterUsers": {
+        "title": "Crear usuarios reporteros",
+        "description": "Cree y administre cuentas de reporteros para cada iglesia."
+      },
+      "manageCelebrants": {
+        "title": "Administrar celebrantes",
+        "description": "Agregue, actualice o elimine celebrantes."
+      },
+      "manageChurches": {
+        "title": "Administrar iglesias",
+        "description": "Agregue, actualice o elimine iglesias."
+      },
+      "createReporterLinks": {
+        "title": "Crear enlaces de reportero",
+        "description": "Cree enlaces para una combinación específica de reportero, iglesia y plantilla."
+      }
+    }
+  },
+  "reports": {
+    "templateSelection": {
+      "title": "Elija una plantilla de servicio",
+      "subtitle": "Seleccione el tipo de servicio que desea reportar.",
+      "loading": "Cargando plantillas...",
+      "loadError": "No se pudieron cargar las plantillas de servicio.",
+      "empty": "Todavía no hay plantillas de servicio disponibles.",
+      "tileDescription": "Abra esta plantilla y continúe con el reporte."
+    }
+  },
+  "areas": {
+    "submitService": {
+      "title": "Enviar reporte de servicio",
+      "description": "Aquí aparecerá el formulario de reporte de la plantilla seleccionada."
+    },
+    "serviceTemplates": {
+      "title": "Plantillas de servicio",
+      "description": "Esta área permitirá a los administradores crear y administrar plantillas de servicio."
+    },
+    "users": {
+      "title": "Usuarios reporteros",
+      "description": "Esta área permitirá a los administradores crear y administrar usuarios reporteros."
+    },
+    "celebrants": {
+      "title": "Celebrantes",
+      "description": "Esta área permitirá a los administradores agregar, editar y eliminar celebrantes."
+    },
+    "churches": {
+      "title": "Iglesias",
+      "description": "Esta área permitirá a los administradores agregar, editar y eliminar iglesias."
+    },
+    "reporterLinks": {
+      "title": "Enlaces de reportero",
+      "description": "Esta área permitirá a los administradores crear enlaces para un reportero, una iglesia y una plantilla de servicio."
+    }
+  },
+  "placeholder": {
+    "title": "Esta área está lista para el siguiente paso de la interfaz.",
+    "description": "El diseño de la página y la navegación ya están preparados para que el resto del flujo se agregue de forma consistente.",
+    "backHome": "Volver al inicio"
   }
 }

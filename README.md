@@ -47,7 +47,19 @@ The following environment variables are required to start the application:
 
 ## Authentication
 
-The app uses session-based login. Visit `/login` in the browser and sign in with your credentials. An Admin account must be created directly in the database before first use — after that, additional accounts can be managed via `POST /api/users`.
+The app uses session-based login. Visit `/login` in the browser and sign in with your
+credentials.
+
+For first-time setup, you can ask the app to create the initial Admin account on startup:
+
+```bash
+export DASHBOARD_BOOTSTRAP_ADMIN_ENABLED=true
+export DASHBOARD_BOOTSTRAP_ADMIN_USERNAME=admin
+export DASHBOARD_BOOTSTRAP_ADMIN_PASSWORD=change-me
+```
+
+That bootstrap step only runs when enabled and only if no `ADMIN` user already exists.
+After the first Admin is in place, additional accounts can be managed via `POST /api/users`.
 
 ## Running Locally
 
@@ -74,6 +86,7 @@ docker run -d \
   -e POSTGRES_USER=diocese \
   -e POSTGRES_PASSWORD=secret \
   -p 5432:5432 \
+  -v diocese-db-data:/var/lib/postgresql/data \
   postgres:16
 ```
 
@@ -84,6 +97,9 @@ export POSTGRESQL_PORT=5432
 export SPRING_DATABASE_NAME=diocese
 export SPRING_DATASOURCE_USERNAME=diocese
 export SPRING_DATASOURCE_PASSWORD=secret
+export DASHBOARD_BOOTSTRAP_ADMIN_ENABLED=true
+export DASHBOARD_BOOTSTRAP_ADMIN_USERNAME=admin
+export DASHBOARD_BOOTSTRAP_ADMIN_PASSWORD=change-me
 
 mvn package spring-boot:run
 ```
@@ -92,7 +108,10 @@ mvn package spring-boot:run
 
 Open **http://localhost:8080**. Spring Boot serves the pre-built React app from `src/main/resources/static/`.
 
-> **Note:** The schema is recreated on every startup. The database starts empty — you must seed an initial Admin user directly in the database before you can log in. See the schema for the `DashboardUser` table structure.
+> **Note:** The application now keeps data between runs. Schema changes are managed with
+> Flyway migrations, and PostgreSQL data persists as long as you keep the Docker volume (or
+> your regular PostgreSQL data directory). The bootstrap Admin settings are only needed for
+> first-time setup.
 
 ## Generating the schema
 
