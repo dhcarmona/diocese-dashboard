@@ -35,6 +35,18 @@ class BootstrapAdminInitializerTest {
   }
 
   @Test
+  void run_disabledWithPartialConfiguration_doesNothing() throws Exception {
+    BootstrapAdminInitializer initializer =
+        new BootstrapAdminInitializer(properties(false, "admin", ""), userService);
+
+    initializer.run(new DefaultApplicationArguments(new String[0]));
+
+    verify(userService, never()).createUser(ArgumentMatchers.any(),
+        ArgumentMatchers.any(), ArgumentMatchers.any(),
+        ArgumentMatchers.anySet());
+  }
+
+  @Test
   void run_enabledWithoutPassword_throwsClearError() {
     BootstrapAdminInitializer initializer =
         new BootstrapAdminInitializer(properties(true, "admin", ""), userService);

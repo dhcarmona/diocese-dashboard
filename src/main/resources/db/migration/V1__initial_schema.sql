@@ -57,7 +57,7 @@ create table reporter_link (
 
 create table service_info_item (
   required boolean,
-  service_info_item_type smallint not null check (service_info_item_type between 0 and 3),
+  service_info_item_type varchar(255) not null,
   id bigint not null,
   service_template_id bigint not null,
   question_id varchar(255) not null unique,
