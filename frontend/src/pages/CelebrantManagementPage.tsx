@@ -85,7 +85,7 @@ export default function CelebrantManagementPage() {
         if (!active) {
           return;
         }
-        setCelebrants(sortCelebrants(loadedCelebrants));
+        setCelebrants(loadedCelebrants);
       } catch {
         if (active) {
           setLoadError(true);
@@ -154,10 +154,8 @@ export default function CelebrantManagementPage() {
       if (selectedCelebrant) {
         const updatedCelebrant = await updateCelebrant(selectedCelebrant.id, { name: trimmedName });
         setCelebrants((currentCelebrants) =>
-          sortCelebrants(
-            currentCelebrants.map((celebrant) =>
-              celebrant.id === updatedCelebrant.id ? updatedCelebrant : celebrant,
-            ),
+          currentCelebrants.map((celebrant) =>
+            celebrant.id === updatedCelebrant.id ? updatedCelebrant : celebrant,
           ),
         );
         setSelectedCelebrantId(updatedCelebrant.id);
@@ -170,7 +168,7 @@ export default function CelebrantManagementPage() {
       } else {
         const createdCelebrant = await createCelebrant({ name: trimmedName });
         setCelebrants((currentCelebrants) =>
-          sortCelebrants([...currentCelebrants, createdCelebrant]),
+          [...currentCelebrants, createdCelebrant],
         );
         resetForm();
         setFeedback({
@@ -362,8 +360,8 @@ export default function CelebrantManagementPage() {
                 {filteredCelebrants.map((celebrant, index) => {
                   const isSelected = celebrant.id === selectedCelebrantId;
                   return (
-                    <Box key={celebrant.id}>
-                      {index > 0 && <Divider component="li" />}
+                    <Box component="li" key={celebrant.id} sx={{ listStyle: 'none' }}>
+                      {index > 0 && <Divider component="div" />}
                       <ListItemButton
                         selected={isSelected}
                         onClick={() => handleSelectCelebrant(celebrant)}
