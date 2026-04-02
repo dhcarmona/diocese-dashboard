@@ -214,7 +214,7 @@
 						</goals>
 						<phase>test</phase>
 						<configuration>
-							<arguments>run test -- --run</arguments>
+							<arguments>run test</arguments>
 						</configuration>
 					</execution>
 					<execution>
