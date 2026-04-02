@@ -38,8 +38,8 @@ describe('CelebrantManagementPage', () => {
 
   it('renders the celebrant directory after loading', async () => {
     mockedGetCelebrants.mockResolvedValueOnce([
-      { id: 2, name: 'Ana Perez' },
-      { id: 1, name: 'Bishop Mora' },
+      { id: 2, name: 'Ana Perez', portraitDataUrl: 'data:image/svg+xml;base64,ana' },
+      { id: 1, name: 'Bishop Mora', portraitDataUrl: 'data:image/svg+xml;base64,bishop' },
     ]);
 
     render(
@@ -56,12 +56,17 @@ describe('CelebrantManagementPage', () => {
 
     expect(screen.getByText('Total celebrants: 2')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /bishop mora/i })).toBeInTheDocument();
+    expect(document.querySelector('img[src="data:image/svg+xml;base64,ana"]')).not.toBeNull();
   });
 
   it('creates a celebrant and returns the form to create mode', async () => {
     const user = userEvent.setup();
     mockedGetCelebrants.mockResolvedValueOnce([]);
-    mockedCreateCelebrant.mockResolvedValueOnce({ id: 14, name: 'Rev. Solis' });
+    mockedCreateCelebrant.mockResolvedValueOnce({
+      id: 14,
+      name: 'Rev. Solis',
+      portraitDataUrl: 'data:image/svg+xml;base64,solis',
+    });
 
     render(
       <MemoryRouter>
@@ -91,8 +96,14 @@ describe('CelebrantManagementPage', () => {
 
   it('lets users dismiss feedback with the close button', async () => {
     const user = userEvent.setup();
-    mockedGetCelebrants.mockResolvedValue([{ id: 7, name: 'Canon Vega' }]);
-    mockedUpdateCelebrant.mockResolvedValueOnce({ id: 7, name: 'Canon Vega-Soto' });
+    mockedGetCelebrants.mockResolvedValue([
+      { id: 7, name: 'Canon Vega', portraitDataUrl: 'data:image/svg+xml;base64,vega' },
+    ]);
+    mockedUpdateCelebrant.mockResolvedValueOnce({
+      id: 7,
+      name: 'Canon Vega-Soto',
+      portraitDataUrl: 'data:image/svg+xml;base64,vega-soto',
+    });
 
     render(
       <MemoryRouter>
@@ -137,8 +148,14 @@ describe('CelebrantManagementPage', () => {
 
   it('updates and deletes an existing celebrant', async () => {
     const user = userEvent.setup();
-    mockedGetCelebrants.mockResolvedValueOnce([{ id: 7, name: 'Canon Vega' }]);
-    mockedUpdateCelebrant.mockResolvedValueOnce({ id: 7, name: 'Canon Vega-Soto' });
+    mockedGetCelebrants.mockResolvedValueOnce([
+      { id: 7, name: 'Canon Vega', portraitDataUrl: 'data:image/svg+xml;base64,vega' },
+    ]);
+    mockedUpdateCelebrant.mockResolvedValueOnce({
+      id: 7,
+      name: 'Canon Vega-Soto',
+      portraitDataUrl: 'data:image/svg+xml;base64,vega-soto',
+    });
     mockedDeleteCelebrant.mockResolvedValueOnce();
 
     render(
@@ -149,6 +166,7 @@ describe('CelebrantManagementPage', () => {
 
     const celebrantButton = await screen.findByRole('button', { name: /canon vega/i });
     await user.click(celebrantButton);
+    expect(screen.getByTestId('celebrant-form-portrait')).toBeInTheDocument();
 
     const nameField = screen.getByLabelText('Celebrant name');
     await user.clear(nameField);

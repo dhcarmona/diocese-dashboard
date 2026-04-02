@@ -12,22 +12,26 @@ import java.util.Optional;
 public class CelebrantService {
 
   private final CelebrantRepository celebrantRepository;
+  private final PortraitService portraitService;
 
   @Autowired
-  public CelebrantService(CelebrantRepository celebrantRepository) {
+  public CelebrantService(CelebrantRepository celebrantRepository, PortraitService portraitService) {
     this.celebrantRepository = celebrantRepository;
+    this.portraitService = portraitService;
   }
 
   public List<Celebrant> findAll() {
-    return celebrantRepository.findAll();
+    return celebrantRepository.findAll().stream()
+        .map(this::attachPortrait)
+        .toList();
   }
 
   public Optional<Celebrant> findById(Long id) {
-    return celebrantRepository.findById(id);
+    return celebrantRepository.findById(id).map(this::attachPortrait);
   }
 
   public Celebrant save(Celebrant celebrant) {
-    return celebrantRepository.save(celebrant);
+    return attachPortrait(celebrantRepository.save(celebrant));
   }
 
   public void deleteById(Long id) {
@@ -36,5 +40,10 @@ public class CelebrantService {
 
   public boolean existsById(Long id) {
     return celebrantRepository.existsById(id);
+  }
+
+  private Celebrant attachPortrait(Celebrant celebrant) {
+    celebrant.setPortraitDataUrl(portraitService.resolveCelebrantPortraitDataUrl(celebrant.getName()));
+    return celebrant;
   }
 }

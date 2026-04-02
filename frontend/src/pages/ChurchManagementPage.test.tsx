@@ -38,8 +38,18 @@ describe('ChurchManagementPage', () => {
 
   it('renders the church directory after loading', async () => {
     mockedGetChurches.mockResolvedValueOnce([
-      { name: 'Iglesia San Pablo', location: 'Heredia', mainCelebrant: null },
-      { name: 'Cathedral', location: 'San Jose', mainCelebrant: null },
+      {
+        name: 'Iglesia San Pablo',
+        location: 'Heredia',
+        mainCelebrant: null,
+        portraitDataUrl: 'data:image/svg+xml;base64,san-pablo',
+      },
+      {
+        name: 'Cathedral',
+        location: 'San Jose',
+        mainCelebrant: null,
+        portraitDataUrl: 'data:image/svg+xml;base64,cathedral',
+      },
     ]);
 
     render(
@@ -57,6 +67,7 @@ describe('ChurchManagementPage', () => {
     expect(screen.getByText('Location: San Jose')).toBeInTheDocument();
     expect(screen.getByText('Total churches: 2')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /iglesia san pablo/i })).toBeInTheDocument();
+    expect(document.querySelector('img[src="data:image/svg+xml;base64,cathedral"]')).not.toBeNull();
   });
 
   it('creates a church and returns the form to create mode', async () => {
@@ -66,6 +77,7 @@ describe('ChurchManagementPage', () => {
       name: 'St. Luke',
       location: 'Cartago',
       mainCelebrant: null,
+      portraitDataUrl: 'data:image/svg+xml;base64,luke',
     });
 
     render(
@@ -102,11 +114,17 @@ describe('ChurchManagementPage', () => {
 
   it('lets users dismiss feedback with the close button', async () => {
     const user = userEvent.setup();
-    mockedGetChurches.mockResolvedValue([{ name: 'Trinity', location: 'Limon', mainCelebrant: null }]);
+    mockedGetChurches.mockResolvedValue([{
+      name: 'Trinity',
+      location: 'Limon',
+      mainCelebrant: null,
+      portraitDataUrl: 'data:image/svg+xml;base64,trinity',
+    }]);
     mockedUpdateChurch.mockResolvedValueOnce({
       name: 'Trinity',
       location: 'Limon Centro',
       mainCelebrant: null,
+      portraitDataUrl: 'data:image/svg+xml;base64,trinity-centro',
     });
 
     render(
@@ -153,12 +171,18 @@ describe('ChurchManagementPage', () => {
   it('updates and deletes an existing church', async () => {
     const user = userEvent.setup();
     mockedGetChurches.mockResolvedValueOnce([
-      { name: 'Trinity', location: 'Limon', mainCelebrant: null },
+      {
+        name: 'Trinity',
+        location: 'Limon',
+        mainCelebrant: null,
+        portraitDataUrl: 'data:image/svg+xml;base64,trinity',
+      },
     ]);
     mockedUpdateChurch.mockResolvedValueOnce({
       name: 'Trinity',
       location: 'Puerto Limon',
       mainCelebrant: null,
+      portraitDataUrl: 'data:image/svg+xml;base64,puerto-limon',
     });
     mockedDeleteChurch.mockResolvedValueOnce();
 
@@ -170,6 +194,7 @@ describe('ChurchManagementPage', () => {
 
     const churchButton = await screen.findByRole('button', { name: /trinity/i });
     await user.click(churchButton);
+    expect(screen.getByTestId('church-form-portrait')).toBeInTheDocument();
 
     const nameField = screen.getByLabelText('Church name');
     expect(nameField).toBeDisabled();

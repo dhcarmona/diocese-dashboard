@@ -2,7 +2,6 @@ import AddOutlinedIcon from '@mui/icons-material/AddOutlined';
 import CloseOutlinedIcon from '@mui/icons-material/CloseOutlined';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
-import PersonOutlineOutlinedIcon from '@mui/icons-material/PersonOutlineOutlined';
 import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined';
 import Alert from '@mui/material/Alert';
 import Box from '@mui/material/Box';
@@ -28,6 +27,7 @@ import {
   updateCelebrant,
   type Celebrant,
 } from '../api/celebrants';
+import CelebrantPortrait from '../components/CelebrantPortrait';
 import PageHeader from '../components/PageHeader';
 
 type FeedbackSeverity = 'success' | 'error';
@@ -249,6 +249,22 @@ export default function CelebrantManagementPage() {
             </Typography>
 
             <Stack spacing={2.5}>
+              {selectedCelebrant && (
+                <Box
+                  sx={{
+                    display: 'flex',
+                    justifyContent: 'center',
+                    py: 1,
+                  }}
+                >
+                  <CelebrantPortrait
+                    celebrant={selectedCelebrant}
+                    size={240}
+                    testId="celebrant-form-portrait"
+                  />
+                </Box>
+              )}
+
               <TextField
                 label={t('celebrants.form.nameLabel')}
                 placeholder={t('celebrants.form.namePlaceholder')}
@@ -362,17 +378,20 @@ export default function CelebrantManagementPage() {
                   return (
                     <Box component="li" key={celebrant.id} sx={{ listStyle: 'none' }}>
                       {index > 0 && <Divider component="div" />}
-                      <ListItemButton
-                        selected={isSelected}
-                        onClick={() => handleSelectCelebrant(celebrant)}
-                        sx={{ px: 3, py: 2.5, alignItems: 'flex-start' }}
-                      >
-                        <PersonOutlineOutlinedIcon
-                          color={isSelected ? 'primary' : 'action'}
-                          sx={{ mt: 0.5, mr: 2 }}
-                        />
-                        <ListItemText
-                          primary={
+                        <ListItemButton
+                          selected={isSelected}
+                          onClick={() => handleSelectCelebrant(celebrant)}
+                          sx={{ px: 3, py: 2.5, alignItems: 'center' }}
+                        >
+                          <CelebrantPortrait
+                            celebrant={celebrant}
+                            sx={{
+                              mr: 2,
+                              color: isSelected ? 'primary.main' : 'action.active',
+                            }}
+                          />
+                          <ListItemText
+                            primary={
                             <Typography variant="h6" fontWeight={700} sx={{ mb: 0.5 }}>
                               {celebrant.name}
                             </Typography>

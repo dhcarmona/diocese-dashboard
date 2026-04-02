@@ -3,6 +3,7 @@ import { api, getCsrfHeaders } from './auth';
 export interface Celebrant {
   id: number;
   name: string;
+  portraitDataUrl?: string;
 }
 
 export interface CelebrantDraft {
