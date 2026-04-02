@@ -1,6 +1,7 @@
 package org.iecr.diocesedashboard.domain.objects;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -9,6 +10,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.OneToOne;
+import jakarta.persistence.Transient;
 
 import java.util.Set;
 
@@ -31,6 +33,10 @@ public class Celebrant {
   @ManyToMany
   @JoinTable(name = "celebrant_service")
   private Set<ServiceInstance> servicesCelebrated;
+
+  @Transient
+  @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+  private String portraitDataUrl;
 
   public Celebrant() {
   }
@@ -65,6 +71,14 @@ public class Celebrant {
 
   public void setServicesCelebrated(Set<ServiceInstance> servicesCelebrated) {
     this.servicesCelebrated = servicesCelebrated;
+  }
+
+  public String getPortraitDataUrl() {
+    return portraitDataUrl;
+  }
+
+  public void setPortraitDataUrl(String portraitDataUrl) {
+    this.portraitDataUrl = portraitDataUrl;
   }
 
   @Override

@@ -2,7 +2,6 @@ import AddOutlinedIcon from '@mui/icons-material/AddOutlined';
 import CloseOutlinedIcon from '@mui/icons-material/CloseOutlined';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
-import LocationCityOutlinedIcon from '@mui/icons-material/LocationCityOutlined';
 import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined';
 import Alert from '@mui/material/Alert';
 import Box from '@mui/material/Box';
@@ -28,6 +27,7 @@ import {
   updateChurch,
   type Church,
 } from '../api/churches';
+import ChurchPortrait from '../components/ChurchPortrait';
 import PageHeader from '../components/PageHeader';
 
 type FeedbackSeverity = 'success' | 'error';
@@ -266,6 +266,22 @@ export default function ChurchManagementPage() {
             </Typography>
 
             <Stack spacing={2.5}>
+              {selectedChurch && (
+                <Box
+                  sx={{
+                    display: 'flex',
+                    justifyContent: 'center',
+                    py: 1,
+                  }}
+                >
+                  <ChurchPortrait
+                    church={selectedChurch}
+                    size={240}
+                    testId="church-form-portrait"
+                  />
+                </Box>
+              )}
+
               <TextField
                 label={t('churches.form.nameLabel')}
                 placeholder={t('churches.form.namePlaceholder')}
@@ -391,17 +407,20 @@ export default function ChurchManagementPage() {
                   return (
                     <Box component="li" key={church.name} sx={{ listStyle: 'none' }}>
                       {index > 0 && <Divider component="div" />}
-                      <ListItemButton
-                        selected={isSelected}
-                        onClick={() => handleSelectChurch(church)}
-                        sx={{ px: 3, py: 2.5, alignItems: 'flex-start' }}
-                      >
-                        <LocationCityOutlinedIcon
-                          color={isSelected ? 'primary' : 'action'}
-                          sx={{ mt: 0.5, mr: 2 }}
-                        />
-                        <ListItemText
-                          primary={
+                        <ListItemButton
+                          selected={isSelected}
+                          onClick={() => handleSelectChurch(church)}
+                          sx={{ px: 3, py: 2.5, alignItems: 'center' }}
+                        >
+                          <ChurchPortrait
+                            church={church}
+                            sx={{
+                              mr: 2,
+                              color: isSelected ? 'primary.main' : 'action.active',
+                            }}
+                          />
+                          <ListItemText
+                            primary={
                             <Typography variant="h6" fontWeight={700} sx={{ mb: 0.5 }}>
                               {church.name}
                             </Typography>

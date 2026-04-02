@@ -1,11 +1,13 @@
 package org.iecr.diocesedashboard.domain.objects;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
+import jakarta.persistence.Transient;
 
 import java.util.Set;
 
@@ -24,6 +26,10 @@ public class Church {
   @JsonIgnore
   @OneToMany(mappedBy = "church")
   private Set<ServiceInstance> services;
+
+  @Transient
+  @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+  private String portraitDataUrl;
 
   public Church() {
   }
@@ -58,6 +64,14 @@ public class Church {
 
   public void setServices(Set<ServiceInstance> services) {
     this.services = services;
+  }
+
+  public String getPortraitDataUrl() {
+    return portraitDataUrl;
+  }
+
+  public void setPortraitDataUrl(String portraitDataUrl) {
+    this.portraitDataUrl = portraitDataUrl;
   }
 
   @Override

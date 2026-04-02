@@ -12,22 +12,26 @@ import java.util.Optional;
 public class ChurchService {
 
   private final ChurchRepository churchRepository;
+  private final PortraitService portraitService;
 
   @Autowired
-  public ChurchService(ChurchRepository churchRepository) {
+  public ChurchService(ChurchRepository churchRepository, PortraitService portraitService) {
     this.churchRepository = churchRepository;
+    this.portraitService = portraitService;
   }
 
   public List<Church> findAll() {
-    return churchRepository.findAll();
+    return churchRepository.findAll().stream()
+        .map(this::attachPortrait)
+        .toList();
   }
 
   public Optional<Church> findById(String name) {
-    return churchRepository.findById(name);
+    return churchRepository.findById(name).map(this::attachPortrait);
   }
 
   public Church save(Church church) {
-    return churchRepository.save(church);
+    return attachPortrait(churchRepository.save(church));
   }
 
   public void deleteById(String name) {
@@ -36,5 +40,10 @@ public class ChurchService {
 
   public boolean existsById(String name) {
     return churchRepository.existsById(name);
+  }
+
+  private Church attachPortrait(Church church) {
+    church.setPortraitDataUrl(portraitService.resolveChurchPortraitDataUrl(church.getName()));
+    return church;
   }
 }

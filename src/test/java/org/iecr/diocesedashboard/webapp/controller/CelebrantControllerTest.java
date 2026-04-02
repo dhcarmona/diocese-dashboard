@@ -48,6 +48,7 @@ class CelebrantControllerTest {
     Celebrant c = new Celebrant();
     c.setId(id);
     c.setName(name);
+    c.setPortraitDataUrl("data:image/svg+xml;base64,celebrant-" + id);
     return c;
   }
 
@@ -61,7 +62,8 @@ class CelebrantControllerTest {
 
     mockMvc.perform(get("/api/celebrants"))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.length()").value(2));
+        .andExpect(jsonPath("$.length()").value(2))
+        .andExpect(jsonPath("$[0].portraitDataUrl").value("data:image/svg+xml;base64,celebrant-1"));
   }
 
   @Test
@@ -88,7 +90,9 @@ class CelebrantControllerTest {
 
     mockMvc.perform(get("/api/celebrants/1"))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.name").value("Fr. John"));
+        .andExpect(jsonPath("$.name").value("Fr. John"))
+        .andExpect(jsonPath("$.portraitDataUrl")
+            .value("data:image/svg+xml;base64,celebrant-1"));
   }
 
   @Test

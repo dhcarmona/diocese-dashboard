@@ -21,29 +21,41 @@ class ChurchServiceTest {
   @Mock
   private ChurchRepository churchRepository;
 
+  @Mock
+  private PortraitService portraitService;
+
   @InjectMocks
   private ChurchService churchService;
 
   @Test
   void findAll_returnsAllChurches() {
     Church c1 = new Church();
+    c1.setName("Cathedral");
     Church c2 = new Church();
+    c2.setName("Trinity");
     when(churchRepository.findAll()).thenReturn(List.of(c1, c2));
+    when(portraitService.resolveChurchPortraitDataUrl("Cathedral")).thenReturn("portrait-cathedral");
+    when(portraitService.resolveChurchPortraitDataUrl("Trinity")).thenReturn("portrait-trinity");
 
     List<Church> result = churchService.findAll();
 
     assertThat(result).hasSize(2);
+    assertThat(result).extracting(Church::getPortraitDataUrl)
+        .containsExactly("portrait-cathedral", "portrait-trinity");
     verify(churchRepository).findAll();
   }
 
   @Test
   void findById_returnsPresent_whenExists() {
     Church church = new Church();
+    church.setName("St. Mary");
     when(churchRepository.findById("St. Mary")).thenReturn(Optional.of(church));
+    when(portraitService.resolveChurchPortraitDataUrl("St. Mary")).thenReturn("portrait-mary");
 
     Optional<Church> result = churchService.findById("St. Mary");
 
     assertThat(result).isPresent().contains(church);
+    assertThat(result.orElseThrow().getPortraitDataUrl()).isEqualTo("portrait-mary");
     verify(churchRepository).findById("St. Mary");
   }
 
@@ -59,11 +71,14 @@ class ChurchServiceTest {
   @Test
   void save_returnsSavedChurch() {
     Church church = new Church();
+    church.setName("St. Luke");
     when(churchRepository.save(church)).thenReturn(church);
+    when(portraitService.resolveChurchPortraitDataUrl("St. Luke")).thenReturn("portrait-luke");
 
     Church result = churchService.save(church);
 
     assertThat(result).isEqualTo(church);
+    assertThat(result.getPortraitDataUrl()).isEqualTo("portrait-luke");
     verify(churchRepository).save(church);
   }
 

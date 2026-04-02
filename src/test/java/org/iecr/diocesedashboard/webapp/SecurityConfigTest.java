@@ -146,6 +146,12 @@ class SecurityConfigTest {
         .andExpect(status().isNotFound());
   }
 
+  @Test
+  void portraitAsset_noAuth_returns401() throws Exception {
+    mockMvc.perform(get("/portraits/celebrants/placeholder.svg"))
+        .andExpect(status().isUnauthorized());
+  }
+
   // ---------------------------------------------------------------------------
   // anyRequest() catch-all requires ADMIN
   // ---------------------------------------------------------------------------

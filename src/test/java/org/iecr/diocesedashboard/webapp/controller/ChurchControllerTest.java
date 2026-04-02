@@ -49,6 +49,7 @@ class ChurchControllerTest {
     Church c = new Church();
     c.setName(name);
     c.setLocation("San José");
+    c.setPortraitDataUrl("data:image/svg+xml;base64,church-" + name);
     return c;
   }
 
@@ -61,7 +62,10 @@ class ChurchControllerTest {
 
     mockMvc.perform(get("/api/churches"))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.length()").value(2));
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.length()").value(2))
+        .andExpect(jsonPath("$[0].portraitDataUrl")
+            .value("data:image/svg+xml;base64,church-ChurchA"));
   }
 
   @Test
@@ -89,7 +93,9 @@ class ChurchControllerTest {
 
     mockMvc.perform(get("/api/churches/Trinity"))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.name").value("Trinity"));
+        .andExpect(jsonPath("$.name").value("Trinity"))
+        .andExpect(jsonPath("$.portraitDataUrl")
+            .value("data:image/svg+xml;base64,church-Trinity"));
   }
 
   @Test

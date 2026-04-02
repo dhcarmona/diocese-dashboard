@@ -21,29 +21,41 @@ class CelebrantServiceTest {
   @Mock
   private CelebrantRepository celebrantRepository;
 
+  @Mock
+  private PortraitService portraitService;
+
   @InjectMocks
   private CelebrantService celebrantService;
 
   @Test
   void findAll_returnsAllCelebrants() {
     Celebrant c1 = new Celebrant();
+    c1.setName("Ana Perez");
     Celebrant c2 = new Celebrant();
+    c2.setName("Bishop Mora");
     when(celebrantRepository.findAll()).thenReturn(List.of(c1, c2));
+    when(portraitService.resolveCelebrantPortraitDataUrl("Ana Perez")).thenReturn("portrait-ana");
+    when(portraitService.resolveCelebrantPortraitDataUrl("Bishop Mora")).thenReturn("portrait-bishop");
 
     List<Celebrant> result = celebrantService.findAll();
 
     assertThat(result).hasSize(2);
+    assertThat(result).extracting(Celebrant::getPortraitDataUrl)
+        .containsExactly("portrait-ana", "portrait-bishop");
     verify(celebrantRepository).findAll();
   }
 
   @Test
   void findById_returnsPresent_whenExists() {
     Celebrant celebrant = new Celebrant();
+    celebrant.setName("Fr. John");
     when(celebrantRepository.findById(1L)).thenReturn(Optional.of(celebrant));
+    when(portraitService.resolveCelebrantPortraitDataUrl("Fr. John")).thenReturn("portrait-john");
 
     Optional<Celebrant> result = celebrantService.findById(1L);
 
     assertThat(result).isPresent().contains(celebrant);
+    assertThat(result.orElseThrow().getPortraitDataUrl()).isEqualTo("portrait-john");
     verify(celebrantRepository).findById(1L);
   }
 
@@ -59,11 +71,14 @@ class CelebrantServiceTest {
   @Test
   void save_returnsSavedCelebrant() {
     Celebrant celebrant = new Celebrant();
+    celebrant.setName("Rev. Solis");
     when(celebrantRepository.save(celebrant)).thenReturn(celebrant);
+    when(portraitService.resolveCelebrantPortraitDataUrl("Rev. Solis")).thenReturn("portrait-solis");
 
     Celebrant result = celebrantService.save(celebrant);
 
     assertThat(result).isEqualTo(celebrant);
+    assertThat(result.getPortraitDataUrl()).isEqualTo("portrait-solis");
     verify(celebrantRepository).save(celebrant);
   }
 
