@@ -13,6 +13,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.hamcrest.Matchers;
 import org.iecr.diocesedashboard.domain.objects.Church;
 import org.iecr.diocesedashboard.service.ChurchService;
 import org.iecr.diocesedashboard.webapp.SecurityConfig;
@@ -49,7 +50,7 @@ class ChurchControllerTest {
     Church c = new Church();
     c.setName(name);
     c.setLocation("San José");
-    c.setPortraitDataUrl("data:image/svg+xml;base64,church-" + name);
+    c.setPortraitUrl("/api/portraits/churches?name=" + name.replace(" ", "+"));
     return c;
   }
 
@@ -62,10 +63,9 @@ class ChurchControllerTest {
 
     mockMvc.perform(get("/api/churches"))
         .andExpect(status().isOk())
-        .andExpect(status().isOk())
         .andExpect(jsonPath("$.length()").value(2))
-        .andExpect(jsonPath("$[0].portraitDataUrl")
-            .value("data:image/svg+xml;base64,church-ChurchA"));
+        .andExpect(jsonPath("$[*].portraitUrl")
+            .value(Matchers.hasItem("/api/portraits/churches?name=ChurchA")));
   }
 
   @Test
@@ -94,8 +94,8 @@ class ChurchControllerTest {
     mockMvc.perform(get("/api/churches/Trinity"))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.name").value("Trinity"))
-        .andExpect(jsonPath("$.portraitDataUrl")
-            .value("data:image/svg+xml;base64,church-Trinity"));
+        .andExpect(jsonPath("$.portraitUrl")
+            .value("/api/portraits/churches?name=Trinity"));
   }
 
   @Test

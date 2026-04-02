@@ -3,14 +3,14 @@ import { api, getCsrfHeaders } from './auth';
 export interface ChurchCelebrantSummary {
   id: number;
   name: string;
-  portraitDataUrl?: string;
+  portraitUrl?: string;
 }
 
 export interface Church {
   name: string;
   location: string | null;
   mainCelebrant?: ChurchCelebrantSummary | null;
-  portraitDataUrl?: string;
+  portraitUrl?: string;
 }
 
 export interface ChurchDraft {

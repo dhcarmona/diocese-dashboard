@@ -43,7 +43,7 @@ public class CelebrantService {
   }
 
   private Celebrant attachPortrait(Celebrant celebrant) {
-    celebrant.setPortraitDataUrl(portraitService.resolveCelebrantPortraitDataUrl(celebrant.getName()));
+    celebrant.setPortraitUrl(portraitService.buildCelebrantPortraitUrl(celebrant.getName()));
     return celebrant;
   }
 }

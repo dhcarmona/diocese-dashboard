@@ -12,6 +12,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.hamcrest.Matchers;
 import org.iecr.diocesedashboard.domain.objects.Celebrant;
 import org.iecr.diocesedashboard.service.CelebrantService;
 import org.iecr.diocesedashboard.webapp.SecurityConfig;
@@ -48,7 +49,7 @@ class CelebrantControllerTest {
     Celebrant c = new Celebrant();
     c.setId(id);
     c.setName(name);
-    c.setPortraitDataUrl("data:image/svg+xml;base64,celebrant-" + id);
+    c.setPortraitUrl("/api/portraits/celebrants?name=" + name.replace(" ", "+"));
     return c;
   }
 
@@ -63,7 +64,8 @@ class CelebrantControllerTest {
     mockMvc.perform(get("/api/celebrants"))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.length()").value(2))
-        .andExpect(jsonPath("$[0].portraitDataUrl").value("data:image/svg+xml;base64,celebrant-1"));
+        .andExpect(jsonPath("$[*].portraitUrl")
+            .value(Matchers.hasItem("/api/portraits/celebrants?name=Fr.+John")));
   }
 
   @Test
@@ -91,8 +93,8 @@ class CelebrantControllerTest {
     mockMvc.perform(get("/api/celebrants/1"))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.name").value("Fr. John"))
-        .andExpect(jsonPath("$.portraitDataUrl")
-            .value("data:image/svg+xml;base64,celebrant-1"));
+        .andExpect(jsonPath("$.portraitUrl")
+            .value("/api/portraits/celebrants?name=Fr.+John"));
   }
 
   @Test

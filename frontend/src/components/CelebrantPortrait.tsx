@@ -20,7 +20,7 @@ export default function CelebrantPortrait({
     <EntityPortrait
       icon={<PersonOutlineOutlinedIcon />}
       size={size}
-      src={celebrant.portraitDataUrl}
+      src={celebrant.portraitUrl}
       sx={sx}
       testId={testId}
     />

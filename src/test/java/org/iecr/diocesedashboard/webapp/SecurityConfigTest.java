@@ -10,8 +10,10 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.iecr.diocesedashboard.domain.objects.DashboardUser;
 import org.iecr.diocesedashboard.domain.objects.UserRole;
+import org.iecr.diocesedashboard.service.PortraitService;
 import org.iecr.diocesedashboard.webapp.controller.AuthController;
 import org.iecr.diocesedashboard.webapp.controller.FrontendController;
+import org.iecr.diocesedashboard.webapp.controller.PortraitController;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -28,7 +30,7 @@ import org.springframework.test.web.servlet.MvcResult;
  * Integration tests for {@link SecurityConfig} authorization rules, login/logout
  * behavior, static asset access, and CSRF enforcement.
  */
-@WebMvcTest({FrontendController.class, AuthController.class})
+@WebMvcTest({FrontendController.class, AuthController.class, PortraitController.class})
 @Import(SecurityConfig.class)
 class SecurityConfigTest {
 
@@ -42,6 +44,9 @@ class SecurityConfigTest {
 
   @MockBean
   private UserDetailsService userDetailsService;
+
+  @MockBean
+  private PortraitService portraitService;
 
   // ---------------------------------------------------------------------------
   // Login endpoint
@@ -149,6 +154,12 @@ class SecurityConfigTest {
   @Test
   void portraitAsset_noAuth_returns401() throws Exception {
     mockMvc.perform(get("/portraits/celebrants/placeholder.svg"))
+        .andExpect(status().isUnauthorized());
+  }
+
+  @Test
+  void portraitApi_noAuth_returns401() throws Exception {
+    mockMvc.perform(get("/api/portraits/celebrants").param("name", "Ana Perez"))
         .andExpect(status().isUnauthorized());
   }
 

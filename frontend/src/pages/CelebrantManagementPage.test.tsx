@@ -38,8 +38,8 @@ describe('CelebrantManagementPage', () => {
 
   it('renders the celebrant directory after loading', async () => {
     mockedGetCelebrants.mockResolvedValueOnce([
-      { id: 2, name: 'Ana Perez', portraitDataUrl: 'data:image/svg+xml;base64,ana' },
-      { id: 1, name: 'Bishop Mora', portraitDataUrl: 'data:image/svg+xml;base64,bishop' },
+      { id: 2, name: 'Ana Perez', portraitUrl: '/api/portraits/celebrants?name=Ana+Perez' },
+      { id: 1, name: 'Bishop Mora', portraitUrl: '/api/portraits/celebrants?name=Bishop+Mora' },
     ]);
 
     render(
@@ -56,7 +56,7 @@ describe('CelebrantManagementPage', () => {
 
     expect(screen.getByText('Total celebrants: 2')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /bishop mora/i })).toBeInTheDocument();
-    expect(document.querySelector('img[src="data:image/svg+xml;base64,ana"]')).not.toBeNull();
+    expect(document.querySelector('img[src="/api/portraits/celebrants?name=Ana+Perez"]')).not.toBeNull();
   });
 
   it('creates a celebrant and returns the form to create mode', async () => {
@@ -65,7 +65,7 @@ describe('CelebrantManagementPage', () => {
     mockedCreateCelebrant.mockResolvedValueOnce({
       id: 14,
       name: 'Rev. Solis',
-      portraitDataUrl: 'data:image/svg+xml;base64,solis',
+      portraitUrl: '/api/portraits/celebrants?name=Rev.+Solis',
     });
 
     render(
@@ -97,12 +97,12 @@ describe('CelebrantManagementPage', () => {
   it('lets users dismiss feedback with the close button', async () => {
     const user = userEvent.setup();
     mockedGetCelebrants.mockResolvedValue([
-      { id: 7, name: 'Canon Vega', portraitDataUrl: 'data:image/svg+xml;base64,vega' },
+      { id: 7, name: 'Canon Vega', portraitUrl: '/api/portraits/celebrants?name=Canon+Vega' },
     ]);
     mockedUpdateCelebrant.mockResolvedValueOnce({
       id: 7,
       name: 'Canon Vega-Soto',
-      portraitDataUrl: 'data:image/svg+xml;base64,vega-soto',
+      portraitUrl: '/api/portraits/celebrants?name=Canon+Vega-Soto',
     });
 
     render(
@@ -149,12 +149,12 @@ describe('CelebrantManagementPage', () => {
   it('updates and deletes an existing celebrant', async () => {
     const user = userEvent.setup();
     mockedGetCelebrants.mockResolvedValueOnce([
-      { id: 7, name: 'Canon Vega', portraitDataUrl: 'data:image/svg+xml;base64,vega' },
+      { id: 7, name: 'Canon Vega', portraitUrl: '/api/portraits/celebrants?name=Canon+Vega' },
     ]);
     mockedUpdateCelebrant.mockResolvedValueOnce({
       id: 7,
       name: 'Canon Vega-Soto',
-      portraitDataUrl: 'data:image/svg+xml;base64,vega-soto',
+      portraitUrl: '/api/portraits/celebrants?name=Canon+Vega-Soto',
     });
     mockedDeleteCelebrant.mockResolvedValueOnce();
 

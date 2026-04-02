@@ -36,7 +36,7 @@ public class Celebrant {
 
   @Transient
   @JsonProperty(access = JsonProperty.Access.READ_ONLY)
-  private String portraitDataUrl;
+  private String portraitUrl;
 
   public Celebrant() {
   }
@@ -73,12 +73,12 @@ public class Celebrant {
     this.servicesCelebrated = servicesCelebrated;
   }
 
-  public String getPortraitDataUrl() {
-    return portraitDataUrl;
+  public String getPortraitUrl() {
+    return portraitUrl;
   }
 
-  public void setPortraitDataUrl(String portraitDataUrl) {
-    this.portraitDataUrl = portraitDataUrl;
+  public void setPortraitUrl(String portraitUrl) {
+    this.portraitUrl = portraitUrl;
   }
 
   @Override

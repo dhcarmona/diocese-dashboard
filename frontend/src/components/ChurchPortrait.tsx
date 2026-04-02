@@ -20,7 +20,7 @@ export default function ChurchPortrait({
     <EntityPortrait
       icon={<LocationCityOutlinedIcon />}
       size={size}
-      src={church.portraitDataUrl}
+      src={church.portraitUrl}
       sx={sx}
       testId={testId}
     />
