@@ -45,6 +45,49 @@ The following environment variables are required to start the application:
 | `SPRING_DATASOURCE_USERNAME`| Database username              |
 | `SPRING_DATASOURCE_PASSWORD`| Database password              |
 
+## WhatsApp Messaging (Twilio)
+
+The application sends WhatsApp messages via the [Twilio API](https://www.twilio.com/en-us/whatsapp).
+Two environment variables are always required, and a third controls which number messages are sent from:
+
+| Variable | Purpose |
+|---|---|
+| `TWILIO_ACCOUNT_SID` | Twilio account SID (found in the Twilio Console) |
+| `TWILIO_AUTH_TOKEN` | Twilio auth token (found in the Twilio Console) |
+| `TWILIO_WHATSAPP_FROM` | Sender number in E.164 format (e.g. `+50600000000`); defaults to the Twilio sandbox number `+14155238886` |
+
+### Development — Twilio Sandbox
+
+The sandbox lets you test without a verified business number or Meta approval.
+
+1. [Sign up for a free Twilio account](https://www.twilio.com/try-twilio).
+2. In the Twilio Console, go to **Messaging → Try it out → Send a WhatsApp message**.
+3. Follow the on-screen instructions — each recipient must send a one-time opt-in message (e.g. `join <your-sandbox-keyword>`) to `+1 415 523 8886` on WhatsApp.
+4. Set only the two required variables (the `+14155238886` sandbox default is used automatically):
+
+    ```bash
+    export TWILIO_ACCOUNT_SID=ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+    export TWILIO_AUTH_TOKEN=your_auth_token
+    ```
+
+### Production — Your Own Number
+
+Once you have a Meta-verified WhatsApp Business number connected to Twilio:
+
+1. In the Twilio Console, go to **Messaging → Senders → WhatsApp senders** and follow the steps to connect your number.
+2. Submit and get approval for any [message templates](https://www.twilio.com/docs/whatsapp/tutorial/send-whatsapp-notification-messages-templates) you intend to send outside a 24-hour customer service window.
+3. Set all three variables:
+
+    ```bash
+    export TWILIO_ACCOUNT_SID=ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+    export TWILIO_AUTH_TOKEN=your_auth_token
+    export TWILIO_WHATSAPP_FROM=+50600000000
+    ```
+
+> **Never commit `TWILIO_ACCOUNT_SID` or `TWILIO_AUTH_TOKEN` to the repository.** Treat them like passwords — use environment variables, a secrets manager, or an `.env` file that is listed in `.gitignore`.
+
+---
+
 ## Authentication
 
 The app uses session-based login. Visit `/login` in the browser and sign in with your
