@@ -138,6 +138,53 @@
       "nameRequired": "Enter a celebrant name before saving."
     }
   },
+  "churches": {
+    "subtitle": "Add, update, and remove churches.",
+    "summary": {
+      "total": "Total churches"
+    },
+    "actions": {
+      "add": "Add Church",
+      "clearSearch": "Clear Search",
+      "edit": "Edit",
+      "create": "Create Church",
+      "save": "Save Changes",
+      "reset": "Start New",
+      "delete": "Delete Church"
+    },
+    "search": {
+      "label": "Search churches",
+      "placeholder": "Search by name or location"
+    },
+    "list": {
+      "title": "Church directory",
+      "loading": "Loading churches...",
+      "loadError": "We could not load the churches right now.",
+      "empty": "No churches have been added yet.",
+      "noMatches": "No churches match the current search.",
+      "location": "Location: {{location}}",
+      "noLocation": "No location has been added yet."
+    },
+    "form": {
+      "createTitle": "Add Church",
+      "editTitle": "Edit Church",
+      "nameLabel": "Church name",
+      "namePlaceholder": "Enter the church name",
+      "nameHelperEdit": "Church names cannot be changed after creation.",
+      "locationLabel": "Location",
+      "locationPlaceholder": "Enter the church location"
+    },
+    "feedback": {
+      "created": "{{name}} was created.",
+      "updated": "{{name}} was updated.",
+      "deleted": "{{name}} was removed.",
+      "saveError": "We could not save the church right now.",
+      "deleteError": "We could not delete the church right now."
+    },
+    "validation": {
+      "nameRequired": "Enter a church name before saving."
+    }
+  },
   "placeholder": {
     "title": "This area is ready for the next UI step.",
     "description": "The page layout and navigation are in place so the rest of the workflow can be added consistently.",

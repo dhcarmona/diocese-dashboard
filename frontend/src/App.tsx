@@ -11,6 +11,7 @@ import { BrowserRouter, Navigate, Outlet, Route, Routes } from 'react-router-dom
 import { AuthProvider } from './auth/AuthProvider';
 import { useAuth } from './auth/auth-context';
 import AppShell from './components/AppShell';
+import ChurchManagementPage from './pages/ChurchManagementPage';
 import LoginPage from './pages/LoginPage';
 import CelebrantManagementPage from './pages/CelebrantManagementPage';
 import FeaturePlaceholderPage from './pages/FeaturePlaceholderPage';
@@ -143,12 +144,7 @@ function AppRoutes() {
             />
             <Route
               path="/churches/manage"
-              element={
-                <FeaturePlaceholderPage
-                  titleKey="areas.churches.title"
-                  descriptionKey="areas.churches.description"
-                />
-              }
+              element={<ChurchManagementPage />}
             />
             <Route
               path="/reporter-links/manage"
