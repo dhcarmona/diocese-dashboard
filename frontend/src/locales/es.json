@@ -138,6 +138,53 @@
       "nameRequired": "Ingrese un nombre de celebrante antes de guardar."
     }
   },
+  "churches": {
+    "subtitle": "Agregue, actualice y elimine iglesias.",
+    "summary": {
+      "total": "Total de iglesias"
+    },
+    "actions": {
+      "add": "Agregar iglesia",
+      "clearSearch": "Limpiar búsqueda",
+      "edit": "Editar",
+      "create": "Crear iglesia",
+      "save": "Guardar cambios",
+      "reset": "Comenzar nuevo",
+      "delete": "Eliminar iglesia"
+    },
+    "search": {
+      "label": "Buscar iglesias",
+      "placeholder": "Buscar por nombre o ubicación"
+    },
+    "list": {
+      "title": "Directorio de iglesias",
+      "loading": "Cargando iglesias...",
+      "loadError": "No se pudieron cargar las iglesias en este momento.",
+      "empty": "Todavía no se han agregado iglesias.",
+      "noMatches": "Ninguna iglesia coincide con la búsqueda actual.",
+      "location": "Ubicación: {{location}}",
+      "noLocation": "Todavía no se ha agregado una ubicación."
+    },
+    "form": {
+      "createTitle": "Agregar iglesia",
+      "editTitle": "Editar iglesia",
+      "nameLabel": "Nombre de la iglesia",
+      "namePlaceholder": "Ingrese el nombre de la iglesia",
+      "nameHelperEdit": "Los nombres de las iglesias no se pueden cambiar después de crearlas.",
+      "locationLabel": "Ubicación",
+      "locationPlaceholder": "Ingrese la ubicación de la iglesia"
+    },
+    "feedback": {
+      "created": "Se creó {{name}}.",
+      "updated": "Se actualizó {{name}}.",
+      "deleted": "Se eliminó {{name}}.",
+      "saveError": "No se pudo guardar la iglesia en este momento.",
+      "deleteError": "No se pudo eliminar la iglesia en este momento."
+    },
+    "validation": {
+      "nameRequired": "Ingrese un nombre de iglesia antes de guardar."
+    }
+  },
   "placeholder": {
     "title": "Esta área está lista para el siguiente paso de la interfaz.",
     "description": "El diseño de la página y la navegación ya están preparados para que el resto del flujo se agregue de forma consistente.",
