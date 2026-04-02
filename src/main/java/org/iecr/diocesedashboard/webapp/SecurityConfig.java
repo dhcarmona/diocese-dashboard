@@ -58,7 +58,7 @@ public class SecurityConfig {
                 .csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler())
                 // Login remains exempt because the SPA fetches its CSRF token from /api/auth/csrf
                 // after the initial page load and only needs that token for protected writes.
-        .ignoringRequestMatchers("/api/auth/login")
+                .ignoringRequestMatchers("/api/auth/login")
         )
         .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/portraits/**").denyAll()
@@ -75,6 +75,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/auth/csrf").permitAll()
                 .requestMatchers("/api/auth/login", "/api/auth/logout").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/auth/me").hasAnyRole("ADMIN", "REPORTER")
+                .requestMatchers(HttpMethod.GET, "/api/portraits/**").hasAnyRole("ADMIN", "REPORTER")
                 .requestMatchers(HttpMethod.GET, "/api/churches").hasAnyRole("ADMIN", "REPORTER")
                 .requestMatchers(HttpMethod.GET, "/api/celebrants").hasAnyRole("ADMIN", "REPORTER")
                 .requestMatchers(HttpMethod.GET, "/api/service-templates").hasAnyRole("ADMIN", "REPORTER")

@@ -34,13 +34,13 @@ class CelebrantServiceTest {
     Celebrant c2 = new Celebrant();
     c2.setName("Bishop Mora");
     when(celebrantRepository.findAll()).thenReturn(List.of(c1, c2));
-    when(portraitService.resolveCelebrantPortraitDataUrl("Ana Perez")).thenReturn("portrait-ana");
-    when(portraitService.resolveCelebrantPortraitDataUrl("Bishop Mora")).thenReturn("portrait-bishop");
+    when(portraitService.buildCelebrantPortraitUrl("Ana Perez")).thenReturn("portrait-ana");
+    when(portraitService.buildCelebrantPortraitUrl("Bishop Mora")).thenReturn("portrait-bishop");
 
     List<Celebrant> result = celebrantService.findAll();
 
     assertThat(result).hasSize(2);
-    assertThat(result).extracting(Celebrant::getPortraitDataUrl)
+    assertThat(result).extracting(Celebrant::getPortraitUrl)
         .containsExactly("portrait-ana", "portrait-bishop");
     verify(celebrantRepository).findAll();
   }
@@ -50,12 +50,12 @@ class CelebrantServiceTest {
     Celebrant celebrant = new Celebrant();
     celebrant.setName("Fr. John");
     when(celebrantRepository.findById(1L)).thenReturn(Optional.of(celebrant));
-    when(portraitService.resolveCelebrantPortraitDataUrl("Fr. John")).thenReturn("portrait-john");
+    when(portraitService.buildCelebrantPortraitUrl("Fr. John")).thenReturn("portrait-john");
 
     Optional<Celebrant> result = celebrantService.findById(1L);
 
     assertThat(result).isPresent().contains(celebrant);
-    assertThat(result.orElseThrow().getPortraitDataUrl()).isEqualTo("portrait-john");
+    assertThat(result.orElseThrow().getPortraitUrl()).isEqualTo("portrait-john");
     verify(celebrantRepository).findById(1L);
   }
 
@@ -73,12 +73,12 @@ class CelebrantServiceTest {
     Celebrant celebrant = new Celebrant();
     celebrant.setName("Rev. Solis");
     when(celebrantRepository.save(celebrant)).thenReturn(celebrant);
-    when(portraitService.resolveCelebrantPortraitDataUrl("Rev. Solis")).thenReturn("portrait-solis");
+    when(portraitService.buildCelebrantPortraitUrl("Rev. Solis")).thenReturn("portrait-solis");
 
     Celebrant result = celebrantService.save(celebrant);
 
     assertThat(result).isEqualTo(celebrant);
-    assertThat(result.getPortraitDataUrl()).isEqualTo("portrait-solis");
+    assertThat(result.getPortraitUrl()).isEqualTo("portrait-solis");
     verify(celebrantRepository).save(celebrant);
   }
 

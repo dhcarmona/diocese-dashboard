@@ -42,13 +42,13 @@ describe('ChurchManagementPage', () => {
         name: 'Iglesia San Pablo',
         location: 'Heredia',
         mainCelebrant: null,
-        portraitDataUrl: 'data:image/svg+xml;base64,san-pablo',
+        portraitUrl: '/api/portraits/churches?name=Iglesia+San+Pablo',
       },
       {
         name: 'Cathedral',
         location: 'San Jose',
         mainCelebrant: null,
-        portraitDataUrl: 'data:image/svg+xml;base64,cathedral',
+        portraitUrl: '/api/portraits/churches?name=Cathedral',
       },
     ]);
 
@@ -67,7 +67,7 @@ describe('ChurchManagementPage', () => {
     expect(screen.getByText('Location: San Jose')).toBeInTheDocument();
     expect(screen.getByText('Total churches: 2')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /iglesia san pablo/i })).toBeInTheDocument();
-    expect(document.querySelector('img[src="data:image/svg+xml;base64,cathedral"]')).not.toBeNull();
+    expect(document.querySelector('img[src="/api/portraits/churches?name=Cathedral"]')).not.toBeNull();
   });
 
   it('creates a church and returns the form to create mode', async () => {
@@ -77,7 +77,7 @@ describe('ChurchManagementPage', () => {
       name: 'St. Luke',
       location: 'Cartago',
       mainCelebrant: null,
-      portraitDataUrl: 'data:image/svg+xml;base64,luke',
+      portraitUrl: '/api/portraits/churches?name=St.+Luke',
     });
 
     render(
@@ -118,13 +118,13 @@ describe('ChurchManagementPage', () => {
       name: 'Trinity',
       location: 'Limon',
       mainCelebrant: null,
-      portraitDataUrl: 'data:image/svg+xml;base64,trinity',
+      portraitUrl: '/api/portraits/churches?name=Trinity',
     }]);
     mockedUpdateChurch.mockResolvedValueOnce({
       name: 'Trinity',
       location: 'Limon Centro',
       mainCelebrant: null,
-      portraitDataUrl: 'data:image/svg+xml;base64,trinity-centro',
+      portraitUrl: '/api/portraits/churches?name=Trinity',
     });
 
     render(
@@ -175,14 +175,14 @@ describe('ChurchManagementPage', () => {
         name: 'Trinity',
         location: 'Limon',
         mainCelebrant: null,
-        portraitDataUrl: 'data:image/svg+xml;base64,trinity',
+        portraitUrl: '/api/portraits/churches?name=Trinity',
       },
     ]);
     mockedUpdateChurch.mockResolvedValueOnce({
       name: 'Trinity',
       location: 'Puerto Limon',
       mainCelebrant: null,
-      portraitDataUrl: 'data:image/svg+xml;base64,puerto-limon',
+      portraitUrl: '/api/portraits/churches?name=Trinity',
     });
     mockedDeleteChurch.mockResolvedValueOnce();
 

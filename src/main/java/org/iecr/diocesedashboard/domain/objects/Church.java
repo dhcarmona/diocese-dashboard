@@ -29,7 +29,7 @@ public class Church {
 
   @Transient
   @JsonProperty(access = JsonProperty.Access.READ_ONLY)
-  private String portraitDataUrl;
+  private String portraitUrl;
 
   public Church() {
   }
@@ -66,12 +66,12 @@ public class Church {
     this.services = services;
   }
 
-  public String getPortraitDataUrl() {
-    return portraitDataUrl;
+  public String getPortraitUrl() {
+    return portraitUrl;
   }
 
-  public void setPortraitDataUrl(String portraitDataUrl) {
-    this.portraitDataUrl = portraitDataUrl;
+  public void setPortraitUrl(String portraitUrl) {
+    this.portraitUrl = portraitUrl;
   }
 
   @Override

@@ -34,13 +34,13 @@ class ChurchServiceTest {
     Church c2 = new Church();
     c2.setName("Trinity");
     when(churchRepository.findAll()).thenReturn(List.of(c1, c2));
-    when(portraitService.resolveChurchPortraitDataUrl("Cathedral")).thenReturn("portrait-cathedral");
-    when(portraitService.resolveChurchPortraitDataUrl("Trinity")).thenReturn("portrait-trinity");
+    when(portraitService.buildChurchPortraitUrl("Cathedral")).thenReturn("portrait-cathedral");
+    when(portraitService.buildChurchPortraitUrl("Trinity")).thenReturn("portrait-trinity");
 
     List<Church> result = churchService.findAll();
 
     assertThat(result).hasSize(2);
-    assertThat(result).extracting(Church::getPortraitDataUrl)
+    assertThat(result).extracting(Church::getPortraitUrl)
         .containsExactly("portrait-cathedral", "portrait-trinity");
     verify(churchRepository).findAll();
   }
@@ -50,12 +50,12 @@ class ChurchServiceTest {
     Church church = new Church();
     church.setName("St. Mary");
     when(churchRepository.findById("St. Mary")).thenReturn(Optional.of(church));
-    when(portraitService.resolveChurchPortraitDataUrl("St. Mary")).thenReturn("portrait-mary");
+    when(portraitService.buildChurchPortraitUrl("St. Mary")).thenReturn("portrait-mary");
 
     Optional<Church> result = churchService.findById("St. Mary");
 
     assertThat(result).isPresent().contains(church);
-    assertThat(result.orElseThrow().getPortraitDataUrl()).isEqualTo("portrait-mary");
+    assertThat(result.orElseThrow().getPortraitUrl()).isEqualTo("portrait-mary");
     verify(churchRepository).findById("St. Mary");
   }
 
@@ -73,12 +73,12 @@ class ChurchServiceTest {
     Church church = new Church();
     church.setName("St. Luke");
     when(churchRepository.save(church)).thenReturn(church);
-    when(portraitService.resolveChurchPortraitDataUrl("St. Luke")).thenReturn("portrait-luke");
+    when(portraitService.buildChurchPortraitUrl("St. Luke")).thenReturn("portrait-luke");
 
     Church result = churchService.save(church);
 
     assertThat(result).isEqualTo(church);
-    assertThat(result.getPortraitDataUrl()).isEqualTo("portrait-luke");
+    assertThat(result.getPortraitUrl()).isEqualTo("portrait-luke");
     verify(churchRepository).save(church);
   }
 

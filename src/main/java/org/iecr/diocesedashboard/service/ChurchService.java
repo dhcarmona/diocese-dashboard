@@ -43,7 +43,7 @@ public class ChurchService {
   }
 
   private Church attachPortrait(Church church) {
-    church.setPortraitDataUrl(portraitService.resolveChurchPortraitDataUrl(church.getName()));
+    church.setPortraitUrl(portraitService.buildChurchPortraitUrl(church.getName()));
     return church;
   }
 }
