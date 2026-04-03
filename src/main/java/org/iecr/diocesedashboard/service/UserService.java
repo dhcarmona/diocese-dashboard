@@ -44,12 +44,16 @@ public class UserService implements UserDetailsService {
   }
 
   /**
-   * Creates and persists a new ADMIN user account with a BCrypt-encoded password.
+   * Convenience overload for creating a user without {@code fullName} or {@code phoneNumber}.
+   * Delegates to {@link #createUser(String, String, UserRole, Set, String, String)}.
+   * Primarily used by the bootstrap initializer for ADMIN accounts; for REPORTER accounts
+   * prefer the 6-argument overload that accepts {@code fullName} and {@code phoneNumber}.
    *
-   * @param username    the unique username
-   * @param rawPassword the plain-text password to encode and store
-   * @param role        the user's role
-   * @param assignedChurches the churches to assign (required for REPORTER, empty for ADMIN)
+   * @param username         the unique username
+   * @param rawPassword      plain-text password (required for ADMIN; pass {@code null} for
+   *                         REPORTER)
+   * @param role             the user's role
+   * @param assignedChurches the churches to assign
    * @return the saved {@link DashboardUser}
    */
   public DashboardUser createUser(String username, String rawPassword,

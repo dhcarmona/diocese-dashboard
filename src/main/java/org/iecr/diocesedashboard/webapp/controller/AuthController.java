@@ -68,7 +68,7 @@ public class AuthController {
    * Generates and sends an OTP to the registered WhatsApp number of the given reporter user.
    *
    * @param request contains the reporter's username
-   * @return 200 if the message was dispatched, 404 if no matching reporter exists
+   * @return 200 if the message was dispatched, 401 if no matching active reporter exists
    */
   @PostMapping("/reporter/request-otp")
   public ResponseEntity<Void> requestReporterOtp(
@@ -77,7 +77,7 @@ public class AuthController {
       reporterOtpService.generateAndSendOtp(request.username());
       return ResponseEntity.ok().build();
     } catch (IllegalArgumentException ex) {
-      throw new ResponseStatusException(HttpStatus.NOT_FOUND, ex.getMessage());
+      throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, ex.getMessage());
     }
   }
 
@@ -106,7 +106,15 @@ public class AuthController {
     SecurityContext context = SecurityContextHolder.createEmptyContext();
     context.setAuthentication(auth);
     SecurityContextHolder.setContext(context);
-    HttpSession session = httpRequest.getSession(true);
+
+    // Rotate the session ID to prevent session fixation attacks.
+    HttpSession session = httpRequest.getSession(false);
+    if (session != null) {
+      httpRequest.changeSessionId();
+      session = httpRequest.getSession(false);
+    } else {
+      session = httpRequest.getSession(true);
+    }
     session.setAttribute(
         HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY, context);
 
