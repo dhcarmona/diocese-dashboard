@@ -6,6 +6,7 @@ import {
   type AuthenticatedUser,
   login,
   logout,
+  verifyReporterOtp,
 } from '../api/auth';
 import { AuthContext, type AuthContextValue, type AuthStatus } from './auth-context';
 
@@ -41,6 +42,22 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
         setUser(null);
         setStatus('unauthenticated');
         throw new Error('Authenticated user could not be loaded after login.');
+      }
+      setUser(currentUser);
+      setStatus('authenticated');
+    },
+    [],
+  );
+
+  const reporterSignIn = useCallback(
+    async (username: string, code: string) => {
+      setAuthErrorKey(null);
+      await verifyReporterOtp(username, code);
+      const currentUser = await fetchAuthenticatedUser();
+      if (!currentUser) {
+        setUser(null);
+        setStatus('unauthenticated');
+        throw new Error('Authenticated user could not be loaded after OTP verification.');
       }
       setUser(currentUser);
       setStatus('authenticated');
@@ -92,10 +109,11 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
       status,
       authErrorKey,
       signIn,
+      reporterSignIn,
       signOut,
       refreshUser,
     }),
-    [authErrorKey, refreshUser, signIn, signOut, status, user],
+    [authErrorKey, refreshUser, reporterSignIn, signIn, signOut, status, user],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

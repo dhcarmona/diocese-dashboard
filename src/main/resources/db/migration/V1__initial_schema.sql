@@ -34,7 +34,9 @@ create table church (
 create table dashboard_user (
   id bigint not null,
   enabled boolean not null,
-  password_hash varchar(255) not null,
+  full_name varchar(255),
+  phone_number varchar(50),
+  password_hash varchar(255),
   role varchar(255) not null check (role in ('ADMIN', 'REPORTER')),
   username varchar(255) not null unique,
   primary key (id)

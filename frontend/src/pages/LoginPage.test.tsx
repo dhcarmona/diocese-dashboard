@@ -12,6 +12,7 @@ function renderLoginPage(overrides: Partial<AuthContextValue> = {}) {
     status: 'unauthenticated',
     authErrorKey: null,
     signIn: vi.fn(),
+    reporterSignIn: vi.fn(),
     signOut: vi.fn(),
     refreshUser: vi.fn(),
     ...overrides,
@@ -39,33 +40,64 @@ describe('LoginPage', () => {
   });
 
   describe('English', () => {
-    it('renders the Sign In button', () => {
+    it('renders the Send Code button by default (reporter mode)', () => {
       renderLoginPage();
-      expect(screen.getByRole('button', { name: /sign in/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /^send code$/i })).toBeInTheDocument();
+      expect(screen.queryByLabelText(/password/i)).not.toBeInTheDocument();
     });
 
-    it('renders Username and Password fields', () => {
+    it('renders the Username field and admin escape-hatch link by default', () => {
       renderLoginPage();
       expect(screen.getByLabelText(/username/i)).toBeInTheDocument();
-      expect(screen.getByLabelText(/password/i)).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /admin\? sign in with password/i })).toBeInTheDocument();
     });
 
     it('renders the app title and subtitle', () => {
       renderLoginPage();
       expect(screen.getByText('Diocese Dashboard')).toBeInTheDocument();
-      expect(screen.getByText('Episcopal Church in Costa Rica')).toBeInTheDocument();
+      expect(screen.getByText('Enter your username to receive a code via WhatsApp.')).toBeInTheDocument();
     });
 
-    it('updates the login error when the language changes', async () => {
+    it('switches to admin mode and back when the links are clicked', async () => {
+      const user = userEvent.setup();
+      renderLoginPage();
+
+      await user.click(screen.getByRole('button', { name: /admin\? sign in with password/i }));
+      expect(screen.getByRole('button', { name: /^sign in$/i })).toBeInTheDocument();
+      expect(screen.getByLabelText(/password/i)).toBeInTheDocument();
+
+      await user.click(screen.getByRole('button', { name: /back to reporter login/i }));
+      expect(screen.getByRole('button', { name: /^send code$/i })).toBeInTheDocument();
+      expect(screen.queryByLabelText(/password/i)).not.toBeInTheDocument();
+    });
+
+    it('submits admin credentials and shows an error on bad password', async () => {
       const user = userEvent.setup();
       const unauthorizedError = { response: { status: 401 }, isAxiosError: true };
       mockedSignIn.mockRejectedValueOnce(unauthorizedError);
 
       renderLoginPage({ signIn: mockedSignIn });
 
+      // Switch to admin mode first
+      await user.click(screen.getByRole('button', { name: /admin\? sign in with password/i }));
       await user.type(screen.getByLabelText(/username/i), 'demo');
       await user.type(screen.getByLabelText(/password/i), 'bad-password');
-      await user.click(screen.getByRole('button', { name: /sign in/i }));
+      await user.click(screen.getByRole('button', { name: /^sign in$/i }));
+
+      expect(await screen.findByText('Invalid username or password.')).toBeInTheDocument();
+    });
+
+    it('updates the admin login error when the language changes', async () => {
+      const user = userEvent.setup();
+      const unauthorizedError = { response: { status: 401 }, isAxiosError: true };
+      mockedSignIn.mockRejectedValueOnce(unauthorizedError);
+
+      renderLoginPage({ signIn: mockedSignIn });
+
+      await user.click(screen.getByRole('button', { name: /admin\? sign in with password/i }));
+      await user.type(screen.getByLabelText(/username/i), 'demo');
+      await user.type(screen.getByLabelText(/password/i), 'bad-password');
+      await user.click(screen.getByRole('button', { name: /^sign in$/i }));
 
       expect(await screen.findByText('Invalid username or password.')).toBeInTheDocument();
 
@@ -84,9 +116,10 @@ describe('LoginPage', () => {
 
       renderLoginPage({ signIn: mockedSignIn });
 
+      await user.click(screen.getByRole('button', { name: /admin\? sign in with password/i }));
       await user.type(screen.getByLabelText(/username/i), 'demo');
       await user.type(screen.getByLabelText(/password/i), 'secret');
-      await user.click(screen.getByRole('button', { name: /sign in/i }));
+      await user.click(screen.getByRole('button', { name: /^sign in$/i }));
 
       expect(
         await screen.findByText(
@@ -101,20 +134,21 @@ describe('LoginPage', () => {
       await i18n.changeLanguage('es');
     });
 
-    it('renders the Iniciar sesión button', () => {
+    it('renders the Enviar código button by default (reporter mode)', () => {
       renderLoginPage();
-      expect(screen.getByRole('button', { name: /iniciar sesión/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /^enviar código$/i })).toBeInTheDocument();
     });
 
-    it('renders Usuario and Contraseña fields', () => {
+    it('renders the Spanish reporter subtitle by default', () => {
       renderLoginPage();
-      expect(screen.getByLabelText(/usuario/i)).toBeInTheDocument();
-      expect(screen.getByLabelText(/contraseña/i)).toBeInTheDocument();
+      expect(screen.getByText('Ingrese su usuario para recibir un código por WhatsApp.')).toBeInTheDocument();
     });
 
-    it('renders the Spanish subtitle', () => {
+    it('renders the admin escape-hatch link in Spanish', () => {
       renderLoginPage();
-      expect(screen.getByText('Iglesia Episcopal en Costa Rica')).toBeInTheDocument();
+      expect(
+        screen.getByRole('button', { name: /¿administrador\? inicie sesión con contraseña/i }),
+      ).toBeInTheDocument();
     });
 
     it('renders the translated session error', () => {
@@ -131,3 +165,4 @@ describe('LoginPage', () => {
     });
   });
 });
+

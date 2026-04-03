@@ -16,6 +16,7 @@ import LoginPage from './pages/LoginPage';
 import CelebrantManagementPage from './pages/CelebrantManagementPage';
 import FeaturePlaceholderPage from './pages/FeaturePlaceholderPage';
 import HomePage from './pages/HomePage';
+import ReporterUserManagementPage from './pages/ReporterUserManagementPage';
 import TemplateSelectionPage from './pages/TemplateSelectionPage';
 
 function FullPageStatus({
@@ -131,12 +132,7 @@ function AppRoutes() {
             />
             <Route
               path="/users/manage"
-              element={
-                <FeaturePlaceholderPage
-                  titleKey="areas.users.title"
-                  descriptionKey="areas.users.description"
-                />
-              }
+              element={<ReporterUserManagementPage />}
             />
             <Route
               path="/celebrants/manage"

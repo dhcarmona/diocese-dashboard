@@ -38,7 +38,7 @@ describe('App routing', () => {
     render(<App />);
 
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: /sign in/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /^send code$/i })).toBeInTheDocument();
     });
   });
 

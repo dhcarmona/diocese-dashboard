@@ -11,6 +11,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.iecr.diocesedashboard.domain.objects.DashboardUser;
 import org.iecr.diocesedashboard.domain.objects.UserRole;
 import org.iecr.diocesedashboard.service.PortraitService;
+import org.iecr.diocesedashboard.service.ReporterOtpService;
+import org.iecr.diocesedashboard.service.UserService;
 import org.iecr.diocesedashboard.webapp.controller.AuthController;
 import org.iecr.diocesedashboard.webapp.controller.FrontendController;
 import org.iecr.diocesedashboard.webapp.controller.PortraitController;
@@ -20,7 +22,6 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.mock.web.MockHttpSession;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
@@ -43,7 +44,10 @@ class SecurityConfigTest {
   private PasswordEncoder passwordEncoder;
 
   @MockBean
-  private UserDetailsService userDetailsService;
+  private UserService userDetailsService;
+
+  @MockBean
+  private ReporterOtpService reporterOtpService;
 
   @MockBean
   private PortraitService portraitService;

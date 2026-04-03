@@ -68,20 +68,34 @@ public class UserController {
    */
   @PostMapping
   public ResponseEntity<DashboardUser> create(@RequestBody @Valid UserRequest request) {
-    if (request.password() == null || request.password().isBlank()) {
-      throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-          "Password is required when creating a user");
-    }
     Set<Church> churches = resolveChurches(request.churchNames());
     if (request.role() == UserRole.ADMIN) {
+      if (request.password() == null || request.password().isBlank()) {
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+            "Password is required when creating an ADMIN user");
+      }
       churches = Set.of();
-    } else if (request.role() == UserRole.REPORTER && churches.isEmpty()) {
-      throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-          "churchNames is required for REPORTER role");
+      DashboardUser created = userService.createUser(
+          request.username(), request.password(), UserRole.ADMIN, churches, null, null);
+      return ResponseEntity.status(HttpStatus.CREATED).body(created);
+    } else {
+      if (churches.isEmpty()) {
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+            "churchNames is required for REPORTER role");
+      }
+      if (request.fullName() == null || request.fullName().isBlank()) {
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+            "fullName is required for REPORTER role");
+      }
+      if (request.phoneNumber() == null || request.phoneNumber().isBlank()) {
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+            "phoneNumber is required for REPORTER role");
+      }
+      DashboardUser created = userService.createUser(
+          request.username(), null, UserRole.REPORTER, churches,
+          request.fullName().trim(), request.phoneNumber().trim());
+      return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
-    DashboardUser created = userService.createUser(
-        request.username(), request.password(), request.role(), churches);
-    return ResponseEntity.status(HttpStatus.CREATED).body(created);
   }
 
   /**
@@ -100,13 +114,27 @@ public class UserController {
     Set<Church> churches = resolveChurches(request.churchNames());
     if (request.role() == UserRole.ADMIN) {
       churches = Set.of();
-    } else if (request.role() == UserRole.REPORTER && churches.isEmpty()) {
-      throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-          "churchNames is required for REPORTER role");
+      DashboardUser updated = userService.updateUser(
+          id, request.username(), request.password(), UserRole.ADMIN, churches, null, null);
+      return ResponseEntity.ok(updated);
+    } else {
+      if (churches.isEmpty()) {
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+            "churchNames is required for REPORTER role");
+      }
+      if (request.fullName() == null || request.fullName().isBlank()) {
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+            "fullName is required for REPORTER role");
+      }
+      if (request.phoneNumber() == null || request.phoneNumber().isBlank()) {
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+            "phoneNumber is required for REPORTER role");
+      }
+      DashboardUser updated = userService.updateUser(
+          id, request.username(), null, UserRole.REPORTER, churches,
+          request.fullName().trim(), request.phoneNumber().trim());
+      return ResponseEntity.ok(updated);
     }
-    DashboardUser updated = userService.updateUser(
-        id, request.username(), request.password(), request.role(), churches);
-    return ResponseEntity.ok(updated);
   }
 
   /**

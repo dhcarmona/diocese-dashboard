@@ -68,6 +68,14 @@ export async function fetchAuthenticatedUser(): Promise<AuthenticatedUser | null
   }
 }
 
+export async function requestReporterOtp(username: string): Promise<void> {
+  await api.post('/api/auth/reporter/request-otp', { username });
+}
+
+export async function verifyReporterOtp(username: string, code: string): Promise<void> {
+  await api.post('/api/auth/reporter/verify-otp', { username, code });
+}
+
 export function isUnauthorizedError(error: unknown): boolean {
   return axios.isAxiosError(error) && error.response?.status === 401;
 }

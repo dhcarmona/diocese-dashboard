@@ -32,8 +32,14 @@ public class DashboardUser {
   private String username;
 
   @JsonIgnore
-  @Column(nullable = false)
+  @Column(nullable = true)
   private String passwordHash;
+
+  @Column
+  private String fullName;
+
+  @Column(length = 50)
+  private String phoneNumber;
 
   @Enumerated(EnumType.STRING)
   @Column(nullable = false)
@@ -75,6 +81,22 @@ public class DashboardUser {
 
   public void setPasswordHash(String passwordHash) {
     this.passwordHash = passwordHash;
+  }
+
+  public String getFullName() {
+    return fullName;
+  }
+
+  public void setFullName(String fullName) {
+    this.fullName = fullName;
+  }
+
+  public String getPhoneNumber() {
+    return phoneNumber;
+  }
+
+  public void setPhoneNumber(String phoneNumber) {
+    this.phoneNumber = phoneNumber;
   }
 
   public UserRole getRole() {

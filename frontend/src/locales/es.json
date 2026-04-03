@@ -23,7 +23,19 @@
     "password": "Contraseña",
     "signIn": "Iniciar sesión",
     "invalidCredentials": "Usuario o contraseña incorrectos.",
-    "genericError": "No se pudo iniciar la sesión en este momento. Inténtelo de nuevo."
+    "genericError": "No se pudo iniciar la sesión en este momento. Inténtelo de nuevo.",
+    "switchToReporter": "Volver al inicio de sesión de reportero",
+    "switchToAdmin": "¿Administrador? Inicie sesión con contraseña",
+    "reporterSubtitle": "Ingrese su usuario para recibir un código por WhatsApp.",
+    "sendCode": "Enviar código",
+    "verifyCode": "Verificar código",
+    "otpLabel": "Código de verificación",
+    "otpPlaceholder": "Código de 6 dígitos de WhatsApp",
+    "codeSent": "Se envió un código a su WhatsApp. Ingréselo abajo.",
+    "back": "Atrás",
+    "userNotFound": "No se encontró una cuenta de reportero con ese usuario.",
+    "invalidCode": "El código es incorrecto o ha expirado.",
+    "otpGenericError": "No se pudo enviar el código en este momento. Inténtelo de nuevo."
   },
   "navigation": {
     "home": "Inicio"
@@ -184,9 +196,61 @@
       "nameRequired": "Ingrese un nombre de iglesia antes de guardar."
     }
   },
+  "users": {
+    "subtitle": "Agregue, actualice y elimine cuentas de reporteros.",
+    "summary": {
+      "total": "Total de reporteros"
+    },
+    "actions": {
+      "clearSearch": "Limpiar búsqueda",
+      "edit": "Editar",
+      "create": "Crear reportero",
+      "save": "Guardar cambios",
+      "reset": "Empezar de nuevo",
+      "delete": "Eliminar reportero"
+    },
+    "search": {
+      "label": "Buscar reporteros",
+      "placeholder": "Buscar por nombre o usuario"
+    },
+    "list": {
+      "title": "Directorio de reporteros",
+      "loading": "Cargando reporteros...",
+      "loadError": "No se pudieron cargar los reporteros en este momento.",
+      "empty": "Aún no se han agregado reporteros.",
+      "noMatches": "Ningún reportero coincide con la búsqueda actual.",
+      "phone": "Teléfono: {{phone}}",
+      "churches": "Iglesias: {{churches}}"
+    },
+    "form": {
+      "createTitle": "Agregar reportero",
+      "editTitle": "Editar reportero",
+      "usernameLabel": "Usuario",
+      "usernamePlaceholder": "Ingrese un nombre de usuario único",
+      "usernameHelperEdit": "El nombre de usuario no se puede cambiar.",
+      "fullNameLabel": "Nombre completo",
+      "fullNamePlaceholder": "Ingrese el nombre completo del reportero",
+      "phoneNumberLabel": "Número de WhatsApp",
+      "phoneNumberPlaceholder": "+50688888888",
+      "churchNamesLabel": "Iglesias asignadas",
+      "churchNamesPlaceholder": "Buscar una iglesia..."
+    },
+    "feedback": {
+      "created": "{{name}} fue creado.",
+      "updated": "{{name}} fue actualizado.",
+      "deleted": "{{name}} fue eliminado.",
+      "saveError": "No se pudo guardar el reportero en este momento.",
+      "deleteError": "No se pudo eliminar el reportero en este momento."
+    },
+    "validation": {
+      "usernameRequired": "Ingrese un nombre de usuario antes de guardar.",
+      "fullNameRequired": "Ingrese un nombre completo antes de guardar.",
+      "phoneRequired": "Ingrese un número de WhatsApp antes de guardar.",
+      "churchesRequired": "Asigne al menos una iglesia antes de guardar."
+    }
+  },
   "placeholder": {
     "title": "Esta área está lista para el siguiente paso de la interfaz.",
-    "description": "El diseño de la página y la navegación ya están preparados para que el resto del flujo se agregue de forma consistente.",
     "backHome": "Volver al inicio"
   }
 }

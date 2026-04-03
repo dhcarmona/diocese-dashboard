@@ -38,7 +38,8 @@ public class DashboardUserDetails implements UserDetails {
 
   @Override
   public String getPassword() {
-    return dashboardUser.getPasswordHash();
+    String hash = dashboardUser.getPasswordHash();
+    return hash != null ? hash : "";
   }
 
   @Override

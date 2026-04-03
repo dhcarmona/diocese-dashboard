@@ -59,11 +59,12 @@ class UserControllerTest {
   }
 
   private UserRequest adminRequest() {
-    return new UserRequest("admin2", "secret123", UserRole.ADMIN, null);
+    return new UserRequest("admin2", "secret123", UserRole.ADMIN, null, null, null);
   }
 
   private UserRequest reporterRequest() {
-    return new UserRequest("reporter1", "secret123", UserRole.REPORTER, Set.of("Trinity"));
+    return new UserRequest("reporter1", null, UserRole.REPORTER, Set.of("Trinity"),
+        "Reporter One", "+50688888888");
   }
 
   // --- GET /api/users ---
@@ -122,8 +123,8 @@ class UserControllerTest {
   @WithMockUser(roles = "ADMIN")
   void create_adminUser_returns201() throws Exception {
     DashboardUser created = buildUser(1L, "admin2", UserRole.ADMIN);
-    when(userService.createUser(eq("admin2"), eq("secret123"), eq(UserRole.ADMIN), eq(Set.of())))
-        .thenReturn(created);
+    when(userService.createUser(eq("admin2"), eq("secret123"), eq(UserRole.ADMIN),
+        eq(Set.of()), eq(null), eq(null))).thenReturn(created);
 
     mockMvc.perform(post("/api/users")
         .with(csrf())
@@ -142,8 +143,8 @@ class UserControllerTest {
     DashboardUser created = buildUser(2L, "reporter1", UserRole.REPORTER);
     created.setAssignedChurches(Set.of(church));
     when(churchService.findById("Trinity")).thenReturn(Optional.of(church));
-    when(userService.createUser(eq("reporter1"), eq("secret123"), eq(UserRole.REPORTER),
-        anySet())).thenReturn(created);
+    when(userService.createUser(eq("reporter1"), eq(null), eq(UserRole.REPORTER),
+        anySet(), eq("Reporter One"), eq("+50688888888"))).thenReturn(created);
 
     mockMvc.perform(post("/api/users")
         .with(csrf())
@@ -157,7 +158,7 @@ class UserControllerTest {
   @Test
   @WithMockUser(roles = "ADMIN")
   void create_missingPassword_returns400() throws Exception {
-    UserRequest noPassword = new UserRequest("newuser", null, UserRole.ADMIN, null);
+    UserRequest noPassword = new UserRequest("newuser", null, UserRole.ADMIN, null, null, null);
 
     mockMvc.perform(post("/api/users")
         .with(csrf())
@@ -169,7 +170,8 @@ class UserControllerTest {
   @Test
   @WithMockUser(roles = "ADMIN")
   void create_reporterWithoutChurch_returns400() throws Exception {
-    UserRequest noChurch = new UserRequest("reporter2", "secret", UserRole.REPORTER, null);
+    UserRequest noChurch = new UserRequest("reporter2", null, UserRole.REPORTER, null,
+        "Jane Doe", "+50699999999");
 
     mockMvc.perform(post("/api/users")
         .with(csrf())
@@ -180,9 +182,35 @@ class UserControllerTest {
 
   @Test
   @WithMockUser(roles = "ADMIN")
+  void create_reporterWithoutFullName_returns400() throws Exception {
+    UserRequest noFullName = new UserRequest("reporter2", null, UserRole.REPORTER,
+        Set.of("Trinity"), null, "+50699999999");
+
+    mockMvc.perform(post("/api/users")
+        .with(csrf())
+        .contentType(MediaType.APPLICATION_JSON)
+        .content(objectMapper.writeValueAsString(noFullName)))
+        .andExpect(status().isBadRequest());
+  }
+
+  @Test
+  @WithMockUser(roles = "ADMIN")
+  void create_reporterWithoutPhoneNumber_returns400() throws Exception {
+    UserRequest noPhone = new UserRequest("reporter2", null, UserRole.REPORTER,
+        Set.of("Trinity"), "Jane Doe", null);
+
+    mockMvc.perform(post("/api/users")
+        .with(csrf())
+        .contentType(MediaType.APPLICATION_JSON)
+        .content(objectMapper.writeValueAsString(noPhone)))
+        .andExpect(status().isBadRequest());
+  }
+
+  @Test
+  @WithMockUser(roles = "ADMIN")
   void create_reporterWithBlankChurchName_returns400() throws Exception {
-    UserRequest invalid = new UserRequest("reporter2", "secret",
-        UserRole.REPORTER, Set.of(" "));
+    UserRequest invalid = new UserRequest("reporter2", null,
+        UserRole.REPORTER, Set.of(" "), "Jane Doe", "+50699999999");
 
     mockMvc.perform(post("/api/users")
         .with(csrf())
@@ -199,8 +227,8 @@ class UserControllerTest {
     DashboardUser created = buildUser(2L, "reporter1", UserRole.REPORTER);
     created.setAssignedChurches(Set.of(church));
     when(churchService.findById("Trinity")).thenReturn(Optional.of(church));
-    when(userService.createUser(eq("reporter1"), eq("secret123"), eq(UserRole.REPORTER),
-        anySet())).thenReturn(created);
+    when(userService.createUser(eq("reporter1"), eq(null), eq(UserRole.REPORTER),
+        anySet(), eq("Reporter One"), eq("+50688888888"))).thenReturn(created);
 
     mockMvc.perform(post("/api/users")
         .with(csrf())
@@ -208,15 +236,16 @@ class UserControllerTest {
         .content("""
             {
               "username": "reporter1",
-              "password": "secret123",
               "role": "REPORTER",
-              "churchNames": ["Trinity", "Trinity"]
+              "churchNames": ["Trinity", "Trinity"],
+              "fullName": "Reporter One",
+              "phoneNumber": "+50688888888"
             }
             """))
         .andExpect(status().isCreated());
 
-    verify(userService).createUser(eq("reporter1"), eq("secret123"), eq(UserRole.REPORTER),
-        eq(Set.of(church)));
+    verify(userService).createUser(eq("reporter1"), eq(null), eq(UserRole.REPORTER),
+        eq(Set.of(church)), eq("Reporter One"), eq("+50688888888"));
   }
 
   // --- PUT /api/users/{id} ---
@@ -227,7 +256,7 @@ class UserControllerTest {
     DashboardUser updated = buildUser(1L, "admin2", UserRole.ADMIN);
     when(userService.existsById(1L)).thenReturn(true);
     when(userService.updateUser(eq(1L), eq("admin2"), eq("secret123"),
-        eq(UserRole.ADMIN), eq(Set.of()))).thenReturn(updated);
+        eq(UserRole.ADMIN), eq(Set.of()), eq(null), eq(null))).thenReturn(updated);
 
     mockMvc.perform(put("/api/users/1")
         .with(csrf())
@@ -248,10 +277,11 @@ class UserControllerTest {
     updated.setAssignedChurches(Set.of(newChurch));
     when(userService.existsById(1L)).thenReturn(true);
     when(churchService.findById("StPaul")).thenReturn(Optional.of(newChurch));
-    when(userService.updateUser(eq(1L), eq("reporter1"), eq("secret123"),
-        eq(UserRole.REPORTER), eq(Set.of(newChurch)))).thenReturn(updated);
-    UserRequest request = new UserRequest("reporter1", "secret123",
-        UserRole.REPORTER, Set.of("StPaul"));
+    when(userService.updateUser(eq(1L), eq("reporter1"), eq(null),
+        eq(UserRole.REPORTER), eq(Set.of(newChurch)),
+        eq("Reporter One"), eq("+50688888888"))).thenReturn(updated);
+    UserRequest request = new UserRequest("reporter1", null,
+        UserRole.REPORTER, Set.of("StPaul"), "Reporter One", "+50688888888");
 
     mockMvc.perform(put("/api/users/1")
         .with(csrf())
