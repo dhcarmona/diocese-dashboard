@@ -9,6 +9,7 @@ export interface AuthContextValue {
   status: AuthStatus;
   authErrorKey: AuthErrorKey | null;
   signIn: (username: string, password: string) => Promise<void>;
+  reporterSignIn: (username: string, code: string) => Promise<void>;
   signOut: () => Promise<void>;
   refreshUser: () => Promise<AuthenticatedUser | null>;
 }

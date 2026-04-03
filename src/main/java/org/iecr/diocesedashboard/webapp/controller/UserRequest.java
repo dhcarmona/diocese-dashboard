@@ -9,12 +9,16 @@ import java.util.Set;
 /**
  * Request body for creating or updating a dashboard user account.
  *
- * <p>Password is optional on update; if omitted, the existing password is preserved.
- * For REPORTER role, {@code churchNames} is required.
+ * <p>For ADMIN role: {@code password} is required; {@code fullName} and {@code phoneNumber}
+ * are ignored.
+ * For REPORTER role: {@code password} must be omitted; {@code fullName}, {@code phoneNumber},
+ * and {@code churchNames} are required.
  */
 public record UserRequest(
 @NotBlank String username,
 String password,
 @NotNull UserRole role,
-Set<String> churchNames) {
+Set<String> churchNames,
+String fullName,
+String phoneNumber) {
 }

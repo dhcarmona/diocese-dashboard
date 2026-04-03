@@ -23,7 +23,19 @@
     "password": "Password",
     "signIn": "Sign In",
     "invalidCredentials": "Invalid username or password.",
-    "genericError": "We could not sign you in right now. Please try again."
+    "genericError": "We could not sign you in right now. Please try again.",
+    "switchToReporter": "Back to reporter login",
+    "switchToAdmin": "Admin? Sign in with password",
+    "reporterSubtitle": "Enter your username to receive a code via WhatsApp.",
+    "sendCode": "Send Code",
+    "verifyCode": "Verify Code",
+    "otpLabel": "Verification code",
+    "otpPlaceholder": "6-digit code from WhatsApp",
+    "codeSent": "A code was sent to your WhatsApp. Enter it below.",
+    "back": "Back",
+    "userNotFound": "No reporter account found for that username.",
+    "invalidCode": "The code is incorrect or has expired.",
+    "otpGenericError": "We could not send the code right now. Please try again."
   },
   "navigation": {
     "home": "Home"
@@ -184,9 +196,61 @@
       "nameRequired": "Enter a church name before saving."
     }
   },
+  "users": {
+    "subtitle": "Add, update, and remove reporter accounts.",
+    "summary": {
+      "total": "Total reporter users"
+    },
+    "actions": {
+      "clearSearch": "Clear Search",
+      "edit": "Edit",
+      "create": "Create Reporter",
+      "save": "Save Changes",
+      "reset": "Start New",
+      "delete": "Delete Reporter"
+    },
+    "search": {
+      "label": "Search reporters",
+      "placeholder": "Search by name or username"
+    },
+    "list": {
+      "title": "Reporter directory",
+      "loading": "Loading reporters...",
+      "loadError": "We could not load the reporter users right now.",
+      "empty": "No reporter users have been added yet.",
+      "noMatches": "No reporters match the current search.",
+      "phone": "Phone: {{phone}}",
+      "churches": "Churches: {{churches}}"
+    },
+    "form": {
+      "createTitle": "Add Reporter",
+      "editTitle": "Edit Reporter",
+      "usernameLabel": "Username",
+      "usernamePlaceholder": "Enter a unique username",
+      "usernameHelperEdit": "Usernames cannot be changed after creation.",
+      "fullNameLabel": "Full name",
+      "fullNamePlaceholder": "Enter the reporter's full name",
+      "phoneNumberLabel": "WhatsApp phone number",
+      "phoneNumberPlaceholder": "+50688888888",
+      "churchNamesLabel": "Assigned churches",
+      "churchNamesPlaceholder": "Search for a church..."
+    },
+    "feedback": {
+      "created": "{{name}} was created.",
+      "updated": "{{name}} was updated.",
+      "deleted": "{{name}} was removed.",
+      "saveError": "We could not save the reporter right now.",
+      "deleteError": "We could not delete the reporter right now."
+    },
+    "validation": {
+      "usernameRequired": "Enter a username before saving.",
+      "fullNameRequired": "Enter a full name before saving.",
+      "phoneRequired": "Enter a WhatsApp phone number before saving.",
+      "churchesRequired": "Assign at least one church before saving."
+    }
+  },
   "placeholder": {
     "title": "This area is ready for the next UI step.",
-    "description": "The page layout and navigation are in place so the rest of the workflow can be added consistently.",
     "backHome": "Back to Home"
   }
 }

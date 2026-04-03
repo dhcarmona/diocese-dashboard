@@ -15,6 +15,7 @@ function renderHomePage(overrides: Partial<AuthContextValue>) {
     status: 'authenticated',
     authErrorKey: null,
     signIn: async () => {},
+    reporterSignIn: async () => {},
     signOut: async () => {},
     refreshUser: async () => null,
     ...overrides,

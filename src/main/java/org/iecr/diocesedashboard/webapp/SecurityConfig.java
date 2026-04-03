@@ -56,9 +56,12 @@ public class SecurityConfig {
         .csrf(csrf -> csrf
                 .csrfTokenRepository(csrfTokenRepository)
                 .csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler())
-                // Login remains exempt because the SPA fetches its CSRF token from /api/auth/csrf
-                // after the initial page load and only needs that token for protected writes.
-                .ignoringRequestMatchers("/api/auth/login")
+                // Login and reporter OTP endpoints are exempt: the SPA fetches its CSRF token
+                // from /api/auth/csrf after the initial page load and uses it for protected writes.
+                .ignoringRequestMatchers(
+                    "/api/auth/login",
+                    "/api/auth/reporter/request-otp",
+                    "/api/auth/reporter/verify-otp")
         )
         .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/portraits/**").denyAll()
@@ -74,6 +77,9 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/reporter-links/manage").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/auth/csrf").permitAll()
                 .requestMatchers("/api/auth/login", "/api/auth/logout").permitAll()
+                .requestMatchers(HttpMethod.POST,
+                    "/api/auth/reporter/request-otp",
+                    "/api/auth/reporter/verify-otp").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/auth/me").hasAnyRole("ADMIN", "REPORTER")
                 .requestMatchers(HttpMethod.GET, "/api/portraits/**").hasAnyRole("ADMIN", "REPORTER")
                 .requestMatchers(HttpMethod.GET, "/api/churches").hasAnyRole("ADMIN", "REPORTER")
