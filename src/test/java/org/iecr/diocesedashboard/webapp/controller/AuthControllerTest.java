@@ -89,14 +89,14 @@ class AuthControllerTest {
   }
 
   @Test
-  void requestReporterOtp_unknownUser_returns404() throws Exception {
+  void requestReporterOtp_unknownUser_returns401() throws Exception {
     doThrow(new IllegalArgumentException("No active reporter found"))
         .when(reporterOtpService).generateAndSendOtp("ghost");
 
     mockMvc.perform(post("/api/auth/reporter/request-otp")
         .contentType(MediaType.APPLICATION_JSON)
         .content("{\"username\":\"ghost\"}"))
-        .andExpect(status().isNotFound());
+        .andExpect(status().isUnauthorized());
   }
 
   @Test

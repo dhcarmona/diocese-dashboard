@@ -56,9 +56,9 @@ describe('ReporterUserManagementPage', () => {
     mockedUpdateReporterUser.mockReset();
     mockedDeleteReporterUser.mockReset();
     mockedGetChurches.mockResolvedValue([
-      { name: 'Grace Church', mainCelebrant: null },
-      { name: 'St. Paul', mainCelebrant: null },
-      { name: 'Trinity', mainCelebrant: null },
+      { name: 'Grace Church', mainCelebrant: null, location: null },
+      { name: 'St. Paul', mainCelebrant: null, location: null },
+      { name: 'Trinity', mainCelebrant: null, location: null },
     ]);
     await i18n.changeLanguage('en');
   });

@@ -90,15 +90,39 @@ class ReporterOtpServiceTest {
   }
 
   @Test
+  void generateAndSendOtp_nullPhone_throwsIllegalArgument() {
+    DashboardUser reporter = buildReporter("rep1");
+    reporter.setPhoneNumber(null);
+    when(userService.findByUsername("rep1")).thenReturn(Optional.of(reporter));
+
+    assertThatThrownBy(() -> reporterOtpService.generateAndSendOtp("rep1"))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessageContaining("phone number");
+  }
+
+  @Test
+  void generateAndSendOtp_blankPhone_throwsIllegalArgument() {
+    DashboardUser reporter = buildReporter("rep1");
+    reporter.setPhoneNumber("  ");
+    when(userService.findByUsername("rep1")).thenReturn(Optional.of(reporter));
+
+    assertThatThrownBy(() -> reporterOtpService.generateAndSendOtp("rep1"))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessageContaining("phone number");
+  }
+
+  @Test
   void verifyAndConsumeOtp_correctCode_returnsTrue() {
     DashboardUser reporter = buildReporter("rep1");
     when(userService.findByUsername("rep1")).thenReturn(Optional.of(reporter));
     reporterOtpService.generateAndSendOtp("rep1");
 
-    // Capture the code sent via WhatsApp using a spy approach — instead, we use package-private
-    // access to verify via double-invocation trick: generate and verify with same service.
-    // We verify the verify returns false for wrong code and test the consumed path separately.
-    assertThat(reporterOtpService.verifyAndConsumeOtp("rep1", "000000")).isFalse();
+    var codeCaptor = ArgumentCaptor.forClass(String.class);
+    verify(whatsAppService).sendMessage(anyString(), codeCaptor.capture());
+    String message = codeCaptor.getValue();
+    String code = message.replaceAll(".*code is: (\\d{6}).*", "$1");
+
+    assertThat(reporterOtpService.verifyAndConsumeOtp("rep1", code)).isTrue();
   }
 
   @Test

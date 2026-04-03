@@ -35,9 +35,12 @@ public class ReporterOtpService {
 
   /**
    * Generates an OTP for the given reporter username and sends it via WhatsApp.
+   * Any previously stored (possibly expired) OTP for this username is replaced.
+   * Expired entries for other users are evicted opportunistically on each call.
    *
    * @param username the reporter's username
-   * @throws IllegalArgumentException if no enabled reporter with that username exists
+   * @throws IllegalArgumentException if no enabled reporter with that username exists,
+   *                                  or if the reporter has no phone number registered
    */
   public void generateAndSendOtp(String username) {
     DashboardUser user = userService.findByUsername(username)
@@ -46,9 +49,17 @@ public class ReporterOtpService {
         .orElseThrow(() -> new IllegalArgumentException(
             "No active reporter found for username: " + username));
 
+    String phoneNumber = user.getPhoneNumber();
+    if (phoneNumber == null || phoneNumber.isBlank()) {
+      throw new IllegalArgumentException(
+          "Reporter does not have a valid phone number for username: " + username);
+    }
+
+    evictExpiredEntries();
+
     String code = generateCode();
     otpStore.put(username, new OtpEntry(code, Instant.now().plusSeconds(OTP_TTL_SECONDS)));
-    whatsAppService.sendMessage(user.getPhoneNumber(),
+    whatsAppService.sendMessage(phoneNumber,
         "Your Diocese Dashboard login code is: " + code
             + ". It expires in 10 minutes.");
   }
@@ -74,6 +85,11 @@ public class ReporterOtpService {
     }
     otpStore.remove(username);
     return true;
+  }
+
+  private void evictExpiredEntries() {
+    Instant now = Instant.now();
+    otpStore.entrySet().removeIf(entry -> now.isAfter(entry.getValue().expiry()));
   }
 
   private String generateCode() {
