@@ -15,7 +15,7 @@ export interface ServiceTemplate {
   id: number;
   serviceTemplateName: string;
   templateType?: ServiceTemplateType;
-  serviceInfoItems: ServiceInfoItemSummary[];
+  serviceInfoItems?: ServiceInfoItemSummary[];
   bannerUrl?: string;
 }
 

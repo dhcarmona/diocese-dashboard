@@ -178,7 +178,8 @@ class ServiceTemplateControllerTest {
   @Test
   @WithMockUser(roles = "ADMIN")
   void update_exists_returns200() throws Exception {
-    when(serviceTemplateService.existsById(1L)).thenReturn(true);
+    when(serviceTemplateService.findById(1L))
+        .thenReturn(Optional.of(buildTemplate(1L, "Sunday Mass")));
     when(serviceTemplateService.save(any(ServiceTemplate.class)))
         .thenReturn(buildTemplate(1L, "Updated"));
 
@@ -192,7 +193,7 @@ class ServiceTemplateControllerTest {
   @Test
   @WithMockUser(roles = "ADMIN")
   void update_notFound_returns404() throws Exception {
-    when(serviceTemplateService.existsById(99L)).thenReturn(false);
+    when(serviceTemplateService.findById(99L)).thenReturn(Optional.empty());
 
     mockMvc.perform(put("/api/service-templates/99")
         .with(csrf())

@@ -29,6 +29,7 @@ public class ServiceInfoItem {
   @Column(nullable = false)
   private String title;
 
+  @Column(length = 1000)
   private String description;
 
   @JsonIgnore
