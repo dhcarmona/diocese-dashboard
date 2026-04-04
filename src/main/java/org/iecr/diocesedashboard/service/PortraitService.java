@@ -78,6 +78,26 @@ public class PortraitService {
     return resolvePortrait("churches", churchName);
   }
 
+  /**
+   * Builds the stable internal URL for a service template banner.
+   *
+   * @param templateName the template name used to derive the slug
+   * @return application URL for the banner
+   */
+  public String buildServiceTemplateBannerUrl(String templateName) {
+    return buildPortraitUrl("/api/portraits/service-templates", templateName);
+  }
+
+  /**
+   * Resolves the bytes and media type for a service template banner.
+   *
+   * @param templateName the template name used to derive the slug
+   * @return portrait asset bytes and media type
+   */
+  public PortraitAsset resolveServiceTemplateBanner(String templateName) {
+    return resolvePortrait("service-templates", templateName);
+  }
+
   String normalizeName(String value) {
     if (value == null) {
       return "";

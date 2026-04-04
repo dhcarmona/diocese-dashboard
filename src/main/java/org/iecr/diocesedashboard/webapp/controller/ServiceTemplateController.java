@@ -65,31 +65,30 @@ public class ServiceTemplateController {
   /**
    * Creates a new service template.
    *
-   * @param template the template to create
+   * @param request the template creation request
    * @return 201 with the created template
    */
   @PostMapping
-  public ResponseEntity<ServiceTemplate> create(@RequestBody @Valid ServiceTemplate template) {
+  public ResponseEntity<ServiceTemplate> create(
+      @RequestBody @Valid ServiceTemplateRequest request) {
+    ServiceTemplate template = buildTemplateFromRequest(request);
     return ResponseEntity.status(HttpStatus.CREATED).body(serviceTemplateService.save(template));
   }
 
   /**
    * Updates the service template with the given ID.
    *
-   * @param id       the template ID
-   * @param template the updated template data
+   * @param id      the template ID
+   * @param request the updated template data
    * @return 200 with the updated template, or 404 if not found
    */
   @PutMapping("/{id}")
   public ResponseEntity<ServiceTemplate> update(@PathVariable Long id,
-      @RequestBody @Valid ServiceTemplate template) {
+      @RequestBody @Valid ServiceTemplateRequest request) {
     if (!serviceTemplateService.existsById(id)) {
       return ResponseEntity.notFound().build();
     }
-    Long bodyId = template.getId();
-    if (bodyId != null && !bodyId.equals(id)) {
-      return ResponseEntity.badRequest().build();
-    }
+    ServiceTemplate template = buildTemplateFromRequest(request);
     template.setId(id);
     return ResponseEntity.ok(serviceTemplateService.save(template));
   }
@@ -130,5 +129,11 @@ public class ServiceTemplateController {
     }
     ServiceInstance created = serviceSubmissionService.submit(id, request);
     return ResponseEntity.status(HttpStatus.CREATED).body(created);
+  }
+
+  private ServiceTemplate buildTemplateFromRequest(ServiceTemplateRequest request) {
+    ServiceTemplate template = new ServiceTemplate();
+    template.setServiceTemplateName(request.serviceTemplateName());
+    return template;
   }
 }

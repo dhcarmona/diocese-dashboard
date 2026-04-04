@@ -69,6 +69,10 @@ class ServiceTemplateControllerTest {
     return t;
   }
 
+  private ServiceTemplateRequest buildTemplateRequest(String name) {
+    return new ServiceTemplateRequest(name);
+  }
+
   private ServiceInstanceRequest buildRequest() {
     return new ServiceInstanceRequest("Trinity", List.of(1L), LocalDate.of(2024, 1, 14),
         List.of(new ServiceInstanceRequest.ResponseEntry(1L, "120")));
@@ -116,7 +120,8 @@ class ServiceTemplateControllerTest {
   @Test
   @WithMockUser(roles = "ADMIN")
   void getById_asAdmin_exists_returns200() throws Exception {
-    when(serviceTemplateService.findById(1L)).thenReturn(Optional.of(buildTemplate(1L, "Sunday Mass")));
+    when(serviceTemplateService.findById(1L))
+        .thenReturn(Optional.of(buildTemplate(1L, "Sunday Mass")));
 
     mockMvc.perform(get("/api/service-templates/1"))
         .andExpect(status().isOk())
@@ -126,7 +131,8 @@ class ServiceTemplateControllerTest {
   @Test
   @WithMockUser(roles = "REPORTER")
   void getById_asUser_exists_returns200() throws Exception {
-    when(serviceTemplateService.findById(1L)).thenReturn(Optional.of(buildTemplate(1L, "Sunday Mass")));
+    when(serviceTemplateService.findById(1L))
+        .thenReturn(Optional.of(buildTemplate(1L, "Sunday Mass")));
 
     mockMvc.perform(get("/api/service-templates/1"))
         .andExpect(status().isOk());
@@ -146,13 +152,13 @@ class ServiceTemplateControllerTest {
   @Test
   @WithMockUser(roles = "ADMIN")
   void create_asAdmin_returns201() throws Exception {
-    ServiceTemplate template = buildTemplate(1L, "Sunday Mass");
-    when(serviceTemplateService.save(any(ServiceTemplate.class))).thenReturn(template);
+    when(serviceTemplateService.save(any(ServiceTemplate.class)))
+        .thenReturn(buildTemplate(1L, "Sunday Mass"));
 
     mockMvc.perform(post("/api/service-templates")
         .with(csrf())
         .contentType(MediaType.APPLICATION_JSON)
-        .content(objectMapper.writeValueAsString(template)))
+        .content(objectMapper.writeValueAsString(buildTemplateRequest("Sunday Mass"))))
         .andExpect(status().isCreated())
         .andExpect(jsonPath("$.serviceTemplateName").value("Sunday Mass"));
   }
@@ -163,7 +169,7 @@ class ServiceTemplateControllerTest {
     mockMvc.perform(post("/api/service-templates")
         .with(csrf())
         .contentType(MediaType.APPLICATION_JSON)
-        .content(objectMapper.writeValueAsString(buildTemplate(1L, "X"))))
+        .content(objectMapper.writeValueAsString(buildTemplateRequest("X"))))
         .andExpect(status().isForbidden());
   }
 
@@ -172,14 +178,14 @@ class ServiceTemplateControllerTest {
   @Test
   @WithMockUser(roles = "ADMIN")
   void update_exists_returns200() throws Exception {
-    ServiceTemplate template = buildTemplate(1L, "Updated");
     when(serviceTemplateService.existsById(1L)).thenReturn(true);
-    when(serviceTemplateService.save(any(ServiceTemplate.class))).thenReturn(template);
+    when(serviceTemplateService.save(any(ServiceTemplate.class)))
+        .thenReturn(buildTemplate(1L, "Updated"));
 
     mockMvc.perform(put("/api/service-templates/1")
         .with(csrf())
         .contentType(MediaType.APPLICATION_JSON)
-        .content(objectMapper.writeValueAsString(template)))
+        .content(objectMapper.writeValueAsString(buildTemplateRequest("Updated"))))
         .andExpect(status().isOk());
   }
 
@@ -191,7 +197,7 @@ class ServiceTemplateControllerTest {
     mockMvc.perform(put("/api/service-templates/99")
         .with(csrf())
         .contentType(MediaType.APPLICATION_JSON)
-        .content(objectMapper.writeValueAsString(buildTemplate(99L, "X"))))
+        .content(objectMapper.writeValueAsString(buildTemplateRequest("X"))))
         .andExpect(status().isNotFound());
   }
 

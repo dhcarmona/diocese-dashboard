@@ -32,9 +32,9 @@ class ServiceInfoItemRepositoryTest {
     template = entityManager.persistAndFlush(t);
   }
 
-  private ServiceInfoItem buildItem(String questionId) {
+  private ServiceInfoItem buildItem(String title) {
     ServiceInfoItem item = new ServiceInfoItem();
-    item.setQuestionId(questionId);
+    item.setTitle(title);
     item.setServiceTemplate(template);
     item.setRequired(true);
     item.setServiceInfoItemType(ServiceInfoItemType.STRING);
@@ -46,7 +46,7 @@ class ServiceInfoItemRepositoryTest {
     ServiceInfoItem saved = serviceInfoItemRepository.save(buildItem("q1"));
 
     assertThat(saved.getId()).isNotNull();
-    assertThat(saved.getQuestionId()).isEqualTo("q1");
+    assertThat(saved.getTitle()).isEqualTo("q1");
   }
 
   @Test
@@ -56,7 +56,7 @@ class ServiceInfoItemRepositoryTest {
     Optional<ServiceInfoItem> result = serviceInfoItemRepository.findById(item.getId());
 
     assertThat(result).isPresent();
-    assertThat(result.get().getQuestionId()).isEqualTo("q1");
+    assertThat(result.get().getTitle()).isEqualTo("q1");
   }
 
   @Test

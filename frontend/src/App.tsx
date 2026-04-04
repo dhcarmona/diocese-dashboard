@@ -17,6 +17,7 @@ import CelebrantManagementPage from './pages/CelebrantManagementPage';
 import FeaturePlaceholderPage from './pages/FeaturePlaceholderPage';
 import HomePage from './pages/HomePage';
 import ReporterUserManagementPage from './pages/ReporterUserManagementPage';
+import ServiceTemplateManagementPage from './pages/ServiceTemplateManagementPage';
 import TemplateSelectionPage from './pages/TemplateSelectionPage';
 
 function FullPageStatus({
@@ -123,12 +124,7 @@ function AppRoutes() {
           <Route element={<AdminRoute />}>
             <Route
               path="/service-templates/manage"
-              element={
-                <FeaturePlaceholderPage
-                  titleKey="areas.serviceTemplates.title"
-                  descriptionKey="areas.serviceTemplates.description"
-                />
-              }
+              element={<ServiceTemplateManagementPage />}
             />
             <Route
               path="/users/manage"

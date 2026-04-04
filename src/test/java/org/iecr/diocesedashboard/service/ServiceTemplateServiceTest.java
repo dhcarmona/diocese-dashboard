@@ -21,6 +21,9 @@ class ServiceTemplateServiceTest {
   @Mock
   private ServiceTemplateRepository repository;
 
+  @Mock
+  private PortraitService portraitService;
+
   @InjectMocks
   private ServiceTemplateService serviceTemplateService;
 

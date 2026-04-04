@@ -68,7 +68,7 @@ class ServiceSubmissionServiceTest {
   private ServiceInfoItem buildInfoItem(Long id) {
     ServiceInfoItem item = new ServiceInfoItem();
     item.setId(id);
-    item.setQuestionId("attendance");
+    item.setTitle("attendance");
     item.setServiceInfoItemType(ServiceInfoItemType.NUMERICAL);
     return item;
   }

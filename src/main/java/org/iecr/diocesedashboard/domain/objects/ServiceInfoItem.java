@@ -1,7 +1,6 @@
 package org.iecr.diocesedashboard.domain.objects;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -12,6 +11,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
+import jakarta.validation.constraints.NotBlank;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
@@ -25,10 +25,13 @@ public class ServiceInfoItem {
   @Column(unique = true, nullable = false)
   private Long id;
 
-  @Column(unique = true, nullable = false)
-  private String questionId;
+  @NotBlank
+  @Column(nullable = false)
+  private String title;
 
-  @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+  private String description;
+
+  @JsonIgnore
   @ManyToOne
   @JoinColumn(nullable = false)
   private ServiceTemplate serviceTemplate;
@@ -55,12 +58,20 @@ public class ServiceInfoItem {
     this.id = id;
   }
 
-  public String getQuestionId() {
-    return questionId;
+  public String getTitle() {
+    return title;
   }
 
-  public void setQuestionId(String questionId) {
-    this.questionId = questionId;
+  public void setTitle(String title) {
+    this.title = title;
+  }
+
+  public String getDescription() {
+    return description;
+  }
+
+  public void setDescription(String description) {
+    this.description = description;
   }
 
   public ServiceTemplate getServiceTemplate() {
@@ -97,6 +108,6 @@ public class ServiceInfoItem {
 
   @Override
   public String toString() {
-    return "ServiceInfoItem{id=" + id + ", questionId='" + questionId + "'}";
+    return "ServiceInfoItem{id=" + id + ", title='" + title + "'}";
   }
 }

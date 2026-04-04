@@ -62,7 +62,8 @@ create table service_info_item (
   service_info_item_type varchar(255) not null,
   id bigint not null,
   service_template_id bigint not null,
-  question_id varchar(255) not null unique,
+  title varchar(255) not null,
+  description varchar(1000),
   primary key (id)
 );
 
@@ -85,6 +86,7 @@ create table service_instance (
 create table service_template (
   id bigint not null,
   service_template_name varchar(255) not null unique,
+  template_type varchar(255),
   primary key (id)
 );
 
