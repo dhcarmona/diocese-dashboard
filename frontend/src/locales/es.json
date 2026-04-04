@@ -31,8 +31,9 @@
     "verifyCode": "Verificar código",
     "otpLabel": "Código de verificación",
     "otpPlaceholder": "Código de 6 dígitos de WhatsApp",
-    "codeSent": "Se envió un código a su WhatsApp. Ingréselo abajo.",
+    "codeSent": "Si {{username}} es una cuenta de reportero registrada, se envió un código a su WhatsApp.",
     "back": "Atrás",
+    "tryDifferentUsername": "Intentar con otro usuario",
     "userNotFound": "No se encontró una cuenta de reportero con ese usuario.",
     "invalidCode": "El código es incorrecto o ha expirado.",
     "otpGenericError": "No se pudo enviar el código en este momento. Inténtelo de nuevo."

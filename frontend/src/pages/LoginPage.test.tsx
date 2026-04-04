@@ -3,8 +3,17 @@ import userEvent from '@testing-library/user-event';
 import i18n from 'i18next';
 import { MemoryRouter } from 'react-router-dom';
 import { vi } from 'vitest';
+import { requestReporterOtp } from '../api/auth';
 import { AuthContext, type AuthContextValue } from '../auth/auth-context';
 import LoginPage from './LoginPage';
+
+vi.mock('../api/auth', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../api/auth')>();
+  return {
+    ...actual,
+    requestReporterOtp: vi.fn(),
+  };
+});
 
 function renderLoginPage(overrides: Partial<AuthContextValue> = {}) {
   const value: AuthContextValue = {
@@ -29,9 +38,11 @@ function renderLoginPage(overrides: Partial<AuthContextValue> = {}) {
 
 describe('LoginPage', () => {
   const mockedSignIn = vi.fn();
+  const mockedRequestReporterOtp = vi.mocked(requestReporterOtp);
 
   beforeEach(async () => {
     mockedSignIn.mockReset();
+    mockedRequestReporterOtp.mockReset();
     await i18n.changeLanguage('en');
   });
 
@@ -69,6 +80,57 @@ describe('LoginPage', () => {
       await user.click(screen.getByRole('button', { name: /back to reporter login/i }));
       expect(screen.getByRole('button', { name: /^send code$/i })).toBeInTheDocument();
       expect(screen.queryByLabelText(/password/i)).not.toBeInTheDocument();
+    });
+
+    it('always advances to the verify screen after submitting a username', async () => {
+      const user = userEvent.setup();
+      mockedRequestReporterOtp.mockResolvedValueOnce(undefined);
+
+      renderLoginPage();
+      await user.type(screen.getByLabelText(/username/i), 'reporter1');
+      await user.click(screen.getByRole('button', { name: /^send code$/i }));
+
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: /verify code/i })).toBeInTheDocument();
+      });
+      expect(
+        screen.getByText(/if reporter1 is a registered reporter account/i),
+      ).toBeInTheDocument();
+    });
+
+    it('advances to the verify screen even if the username does not exist (prevents account enumeration)', async () => {
+      const user = userEvent.setup();
+      mockedRequestReporterOtp.mockRejectedValueOnce({
+        response: { status: 401 },
+        isAxiosError: true,
+      });
+
+      renderLoginPage();
+      await user.type(screen.getByLabelText(/username/i), 'ghost');
+      await user.click(screen.getByRole('button', { name: /^send code$/i }));
+
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: /verify code/i })).toBeInTheDocument();
+      });
+      expect(screen.queryByText(/no reporter account/i)).not.toBeInTheDocument();
+    });
+
+    it('shows "try a different username" link on verify screen that returns to username form', async () => {
+      const user = userEvent.setup();
+      mockedRequestReporterOtp.mockResolvedValueOnce(undefined);
+
+      renderLoginPage();
+      await user.type(screen.getByLabelText(/username/i), 'reporter1');
+      await user.click(screen.getByRole('button', { name: /^send code$/i }));
+
+      await waitFor(() => {
+        expect(
+          screen.getByRole('button', { name: /try a different username/i }),
+        ).toBeInTheDocument();
+      });
+
+      await user.click(screen.getByRole('button', { name: /try a different username/i }));
+      expect(screen.getByRole('button', { name: /^send code$/i })).toBeInTheDocument();
     });
 
     it('submits admin credentials and shows an error on bad password', async () => {

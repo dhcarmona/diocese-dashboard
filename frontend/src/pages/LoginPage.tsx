@@ -22,7 +22,6 @@ type LoginMode = 'admin' | 'reporterRequest' | 'reporterVerify';
 type LoginErrorKey =
   | 'login.invalidCredentials'
   | 'login.genericError'
-  | 'login.userNotFound'
   | 'login.invalidCode'
   | 'login.otpGenericError'
   | 'auth.backendUnavailable';
@@ -77,18 +76,20 @@ export default function LoginPage() {
     setLoading(true);
     try {
       await requestReporterOtp(username);
-      setLoginMode('reporterVerify');
     } catch (error) {
-      if (isUnauthorizedError(error)) {
-        setErrorKey('login.userNotFound');
-      } else if (isBackendUnavailableError(error)) {
+      if (isBackendUnavailableError(error)) {
         setErrorKey('auth.backendUnavailable');
-      } else {
+        setLoading(false);
+        return;
+      } else if (!isUnauthorizedError(error)) {
         setErrorKey('login.otpGenericError');
+        setLoading(false);
+        return;
       }
     } finally {
       setLoading(false);
     }
+    setLoginMode('reporterVerify');
   }
 
   async function handleVerifyOtp(e: FormEvent) {
@@ -153,7 +154,7 @@ export default function LoginPage() {
 
           {loginMode === 'reporterVerify' && !errorKey && (
             <Alert severity="info" sx={{ mb: 2 }}>
-              {t('login.codeSent')}
+              {t('login.codeSent', { username })}
             </Alert>
           )}
 
@@ -279,7 +280,7 @@ export default function LoginPage() {
                     setErrorKey(null);
                   }}
                 >
-                  {t('login.back')}
+                  {t('login.tryDifferentUsername')}
                 </Link>
               </Box>
             </Box>
