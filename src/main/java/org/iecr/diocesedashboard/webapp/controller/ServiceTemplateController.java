@@ -85,11 +85,12 @@ public class ServiceTemplateController {
   @PutMapping("/{id}")
   public ResponseEntity<ServiceTemplate> update(@PathVariable Long id,
       @RequestBody @Valid ServiceTemplateRequest request) {
-    if (!serviceTemplateService.existsById(id)) {
+    ServiceTemplate template = serviceTemplateService.findById(id)
+        .orElse(null);
+    if (template == null) {
       return ResponseEntity.notFound().build();
     }
-    ServiceTemplate template = buildTemplateFromRequest(request);
-    template.setId(id);
+    template.setServiceTemplateName(request.serviceTemplateName());
     return ResponseEntity.ok(serviceTemplateService.save(template));
   }
 
