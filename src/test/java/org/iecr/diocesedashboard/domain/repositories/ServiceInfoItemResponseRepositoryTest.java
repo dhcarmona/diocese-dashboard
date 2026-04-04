@@ -31,21 +31,21 @@ class ServiceInfoItemResponseRepositoryTest {
 
   @BeforeEach
   void setUp() {
+    Church church = new Church();
+    church.setName("St. Mary");
+    church.setLocation("Downtown");
+    entityManager.persist(church);
+
     ServiceTemplate template = new ServiceTemplate();
     template.setServiceTemplateName("Sunday Mass");
     entityManager.persist(template);
 
     ServiceInfoItem item = new ServiceInfoItem();
-    item.setQuestionId("q1");
+    item.setTitle("q1");
     item.setServiceTemplate(template);
     item.setRequired(true);
     item.setServiceInfoItemType(ServiceInfoItemType.STRING);
     serviceInfoItem = entityManager.persist(item);
-
-    Church church = new Church();
-    church.setName("St. Mary");
-    church.setLocation("Downtown");
-    entityManager.persist(church);
 
     ServiceInstance instance = new ServiceInstance();
     instance.setChurch(church);
@@ -67,21 +67,23 @@ class ServiceInfoItemResponseRepositoryTest {
     ServiceInfoItemResponse saved = serviceInfoItemResponseRepository.save(buildResponse());
 
     assertThat(saved.getId()).isNotNull();
-    assertThat(saved.getServiceInfoItem().getQuestionId()).isEqualTo("q1");
+    assertThat(saved.getServiceInfoItem().getTitle()).isEqualTo("q1");
   }
 
   @Test
   void findById_returnsPresent_whenExists() {
     ServiceInfoItemResponse response = entityManager.persistFlushFind(buildResponse());
 
-    Optional<ServiceInfoItemResponse> result = serviceInfoItemResponseRepository.findById(response.getId());
+    Optional<ServiceInfoItemResponse> result =
+        serviceInfoItemResponseRepository.findById(response.getId());
 
     assertThat(result).isPresent();
   }
 
   @Test
   void findById_returnsEmpty_whenNotExists() {
-    Optional<ServiceInfoItemResponse> result = serviceInfoItemResponseRepository.findById(999L);
+    Optional<ServiceInfoItemResponse> result =
+        serviceInfoItemResponseRepository.findById(999L);
 
     assertThat(result).isEmpty();
   }

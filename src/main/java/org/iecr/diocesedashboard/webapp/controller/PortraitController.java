@@ -47,6 +47,17 @@ public class PortraitController {
     return buildPortraitResponse(portraitService.resolveChurchPortrait(name));
   }
 
+  /**
+   * Returns the bundled banner bytes for a service template name.
+   *
+   * @param name the service template name
+   * @return banner bytes and content type
+   */
+  @GetMapping("/service-templates")
+  public ResponseEntity<byte[]> getServiceTemplateBanner(@RequestParam String name) {
+    return buildPortraitResponse(portraitService.resolveServiceTemplateBanner(name));
+  }
+
   private ResponseEntity<byte[]> buildPortraitResponse(PortraitService.PortraitAsset portrait) {
     return ResponseEntity.ok()
         .cacheControl(CacheControl.maxAge(PORTRAIT_CACHE_DURATION).cachePrivate())

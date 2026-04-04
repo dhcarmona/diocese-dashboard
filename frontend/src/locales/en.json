@@ -252,5 +252,71 @@
   "placeholder": {
     "title": "This area is ready for the next UI step.",
     "backHome": "Back to Home"
+  },
+  "serviceTemplates": {
+    "subtitle": "Add, update, and remove service templates.",
+    "summary": {
+      "total": "Total service templates"
+    },
+    "type": {
+      "RECURRING": "Recurring",
+      "SPECIAL": "Special"
+    },
+    "actions": {
+      "clearSearch": "Clear Search",
+      "edit": "Edit",
+      "create": "Create Template",
+      "save": "Save Changes",
+      "reset": "Start New",
+      "delete": "Delete Template",
+      "addItem": "Add Info Item",
+      "removeItem": "Remove"
+    },
+    "search": {
+      "label": "Search templates",
+      "placeholder": "Search by name"
+    },
+    "list": {
+      "title": "Template directory",
+      "loading": "Loading templates...",
+      "loadError": "We could not load the service templates right now.",
+      "empty": "No service templates have been added yet.",
+      "noMatches": "No templates match the current search.",
+      "itemsCount": "{{count}} info item(s)"
+    },
+    "form": {
+      "createTitle": "Add Service Template",
+      "editTitle": "Edit Service Template",
+      "nameLabel": "Template name",
+      "namePlaceholder": "Enter the template name",
+      "infoItemsTitle": "Service Info Items",
+      "itemTitleLabel": "Item title",
+      "itemTitlePlaceholder": "e.g. Number of attendants",
+      "itemDescLabel": "Description (optional)",
+      "itemDescPlaceholder": "Brief description of this field",
+      "itemTypeLabel": "Type",
+      "itemRequiredLabel": "Required"
+    },
+    "feedback": {
+      "created": "\"{{name}}\" was created.",
+      "updated": "\"{{name}}\" was updated.",
+      "deleted": "\"{{name}}\" was removed.",
+      "saveError": "We could not save the template right now.",
+      "deleteError": "We could not delete the template right now.",
+      "itemAdded": "Info item added.",
+      "itemRemoved": "Info item removed.",
+      "itemError": "We could not save the info item right now."
+    },
+    "validation": {
+      "nameRequired": "Enter a template name before saving.",
+      "itemTitleRequired": "Enter a title for the info item.",
+      "itemTypeRequired": "Select a type for the info item."
+    }
+  },
+  "serviceInfoItemType": {
+    "NUMERICAL": "Number",
+    "DOLLARS": "US Dollars",
+    "COLONES": "Colones",
+    "STRING": "Text"
   }
 }

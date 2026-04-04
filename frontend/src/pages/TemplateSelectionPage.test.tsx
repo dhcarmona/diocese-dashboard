@@ -2,7 +2,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import i18n from 'i18next';
 import { MemoryRouter } from 'react-router-dom';
 import { vi } from 'vitest';
-import { getServiceTemplates } from '../api/serviceTemplates';
+import { getServiceTemplates, type ServiceTemplate } from '../api/serviceTemplates';
 import TemplateSelectionPage from './TemplateSelectionPage';
 
 vi.mock('../api/serviceTemplates', () => ({
@@ -19,8 +19,8 @@ describe('TemplateSelectionPage', () => {
 
   it('renders service template tiles after loading', async () => {
     mockedGetServiceTemplates.mockResolvedValueOnce([
-      { id: 1, serviceTemplateName: 'Sunday Eucharist' },
-      { id: 2, serviceTemplateName: 'Morning Prayer' },
+      { id: 1, serviceTemplateName: 'Sunday Eucharist' } as ServiceTemplate,
+      { id: 2, serviceTemplateName: 'Morning Prayer' } as ServiceTemplate,
     ]);
 
     render(

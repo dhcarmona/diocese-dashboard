@@ -50,10 +50,10 @@ class ServiceInfoItemControllerTest {
   @MockBean
   private UserDetailsService userDetailsService;
 
-  private ServiceInfoItem buildItem(Long id, String questionId) {
+  private ServiceInfoItem buildItem(Long id, String title) {
     ServiceInfoItem item = new ServiceInfoItem();
     item.setId(id);
-    item.setQuestionId(questionId);
+    item.setTitle(title);
     item.setRequired(true);
     item.setServiceInfoItemType(ServiceInfoItemType.NUMERICAL);
     return item;
@@ -94,7 +94,7 @@ class ServiceInfoItemControllerTest {
 
     mockMvc.perform(get("/api/service-info-items/1"))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.questionId").value("attendance"));
+        .andExpect(jsonPath("$.title").value("attendance"));
   }
 
   @Test
@@ -123,7 +123,7 @@ class ServiceInfoItemControllerTest {
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(item)))
         .andExpect(status().isCreated())
-        .andExpect(jsonPath("$.questionId").value("attendance"));
+        .andExpect(jsonPath("$.title").value("attendance"));
   }
 
   @Test
