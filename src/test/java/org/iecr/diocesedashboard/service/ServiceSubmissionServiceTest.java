@@ -97,7 +97,7 @@ class ServiceSubmissionServiceTest {
         List.of(new ServiceInstanceRequest.ResponseEntry(5L, "120"))
     );
 
-    ServiceInstance result = serviceSubmissionService.submit(1L, request);
+    ServiceInstance result = serviceSubmissionService.submit(1L, request, null);
 
     assertThat(result.getId()).isEqualTo(99L);
     verify(serviceInstanceService).save(any(ServiceInstance.class));
@@ -115,7 +115,7 @@ class ServiceSubmissionServiceTest {
     ServiceInstanceRequest request = new ServiceInstanceRequest(
         "Trinity", List.of(), LocalDate.of(2024, 1, 14), List.of());
 
-    ServiceInstance result = serviceSubmissionService.submit(1L, request);
+    ServiceInstance result = serviceSubmissionService.submit(1L, request, null);
 
     assertThat(result).isNotNull();
     verify(celebrantService, times(0)).findById(any());
@@ -128,7 +128,7 @@ class ServiceSubmissionServiceTest {
     ServiceInstanceRequest request = new ServiceInstanceRequest(
         "Trinity", List.of(), LocalDate.now(), List.of());
 
-    assertThatThrownBy(() -> serviceSubmissionService.submit(99L, request))
+    assertThatThrownBy(() -> serviceSubmissionService.submit(99L, request, null))
         .isInstanceOf(ResponseStatusException.class)
         .hasMessageContaining("Template not found");
   }
@@ -141,7 +141,7 @@ class ServiceSubmissionServiceTest {
     ServiceInstanceRequest request = new ServiceInstanceRequest(
         "Ghost", List.of(), LocalDate.now(), List.of());
 
-    assertThatThrownBy(() -> serviceSubmissionService.submit(1L, request))
+    assertThatThrownBy(() -> serviceSubmissionService.submit(1L, request, null))
         .isInstanceOf(ResponseStatusException.class)
         .hasMessageContaining("Church not found");
   }
@@ -155,7 +155,7 @@ class ServiceSubmissionServiceTest {
     ServiceInstanceRequest request = new ServiceInstanceRequest(
         "Trinity", List.of(999L), LocalDate.now(), List.of());
 
-    assertThatThrownBy(() -> serviceSubmissionService.submit(1L, request))
+    assertThatThrownBy(() -> serviceSubmissionService.submit(1L, request, null))
         .isInstanceOf(ResponseStatusException.class)
         .hasMessageContaining("Celebrant not found");
   }
@@ -173,7 +173,7 @@ class ServiceSubmissionServiceTest {
         "Trinity", List.of(), LocalDate.now(),
         List.of(new ServiceInstanceRequest.ResponseEntry(888L, "val")));
 
-    assertThatThrownBy(() -> serviceSubmissionService.submit(1L, request))
+    assertThatThrownBy(() -> serviceSubmissionService.submit(1L, request, null))
         .isInstanceOf(ResponseStatusException.class)
         .hasMessageContaining("ServiceInfoItem not found");
   }

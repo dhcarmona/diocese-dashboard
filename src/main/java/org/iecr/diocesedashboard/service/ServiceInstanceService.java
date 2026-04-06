@@ -2,6 +2,7 @@ package org.iecr.diocesedashboard.service;
 
 import org.iecr.diocesedashboard.domain.objects.Church;
 import org.iecr.diocesedashboard.domain.objects.ServiceInstance;
+import org.iecr.diocesedashboard.domain.objects.ServiceTemplate;
 import org.iecr.diocesedashboard.domain.repositories.ServiceInstanceRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -28,6 +29,10 @@ public class ServiceInstanceService {
 
   public List<ServiceInstance> findByChurches(Iterable<Church> churches) {
     return repository.findByChurchIn(churches);
+  }
+
+  public List<ServiceInstance> findByServiceTemplate(ServiceTemplate template) {
+    return repository.findByServiceTemplate(template);
   }
 
   public Optional<ServiceInstance> findById(Long id) {

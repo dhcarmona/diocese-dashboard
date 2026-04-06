@@ -33,6 +33,10 @@ public class ServiceInstance {
 
   private LocalDate serviceDate;
 
+  @ManyToOne
+  @JoinColumn(name = "submitted_by_id")
+  private DashboardUser submittedBy;
+
   public ServiceInstance() {
   }
 
@@ -74,6 +78,14 @@ public class ServiceInstance {
 
   public void setServiceDate(LocalDate serviceDate) {
     this.serviceDate = serviceDate;
+  }
+
+  public DashboardUser getSubmittedBy() {
+    return submittedBy;
+  }
+
+  public void setSubmittedBy(DashboardUser submittedBy) {
+    this.submittedBy = submittedBy;
   }
 
   @Override

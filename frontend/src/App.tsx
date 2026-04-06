@@ -18,6 +18,10 @@ import LoginPage from './pages/LoginPage';
 import CelebrantManagementPage from './pages/CelebrantManagementPage';
 import FeaturePlaceholderPage from './pages/FeaturePlaceholderPage';
 import HomePage from './pages/HomePage';
+import AdminReportTemplateSelectionPage from './pages/AdminReportTemplateSelectionPage';
+import ReportInstanceDetailPage from './pages/ReportInstanceDetailPage';
+import ReportInstancesListPage from './pages/ReportInstancesListPage';
+import ReportsHubPage from './pages/ReportsHubPage';
 import ReporterUserManagementPage from './pages/ReporterUserManagementPage';
 import ServiceSubmitPage from './pages/ServiceSubmitPage';
 import ServiceTemplateManagementPage from './pages/ServiceTemplateManagementPage';
@@ -144,6 +148,19 @@ function AppRoutes() {
                   descriptionKey="areas.reporterLinks.description"
                 />
               }
+            />
+            <Route path="/reports/view" element={<ReportsHubPage />} />
+            <Route
+              path="/reports/view/individual"
+              element={<AdminReportTemplateSelectionPage />}
+            />
+            <Route
+              path="/reports/view/individual/:templateId"
+              element={<ReportInstancesListPage />}
+            />
+            <Route
+              path="/reports/view/individual/:templateId/:instanceId"
+              element={<ReportInstanceDetailPage />}
             />
           </Route>
         </Route>
