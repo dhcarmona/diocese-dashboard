@@ -14,9 +14,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.support.ResourceBundleMessageSource;
 
 import java.util.Optional;
 
@@ -29,7 +29,6 @@ class ReporterOtpServiceTest {
   @Mock
   private UserService userService;
 
-  @InjectMocks
   private ReporterOtpService reporterOtpService;
 
   private DashboardUser buildReporter(String username) {
@@ -45,7 +44,10 @@ class ReporterOtpServiceTest {
 
   @BeforeEach
   void setUp() {
-    // fresh service per test via @InjectMocks
+    ResourceBundleMessageSource messageSource = new ResourceBundleMessageSource();
+    messageSource.setBasename("messages");
+    messageSource.setDefaultEncoding("UTF-8");
+    reporterOtpService = new ReporterOtpService(whatsAppService, userService, messageSource);
   }
 
   @Test
@@ -120,7 +122,7 @@ class ReporterOtpServiceTest {
     var codeCaptor = ArgumentCaptor.forClass(String.class);
     verify(whatsAppService).sendMessage(anyString(), codeCaptor.capture());
     String message = codeCaptor.getValue();
-    String code = message.replaceAll(".*code is: (\\d{6}).*", "$1");
+    String code = message.replaceAll(".*es: (\\d{6}).*", "$1");
 
     assertThat(reporterOtpService.verifyAndConsumeOtp("rep1", code)).isTrue();
   }
@@ -149,9 +151,9 @@ class ReporterOtpServiceTest {
     reporterOtpService.generateAndSendOtp("rep1");
     verify(whatsAppService).sendMessage(anyString(), codeCaptor.capture());
 
-    // Extract the 6-digit code from the message "...code is: 123456. It expires..."
+    // Extract the 6-digit code from the Spanish message "...es: 123456. Expira..."
     String message = codeCaptor.getValue();
-    String code = message.replaceAll(".*code is: (\\d{6}).*", "$1");
+    String code = message.replaceAll(".*es: (\\d{6}).*", "$1");
 
     assertThat(reporterOtpService.verifyAndConsumeOtp("rep1", code)).isTrue();
     assertThat(reporterOtpService.verifyAndConsumeOtp("rep1", code)).isFalse();

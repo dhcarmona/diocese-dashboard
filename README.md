@@ -237,3 +237,39 @@ frontend/src/locales/
    resources: { en: { translation: en }, es: { translation: es }, pt: { translation: pt } }
    ```
 3. Add the new `value`/`aria-label` pair to the `ToggleButtonGroup` in `frontend/src/components/LanguageSwitcher.tsx`.
+
+### Backend messages (WhatsApp / server-side strings)
+
+Server-side strings (e.g. WhatsApp notifications) live in Spring message bundles under
+`src/main/resources/`:
+
+```
+src/main/resources/
+├── messages.properties      ← English (fallback)
+└── messages_es.properties   ← Spanish (active default)
+```
+
+#### Adding a new backend message
+
+1. Add the key to **`messages.properties`** (English):
+   ```properties
+   my.new.message=Hello, {0}!
+   ```
+2. Add the translated key to **`messages_es.properties`** (Spanish):
+   ```properties
+   my.new.message=¡Hola, {0}!
+   ```
+   Use `{0}`, `{1}`, … as positional placeholders — they are resolved by
+   [`MessageFormat`](https://docs.oracle.com/en/java/se/21/docs/api/java.base/java/text/MessageFormat.html).
+
+3. Inject `MessageSource` into your service and resolve the string with the desired locale:
+   ```java
+   messageSource.getMessage("my.new.message", new Object[]{"World"}, Locale.forLanguageTag("es"));
+   // → "¡Hola, World!"
+   ```
+
+#### Adding a new locale
+
+1. Create `messages_{code}.properties` (e.g. `messages_pt.properties` for Portuguese).
+2. Copy all keys from `messages.properties` and provide translated values.
+3. Pass the matching `Locale` when calling `messageSource.getMessage(…)`.

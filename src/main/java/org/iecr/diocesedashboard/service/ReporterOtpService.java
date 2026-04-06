@@ -3,10 +3,12 @@ package org.iecr.diocesedashboard.service;
 import org.iecr.diocesedashboard.domain.objects.DashboardUser;
 import org.iecr.diocesedashboard.domain.objects.UserRole;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Service;
 
 import java.security.SecureRandom;
 import java.time.Instant;
+import java.util.Locale;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -22,15 +24,20 @@ public class ReporterOtpService {
   private static final int OTP_DIGITS = 6;
   private static final int OTP_MODULUS = 1_000_000;
 
+  private static final Locale WHATSAPP_LOCALE = Locale.forLanguageTag("es");
+
   private final WhatsAppService whatsAppService;
   private final UserService userService;
+  private final MessageSource messageSource;
   private final SecureRandom secureRandom = new SecureRandom();
   private final ConcurrentHashMap<String, OtpEntry> otpStore = new ConcurrentHashMap<>();
 
   @Autowired
-  public ReporterOtpService(WhatsAppService whatsAppService, UserService userService) {
+  public ReporterOtpService(
+      WhatsAppService whatsAppService, UserService userService, MessageSource messageSource) {
     this.whatsAppService = whatsAppService;
     this.userService = userService;
+    this.messageSource = messageSource;
   }
 
   /**
@@ -60,8 +67,7 @@ public class ReporterOtpService {
     String code = generateCode();
     otpStore.put(username, new OtpEntry(code, Instant.now().plusSeconds(OTP_TTL_SECONDS)));
     whatsAppService.sendMessage(phoneNumber,
-        "Your Diocese Dashboard login code is: " + code
-            + ". It expires in 10 minutes.");
+        messageSource.getMessage("otp.whatsapp.message", new Object[]{code}, WHATSAPP_LOCALE));
   }
 
   /**
