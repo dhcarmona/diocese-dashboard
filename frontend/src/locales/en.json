@@ -80,6 +80,27 @@
       "tileDescription": "Open this template and continue with the report."
     }
   },
+  "submitService": {
+    "title": "Submit Service Report",
+    "subtitle": "Fill in the details for this service.",
+    "loading": "Loading form...",
+    "loadError": "We could not load this service template.",
+    "backToTemplates": "Back to templates",
+    "infoItemsTitle": "Service Details",
+    "submit": "Submit Report",
+    "cancel": "Cancel",
+    "submitError": "We could not submit the report. Please try again.",
+    "successTitle": "Report Submitted",
+    "successMessage": "Your service report has been recorded successfully.",
+    "submitAnother": "Submit Another",
+    "backHome": "Back to Home",
+    "fields": {
+      "date": "Service Date",
+      "church": "Church",
+      "celebrants": "Celebrants",
+      "celebrantsPlaceholder": "Search for a celebrant..."
+    }
+  },
   "areas": {
     "submitService": {
       "title": "Submit Service Report",

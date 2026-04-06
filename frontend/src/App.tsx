@@ -6,6 +6,8 @@ import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
 import CircularProgress from '@mui/material/CircularProgress';
 import Typography from '@mui/material/Typography';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { useTranslation } from 'react-i18next';
 import { BrowserRouter, Navigate, Outlet, Route, Routes } from 'react-router-dom';
 import { AuthProvider } from './auth/AuthProvider';
@@ -17,6 +19,7 @@ import CelebrantManagementPage from './pages/CelebrantManagementPage';
 import FeaturePlaceholderPage from './pages/FeaturePlaceholderPage';
 import HomePage from './pages/HomePage';
 import ReporterUserManagementPage from './pages/ReporterUserManagementPage';
+import ServiceSubmitPage from './pages/ServiceSubmitPage';
 import ServiceTemplateManagementPage from './pages/ServiceTemplateManagementPage';
 import TemplateSelectionPage from './pages/TemplateSelectionPage';
 
@@ -114,12 +117,7 @@ function AppRoutes() {
           <Route path="/reports/new" element={<TemplateSelectionPage />} />
           <Route
             path="/submit/service-templates/:templateId"
-            element={
-              <FeaturePlaceholderPage
-                titleKey="areas.submitService.title"
-                descriptionKey="areas.submitService.description"
-              />
-            }
+            element={<ServiceSubmitPage />}
           />
           <Route element={<AdminRoute />}>
             <Route
@@ -157,11 +155,13 @@ function AppRoutes() {
 
 function App() {
   return (
-    <BrowserRouter>
-      <AuthProvider>
-        <AppRoutes />
-      </AuthProvider>
-    </BrowserRouter>
+    <LocalizationProvider dateAdapter={AdapterDayjs}>
+      <BrowserRouter>
+        <AuthProvider>
+          <AppRoutes />
+        </AuthProvider>
+      </BrowserRouter>
+    </LocalizationProvider>
   );
 }
 
