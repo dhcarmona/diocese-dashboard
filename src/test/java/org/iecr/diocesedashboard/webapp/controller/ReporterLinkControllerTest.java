@@ -334,7 +334,7 @@ class ReporterLinkControllerTest {
         Optional.of(buildLink(TOKEN, 1L, "Trinity")));
     ServiceInstance instance = new ServiceInstance();
     instance.setId(42L);
-    when(serviceSubmissionService.submit(eq(2L), any(ServiceInstanceRequest.class)))
+    when(serviceSubmissionService.submit(eq(2L), any(ServiceInstanceRequest.class), any()))
         .thenReturn(instance);
 
     ReporterLinkSubmitRequest request = new ReporterLinkSubmitRequest(
@@ -356,7 +356,7 @@ class ReporterLinkControllerTest {
         Optional.of(buildLink(TOKEN, 1L, "Trinity")));
     ServiceInstance instance = new ServiceInstance();
     instance.setId(43L);
-    when(serviceSubmissionService.submit(eq(2L), any(ServiceInstanceRequest.class)))
+    when(serviceSubmissionService.submit(eq(2L), any(ServiceInstanceRequest.class), any()))
         .thenReturn(instance);
     ReporterLinkSubmitRequest request = new ReporterLinkSubmitRequest(
         List.of(10L), LocalDate.of(2024, 1, 14),
@@ -371,7 +371,7 @@ class ReporterLinkControllerTest {
 
     ArgumentCaptor<ServiceInstanceRequest> captor =
         ArgumentCaptor.forClass(ServiceInstanceRequest.class);
-    verify(serviceSubmissionService).submit(eq(2L), captor.capture());
+    verify(serviceSubmissionService).submit(eq(2L), captor.capture(), any());
     ServiceInstanceRequest submittedRequest = captor.getValue();
     Assertions.assertThat(submittedRequest.churchName()).isEqualTo("Trinity");
   }

@@ -2,6 +2,7 @@ package org.iecr.diocesedashboard.domain.repositories;
 
 import org.iecr.diocesedashboard.domain.objects.Church;
 import org.iecr.diocesedashboard.domain.objects.ServiceInstance;
+import org.iecr.diocesedashboard.domain.objects.ServiceTemplate;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
@@ -11,4 +12,6 @@ public interface ServiceInstanceRepository extends JpaRepository<ServiceInstance
   List<ServiceInstance> findByChurch(Church church);
 
   List<ServiceInstance> findByChurchIn(Iterable<Church> churches);
+
+  List<ServiceInstance> findByServiceTemplate(ServiceTemplate template);
 }

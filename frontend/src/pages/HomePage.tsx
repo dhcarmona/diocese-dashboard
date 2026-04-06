@@ -63,6 +63,13 @@ export default function HomePage() {
       to: '/reporter-links/manage',
       imageUrl: tileArtwork.links,
     },
+    {
+      id: 'see-reports',
+      title: t('home.tiles.seeReports.title'),
+      description: t('home.tiles.seeReports.description'),
+      to: '/reports/view',
+      imageUrl: tileArtwork.viewReports,
+    },
   ];
 
   const tiles = user?.role === 'ADMIN' ? [...reporterTiles, ...adminTiles] : reporterTiles;

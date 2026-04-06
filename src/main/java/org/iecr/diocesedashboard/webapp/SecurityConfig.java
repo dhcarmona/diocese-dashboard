@@ -75,6 +75,10 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/celebrants/manage").permitAll()
                 .requestMatchers(HttpMethod.GET, "/churches/manage").permitAll()
                 .requestMatchers(HttpMethod.GET, "/reporter-links/manage").permitAll()
+                .requestMatchers(HttpMethod.GET,
+                    "/reports/view",
+                    "/reports/view/individual",
+                    "/reports/view/individual/*").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/auth/csrf").permitAll()
                 .requestMatchers("/api/auth/login", "/api/auth/logout").permitAll()
                 .requestMatchers(HttpMethod.POST,
@@ -90,6 +94,8 @@ public class SecurityConfig {
                 .hasAnyRole("ADMIN", "REPORTER")
                 .requestMatchers(HttpMethod.GET, "/api/service-instances").hasAnyRole("ADMIN", "REPORTER")
                 .requestMatchers(HttpMethod.GET, "/api/service-instances/*").hasAnyRole("ADMIN", "REPORTER")
+                .requestMatchers(HttpMethod.PUT, "/api/service-instances/*").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.DELETE, "/api/service-instances/*").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.GET, "/api/reporter-links/*").hasAnyRole("ADMIN", "REPORTER")
                 .requestMatchers(HttpMethod.POST, "/api/reporter-links/*/submit").hasRole("REPORTER")
                 .anyRequest().hasRole("ADMIN")

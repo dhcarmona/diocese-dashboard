@@ -1,6 +1,7 @@
 package org.iecr.diocesedashboard.service;
 
 import org.iecr.diocesedashboard.domain.objects.ServiceInfoItemResponse;
+import org.iecr.diocesedashboard.domain.objects.ServiceInstance;
 import org.iecr.diocesedashboard.domain.repositories.ServiceInfoItemResponseRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -23,12 +24,21 @@ public class ServiceInfoItemResponseService {
     return serviceInfoItemResponseRepository.findAll();
   }
 
+  public List<ServiceInfoItemResponse> findByServiceInstance(ServiceInstance instance) {
+    return serviceInfoItemResponseRepository.findByServiceInstance(instance);
+  }
+
   public Optional<ServiceInfoItemResponse> findById(Long id) {
     return serviceInfoItemResponseRepository.findById(id);
   }
 
   public ServiceInfoItemResponse save(ServiceInfoItemResponse serviceInfoItemResponse) {
     return serviceInfoItemResponseRepository.save(serviceInfoItemResponse);
+  }
+
+  public void deleteByServiceInstance(ServiceInstance instance) {
+    serviceInfoItemResponseRepository.deleteAll(
+        serviceInfoItemResponseRepository.findByServiceInstance(instance));
   }
 
   public void deleteById(Long id) {

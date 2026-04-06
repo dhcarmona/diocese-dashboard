@@ -155,7 +155,7 @@ public class ReporterLinkController {
         request.serviceDate(),
         request.responses());
     ServiceInstance created = serviceSubmissionService.submit(
-        link.getServiceTemplate().getId(), instanceRequest);
+        link.getServiceTemplate().getId(), instanceRequest, user);
     return ResponseEntity.status(HttpStatus.CREATED)
         .body(ReporterLinkSubmissionResponse.from(created));
   }

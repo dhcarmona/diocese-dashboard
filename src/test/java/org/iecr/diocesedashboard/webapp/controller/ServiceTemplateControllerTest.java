@@ -231,7 +231,7 @@ class ServiceTemplateControllerTest {
   void submit_asReporter_validRequest_returns201() throws Exception {
     ServiceInstance instance = new ServiceInstance();
     instance.setId(42L);
-    when(serviceSubmissionService.submit(eq(1L), any(ServiceInstanceRequest.class)))
+    when(serviceSubmissionService.submit(eq(1L), any(ServiceInstanceRequest.class), any()))
         .thenReturn(instance);
 
     mockMvc.perform(post("/api/service-templates/1/submit")
@@ -247,7 +247,7 @@ class ServiceTemplateControllerTest {
   void submit_asReporterAssignedToMultipleChurches_returns201() throws Exception {
     ServiceInstance instance = new ServiceInstance();
     instance.setId(43L);
-    when(serviceSubmissionService.submit(eq(1L), any(ServiceInstanceRequest.class)))
+    when(serviceSubmissionService.submit(eq(1L), any(ServiceInstanceRequest.class), any()))
         .thenReturn(instance);
 
     mockMvc.perform(post("/api/service-templates/1/submit")
@@ -263,7 +263,7 @@ class ServiceTemplateControllerTest {
   void submit_asAdmin_validRequest_returns201() throws Exception {
     ServiceInstance instance = new ServiceInstance();
     instance.setId(7L);
-    when(serviceSubmissionService.submit(eq(1L), any(ServiceInstanceRequest.class)))
+    when(serviceSubmissionService.submit(eq(1L), any(ServiceInstanceRequest.class), any()))
         .thenReturn(instance);
 
     mockMvc.perform(post("/api/service-templates/1/submit")
@@ -276,7 +276,7 @@ class ServiceTemplateControllerTest {
   @Test
   @WithMockDashboardUser(role = UserRole.REPORTER, churchName = "Trinity")
   void submit_templateNotFound_returns404() throws Exception {
-    when(serviceSubmissionService.submit(eq(99L), any(ServiceInstanceRequest.class)))
+    when(serviceSubmissionService.submit(eq(99L), any(ServiceInstanceRequest.class), any()))
         .thenThrow(new ResponseStatusException(NOT_FOUND, "Template not found"));
 
     mockMvc.perform(post("/api/service-templates/99/submit")

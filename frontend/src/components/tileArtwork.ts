@@ -26,4 +26,5 @@ export const tileArtwork = {
   celebrants: buildArtwork('#E8F5E9', '#C8E6C9', '#2E7D32'),
   churches: buildArtwork('#E0F7FA', '#B2EBF2', '#00838F'),
   links: buildArtwork('#FBE9E7', '#FFCCBC', '#D84315'),
+  viewReports: buildArtwork('#FFF8E1', '#FFECB3', '#F57F17'),
 } as const;
