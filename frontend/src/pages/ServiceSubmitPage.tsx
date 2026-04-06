@@ -57,7 +57,7 @@ export default function ServiceSubmitPage() {
   const [submitSuccess, setSubmitSuccess] = useState(false);
 
   const availableChurches = useMemo(() => {
-    if (!user || user.role === 'ADMIN' || user.assignedChurchNames.length === 0) {
+    if (!user || user.role === 'ADMIN') {
       return allChurches;
     }
     const assignedSet = new Set(user.assignedChurchNames);
@@ -107,13 +107,27 @@ export default function ServiceSubmitPage() {
     e.preventDefault();
     if (!template || !selectedChurch || !serviceDate) return;
 
-    setSubmitting(true);
     setSubmitError(false);
 
-    const responseEntries = (template.serviceInfoItems ?? []).map((item) => ({
-      serviceInfoItemId: item.id,
-      responseValue: responses[item.id] ?? '',
-    }));
+    const serviceInfoItems = template.serviceInfoItems ?? [];
+    const hasMissingRequired = serviceInfoItems.some((item) => {
+      const value = responses[item.id]?.trim() ?? '';
+      return item.required && value === '';
+    });
+
+    if (hasMissingRequired) {
+      setSubmitError(true);
+      return;
+    }
+
+    setSubmitting(true);
+
+    const responseEntries = serviceInfoItems
+      .map((item) => ({
+        serviceInfoItemId: item.id,
+        responseValue: responses[item.id]?.trim() ?? '',
+      }))
+      .filter((entry) => entry.responseValue !== '');
 
     try {
       await submitServiceInstance(template.id, {
@@ -196,6 +210,7 @@ export default function ServiceSubmitPage() {
 
       <Box
         component="form"
+        noValidate
         onSubmit={(e) => void handleSubmit(e)}
         sx={{ maxWidth: 640 }}
       >
@@ -213,7 +228,10 @@ export default function ServiceSubmitPage() {
           />
 
           {/* Church */}
-          <FormControl fullWidth required>
+          {user?.role === 'REPORTER' && availableChurches.length === 0 ? (
+            <Alert severity="warning">{t('submitService.noChurchesAssigned')}</Alert>
+          ) : (
+            <FormControl fullWidth required>
             <InputLabel id="church-label">{t('submitService.fields.church')}</InputLabel>
             <Select
               labelId="church-label"
@@ -230,7 +248,8 @@ export default function ServiceSubmitPage() {
                 </MenuItem>
               ))}
             </Select>
-          </FormControl>
+            </FormControl>
+          )}
 
           {/* Celebrants — pills pattern */}
           <Autocomplete
@@ -240,9 +259,10 @@ export default function ServiceSubmitPage() {
             value={selectedCelebrants}
             onChange={(_e, newValue) => setSelectedCelebrants(newValue)}
             renderTags={(value, getTagProps) =>
-              value.map((option, index) => (
-                <Chip label={option.name} {...getTagProps({ index })} key={option.id} />
-              ))
+              value.map((option, index) => {
+                const { key, ...tagProps } = getTagProps({ index });
+                return <Chip key={key} label={option.name} {...tagProps} />;
+              })
             }
             renderInput={(params) => (
               <TextField
@@ -308,7 +328,12 @@ export default function ServiceSubmitPage() {
               type="submit"
               variant="contained"
               size="large"
-              disabled={submitting || !selectedChurch || !serviceDate}
+              disabled={
+                submitting
+                || !selectedChurch
+                || !serviceDate
+                || (user?.role === 'REPORTER' && availableChurches.length === 0)
+              }
             >
               {submitting ? (
                 <CircularProgress size={22} color="inherit" />
