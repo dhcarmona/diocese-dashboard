@@ -32,9 +32,7 @@
     "otpLabel": "Verification code",
     "otpPlaceholder": "6-digit code from WhatsApp",
     "codeSent": "If {{username}} is a registered reporter account, a code was sent to their WhatsApp.",
-    "back": "Back",
     "tryDifferentUsername": "Try a different username",
-    "userNotFound": "No reporter account found for that username.",
     "invalidCode": "The code is incorrect or has expired.",
     "otpGenericError": "We could not send the code right now. Please try again."
   },
