@@ -80,6 +80,27 @@
       "tileDescription": "Abra esta plantilla y continúe con el reporte."
     }
   },
+  "submitService": {
+    "title": "Enviar reporte de servicio",
+    "subtitle": "Complete los detalles de este servicio.",
+    "loading": "Cargando formulario...",
+    "loadError": "No se pudo cargar esta plantilla de servicio.",
+    "backToTemplates": "Volver a las plantillas",
+    "infoItemsTitle": "Detalles del servicio",
+    "submit": "Enviar reporte",
+    "cancel": "Cancelar",
+    "submitError": "No se pudo enviar el reporte. Intente de nuevo.",
+    "successTitle": "Reporte enviado",
+    "successMessage": "Su reporte de servicio fue registrado exitosamente.",
+    "submitAnother": "Enviar otro reporte",
+    "backHome": "Volver al inicio",
+    "fields": {
+      "date": "Fecha del servicio",
+      "church": "Iglesia",
+      "celebrants": "Celebrantes",
+      "celebrantsPlaceholder": "Buscar un celebrante..."
+    }
+  },
   "areas": {
     "submitService": {
       "title": "Enviar reporte de servicio",
