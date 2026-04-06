@@ -12,18 +12,13 @@ export interface ResponseEntry {
   responseValue: string;
 }
 
-export interface ServiceInstanceSubmitResult {
-  id: number;
-}
-
 export async function submitServiceInstance(
   templateId: number,
   request: ServiceInstanceSubmitRequest,
-): Promise<ServiceInstanceSubmitResult> {
-  const response = await api.post<ServiceInstanceSubmitResult>(
+): Promise<void> {
+  await api.post<unknown>(
     `/api/service-templates/${templateId}/submit`,
     request,
     { headers: await getCsrfHeaders() },
   );
-  return response.data;
 }
