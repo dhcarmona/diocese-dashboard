@@ -65,13 +65,20 @@ export default function ServiceSubmitPage() {
   }, [allChurches, user]);
 
   useEffect(() => {
-    if (!templateId) return;
-    let active = true;
     setLoading(true);
     setLoadError(false);
 
+    const parsedTemplateId = Number(templateId);
+    if (!templateId || !Number.isFinite(parsedTemplateId)) {
+      setLoadError(true);
+      setLoading(false);
+      return;
+    }
+
+    let active = true;
+
     Promise.all([
-      getServiceTemplateById(Number(templateId)),
+      getServiceTemplateById(parsedTemplateId),
       getCelebrants(),
       getChurches(),
     ])
@@ -105,7 +112,7 @@ export default function ServiceSubmitPage() {
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    if (!template || !selectedChurch || !serviceDate) return;
+    if (!template || !selectedChurch || !serviceDate || !serviceDate.isValid()) return;
 
     setSubmitError(false);
 
@@ -303,14 +310,12 @@ export default function ServiceSubmitPage() {
                 onChange={(e) => handleResponseChange(item.id, e.target.value)}
                 type={isNumeric ? 'number' : 'text'}
                 inputProps={isNumeric ? { min: 0, step: 'any' } : undefined}
-                slotProps={
+                InputProps={
                   adornment
                     ? {
-                        input: {
-                          startAdornment: (
-                            <InputAdornment position="start">{adornment}</InputAdornment>
-                          ),
-                        },
+                        startAdornment: (
+                          <InputAdornment position="start">{adornment}</InputAdornment>
+                        ),
                       }
                     : undefined
                 }
@@ -332,6 +337,7 @@ export default function ServiceSubmitPage() {
                 submitting
                 || !selectedChurch
                 || !serviceDate
+                || !serviceDate.isValid()
                 || (user?.role === 'REPORTER' && availableChurches.length === 0)
               }
             >
