@@ -97,6 +97,8 @@ class AuthControllerTest {
         .contentType(MediaType.APPLICATION_JSON)
         .content("{\"username\":\"ghost\"}"))
         .andExpect(status().isOk());
+
+    verify(reporterOtpService).generateAndSendOtp("ghost");
   }
 
   @Test

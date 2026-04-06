@@ -66,18 +66,20 @@ public class AuthController {
 
   /**
    * Generates and sends an OTP to the registered WhatsApp number of the given reporter user.
-   * Always returns 200 regardless of whether the username exists, to prevent account enumeration.
+   * Always returns 200 for valid requests regardless of whether the username exists or whether
+   * OTP dispatch succeeds, to prevent account enumeration. Returns 400 for invalid payloads
+   * (e.g. blank username).
    *
    * @param request contains the reporter's username
-   * @return 200 always
+   * @return 200 for valid requests; 400 for invalid payloads
    */
   @PostMapping("/reporter/request-otp")
   public ResponseEntity<Void> requestReporterOtp(
       @RequestBody @Valid ReporterOtpRequest request) {
     try {
       reporterOtpService.generateAndSendOtp(request.username());
-    } catch (IllegalArgumentException ignored) {
-      // Silently ignored to prevent account enumeration.
+    } catch (Exception ignored) {
+      // Silently ignored to prevent account enumeration via differing response codes.
     }
     return ResponseEntity.ok().build();
   }

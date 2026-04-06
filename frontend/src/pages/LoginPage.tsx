@@ -79,11 +79,9 @@ export default function LoginPage() {
     } catch (error) {
       if (isBackendUnavailableError(error)) {
         setErrorKey('auth.backendUnavailable');
-        setLoading(false);
         return;
       } else if (!isUnauthorizedError(error)) {
         setErrorKey('login.otpGenericError');
-        setLoading(false);
         return;
       }
     } finally {
