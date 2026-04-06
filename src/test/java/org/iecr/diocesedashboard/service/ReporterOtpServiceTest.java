@@ -121,8 +121,7 @@ class ReporterOtpServiceTest {
 
     var codeCaptor = ArgumentCaptor.forClass(String.class);
     verify(whatsAppService).sendMessage(anyString(), codeCaptor.capture());
-    String message = codeCaptor.getValue();
-    String code = message.replaceAll(".*es: (\\d{6}).*", "$1");
+    String code = codeCaptor.getValue().replaceAll(".*?(\\d{6}).*", "$1");
 
     assertThat(reporterOtpService.verifyAndConsumeOtp("rep1", code)).isTrue();
   }
@@ -146,14 +145,10 @@ class ReporterOtpServiceTest {
     DashboardUser reporter = buildReporter("rep1");
     when(userService.findByUsername("rep1")).thenReturn(Optional.of(reporter));
 
-    // Use reflection-friendly approach: capture code via ArgumentCaptor
     var codeCaptor = ArgumentCaptor.forClass(String.class);
     reporterOtpService.generateAndSendOtp("rep1");
     verify(whatsAppService).sendMessage(anyString(), codeCaptor.capture());
-
-    // Extract the 6-digit code from the Spanish message "...es: 123456. Expira..."
-    String message = codeCaptor.getValue();
-    String code = message.replaceAll(".*es: (\\d{6}).*", "$1");
+    String code = codeCaptor.getValue().replaceAll(".*?(\\d{6}).*", "$1");
 
     assertThat(reporterOtpService.verifyAndConsumeOtp("rep1", code)).isTrue();
     assertThat(reporterOtpService.verifyAndConsumeOtp("rep1", code)).isFalse();
