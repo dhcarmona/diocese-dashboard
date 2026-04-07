@@ -2,6 +2,7 @@ package org.iecr.diocesedashboard.webapp.controller;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -543,5 +544,75 @@ class ServiceInstanceControllerTest {
   void delete_unauthenticated_returns401() throws Exception {
     mockMvc.perform(delete("/api/service-instances/1").with(csrf()))
         .andExpect(status().isUnauthorized());
+  }
+
+  @Test
+  @WithMockDashboardUser
+  void update_newItemFromDifferentTemplate_returns400() throws Exception {
+    ServiceInstance instance = buildFullInstance(1L, "Trinity", "Sunday Mass", "+50612345678");
+    ServiceTemplate otherTemplate = new ServiceTemplate();
+    otherTemplate.setId(99L);
+    ServiceInfoItem foreignItem = new ServiceInfoItem();
+    foreignItem.setId(77L);
+    foreignItem.setTitle("Foreign");
+    foreignItem.setServiceTemplate(otherTemplate);
+    when(serviceInstanceService.findById(1L)).thenReturn(Optional.of(instance));
+    when(responseService.findByServiceInstance(instance)).thenReturn(List.of());
+    when(serviceInfoItemService.findById(77L)).thenReturn(Optional.of(foreignItem));
+    String body = objectMapper.writeValueAsString(new ServiceInstanceUpdateRequest(
+        List.of(new ServiceInstanceUpdateRequest.ResponseEntry(77L, "newValue")), false));
+
+    mockMvc.perform(put("/api/service-instances/1")
+        .with(csrf())
+        .contentType(MediaType.APPLICATION_JSON)
+        .content(body))
+        .andExpect(status().isBadRequest());
+
+    verify(responseService, never()).save(any());
+  }
+
+  @Test
+  @WithMockDashboardUser
+  void update_whatsAppFailure_stillReturns200() throws Exception {
+    ServiceInstance instance = buildFullInstance(1L, "Trinity", "Sunday Mass", "+50612345678");
+    ServiceInfoItem item = buildItem(5L, "Attendance");
+    ServiceInfoItemResponse existing = buildResponse(100L, item, instance, "42");
+    when(serviceInstanceService.findById(1L)).thenReturn(Optional.of(instance));
+    when(responseService.findByServiceInstance(instance)).thenReturn(List.of(existing));
+    when(messageSource.getMessage(
+        eq("whatsapp.report.updated"), any(Object[].class), any(Locale.class)))
+        .thenReturn("Updated message");
+    doThrow(new RuntimeException("Twilio error"))
+        .when(whatsAppService).sendMessage(any(), any());
+    String body = objectMapper.writeValueAsString(new ServiceInstanceUpdateRequest(
+        List.of(new ServiceInstanceUpdateRequest.ResponseEntry(5L, "99")), true));
+
+    mockMvc.perform(put("/api/service-instances/1")
+        .with(csrf())
+        .contentType(MediaType.APPLICATION_JSON)
+        .content(body))
+        .andExpect(status().isOk());
+
+    verify(responseService).save(existing);
+  }
+
+  @Test
+  @WithMockDashboardUser
+  void delete_whatsAppFailure_stillDeletes() throws Exception {
+    ServiceInstance instance = buildFullInstance(1L, "Trinity", "Sunday Mass", "+50612345678");
+    when(serviceInstanceService.findById(1L)).thenReturn(Optional.of(instance));
+    when(messageSource.getMessage(
+        eq("whatsapp.report.deleted"), any(Object[].class), any(Locale.class)))
+        .thenReturn("Deleted message");
+    doThrow(new RuntimeException("Twilio error"))
+        .when(whatsAppService).sendMessage(any(), any());
+
+    mockMvc.perform(delete("/api/service-instances/1")
+        .with(csrf())
+        .param("notify", "true"))
+        .andExpect(status().isNoContent());
+
+    verify(responseService).deleteByServiceInstance(instance);
+    verify(serviceInstanceService).deleteById(1L);
   }
 }

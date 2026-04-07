@@ -37,8 +37,7 @@ public class ServiceInfoItemResponseService {
   }
 
   public void deleteByServiceInstance(ServiceInstance instance) {
-    serviceInfoItemResponseRepository.deleteAll(
-        serviceInfoItemResponseRepository.findByServiceInstance(instance));
+    serviceInfoItemResponseRepository.deleteByServiceInstance(instance);
   }
 
   public void deleteById(Long id) {

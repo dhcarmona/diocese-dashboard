@@ -23,16 +23,14 @@ export interface ServiceInstanceSummary {
   submittedAt: string | null; // ISO datetime, present for admin users only
 }
 
-export interface ServiceInfoItemType {
-  serviceInfoItemType: 'NUMERICAL' | 'DOLLARS' | 'COLONES' | 'STRING';
-}
+export type ServiceInfoItemType = 'NUMERICAL' | 'DOLLARS' | 'COLONES' | 'STRING';
 
 export interface ResponseDetail {
   responseId: number;
   serviceInfoItemId: number;
   serviceInfoItemTitle: string;
   serviceInfoItemDescription: string | null;
-  serviceInfoItemType: 'NUMERICAL' | 'DOLLARS' | 'COLONES' | 'STRING';
+  serviceInfoItemType: ServiceInfoItemType;
   required: boolean | null;
   responseValue: string;
 }

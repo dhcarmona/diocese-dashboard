@@ -161,6 +161,16 @@ public class ServiceInstanceController {
               : serviceInfoItemService.findById(entry.serviceInfoItemId())
               .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
                   "Unknown service info item: " + entry.serviceInfoItemId()));
+          if (response == null) {
+            ServiceTemplate instanceTemplate = instance.getServiceTemplate();
+            ServiceTemplate itemTemplate = item.getServiceTemplate();
+            if (instanceTemplate != null && itemTemplate != null
+                && !instanceTemplate.getId().equals(itemTemplate.getId())) {
+              throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                  "Service info item " + item.getId()
+                      + " does not belong to this report's template");
+            }
+          }
           String title = item.getTitle();
           changeSummaries.add("\"" + title + "\": \"" + oldValue + "\" → \"" + newValue + "\"");
           if (response != null) {
@@ -178,7 +188,11 @@ public class ServiceInstanceController {
     }
 
     if (request.notifyReporter() && !changeSummaries.isEmpty()) {
-      sendEditNotification(instance, changeSummaries);
+      try {
+        sendEditNotification(instance, changeSummaries);
+      } catch (Exception ex) {
+        // Notification failure is non-fatal; data has already been saved
+      }
     }
 
     List<ServiceInfoItemResponse> updated = responseService.findByServiceInstance(instance);
@@ -204,7 +218,11 @@ public class ServiceInstanceController {
       return ResponseEntity.notFound().build();
     }
     if (notify) {
-      sendDeleteNotification(instance);
+      try {
+        sendDeleteNotification(instance);
+      } catch (Exception ex) {
+        // Notification failure is non-fatal; deletion will still proceed
+      }
     }
     responseService.deleteByServiceInstance(instance);
     serviceInstanceService.deleteById(id);

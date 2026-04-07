@@ -1,11 +1,13 @@
 package org.iecr.diocesedashboard.webapp.controller;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import org.iecr.diocesedashboard.domain.objects.ServiceInstance;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 /** A lightweight projection of a ServiceInstance for list views. */
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public record ServiceInstanceSummaryResponse(
 Long id,
 LocalDate serviceDate,
