@@ -56,7 +56,7 @@ The following environment variables are required to start the application:
 
 **Do not put hand-maintained assets in `src/main/resources/static/`.** That directory is the Vite build output directory and is fully git-ignored. Anything placed there will be wiped the next time `npm run build` runs (Vite clears the output directory before each build).
 
-Portrait files are resolved by `PortraitService` at runtime using a slug derived from the entity name. Name your files `<slug>.svg` (or `.png`, `.jpg`, `.webp`) where the slug is the lowercase, diacritic-stripped, hyphenated form of the entity name. If no matching file exists, `placeholder.svg` in the group's directory is used as the fallback.
+Portrait files are resolved by `PortraitService` at runtime using a slug derived from the entity name. Name your files `<slug>.svg` (or `.png`, `.jpg`, `.jpeg`, `.webp`) where the slug is the lowercase, diacritic-stripped, hyphenated form of the entity name. If no matching file exists, `placeholder.svg` in the group's directory is used as the fallback.
 
 ---
 
