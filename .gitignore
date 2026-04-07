@@ -42,7 +42,6 @@ mvnw*
 ### Frontend
 frontend/node/
 frontend/node_modules/
-src/main/resources/static/assets/
-src/main/resources/static/index.html
+src/main/resources/static/
 
 

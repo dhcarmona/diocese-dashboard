@@ -45,7 +45,22 @@ The following environment variables are required to start the application:
 | `SPRING_DATASOURCE_USERNAME`| Database username              |
 | `SPRING_DATASOURCE_PASSWORD`| Database password              |
 
-## WhatsApp Messaging (Twilio)
+## Static Assets
+
+### Where to put image and media files
+
+| Asset type | Location | Notes |
+|---|---|---|
+| Church / Celebrant / Service Template portraits & banners | `frontend/public/portraits/<group>/` | Tracked in git; Maven copies them into the build automatically |
+| Frontend icons, favicons, and other public files | `frontend/public/` | Tracked in git; served directly by Vite |
+
+**Do not put hand-maintained assets in `src/main/resources/static/`.** That directory is the Vite build output directory and is fully git-ignored. Anything placed there will be wiped the next time `npm run build` runs (Vite clears the output directory before each build).
+
+Portrait files are resolved by `PortraitService` at runtime using a slug derived from the entity name. Name your files `<slug>.svg` (or `.png`, `.jpg`, `.webp`) where the slug is the lowercase, diacritic-stripped, hyphenated form of the entity name. If no matching file exists, `placeholder.svg` in the group's directory is used as the fallback.
+
+---
+
+
 
 The application sends WhatsApp messages via the [Twilio API](https://www.twilio.com/en-us/whatsapp).
 Two environment variables are always required, and a third controls which number messages are sent from:
