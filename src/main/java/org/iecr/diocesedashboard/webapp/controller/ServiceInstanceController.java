@@ -98,7 +98,9 @@ public class ServiceInstanceController {
     } else {
       instances = serviceInstanceService.findAll();
     }
-    return instances.stream().map(ServiceInstanceSummaryResponse::from).toList();
+    return instances.stream()
+        .map(i -> ServiceInstanceSummaryResponse.from(i, user.getRole() == UserRole.ADMIN))
+        .toList();
   }
 
   /**
@@ -142,7 +144,8 @@ public class ServiceInstanceController {
     List<ServiceInfoItemResponse> existing = responseService.findByServiceInstance(instance);
     Map<Long, ServiceInfoItemResponse> byItemId = existing.stream()
         .collect(Collectors.toMap(
-            r -> r.getServiceInfoItem().getId(), Function.identity()));
+            r -> r.getServiceInfoItem().getId(), Function.identity(),
+            (first, second) -> second));
 
     List<String> changeSummaries = new ArrayList<>();
 
@@ -155,8 +158,10 @@ public class ServiceInstanceController {
         if (changed) {
           ServiceInfoItem item = response != null
               ? response.getServiceInfoItem()
-              : serviceInfoItemService.findById(entry.serviceInfoItemId()).orElse(null);
-          String title = item != null ? item.getTitle() : "#" + entry.serviceInfoItemId();
+              : serviceInfoItemService.findById(entry.serviceInfoItemId())
+              .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                  "Unknown service info item: " + entry.serviceInfoItemId()));
+          String title = item.getTitle();
           changeSummaries.add("\"" + title + "\": \"" + oldValue + "\" → \"" + newValue + "\"");
           if (response != null) {
             response.setResponseValue(newValue);

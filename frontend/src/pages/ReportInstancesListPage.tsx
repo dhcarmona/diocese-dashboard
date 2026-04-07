@@ -45,9 +45,7 @@ export default function ReportInstancesListPage() {
         const data = await getInstancesByTemplate(parsedId);
         if (active) {
           setInstances(data);
-          if (data.length > 0) {
-            setTemplateName(data[0].templateName ?? '');
-          }
+          setTemplateName(data.length > 0 ? (data[0].templateName ?? '') : '');
         }
       } catch {
         if (active) setHasError(true);
@@ -94,6 +92,9 @@ export default function ReportInstancesListPage() {
                 <TableCell>{t('reportsList.columns.date')}</TableCell>
                 <TableCell>{t('reportsList.columns.church')}</TableCell>
                 <TableCell>{t('reportsList.columns.reporter')}</TableCell>
+                {instances.some((i) => i.submittedAt != null) && (
+                  <TableCell>{t('reportsList.columns.submittedAt')}</TableCell>
+                )}
                 <TableCell>{t('reportsList.columns.actions')}</TableCell>
               </TableRow>
             </TableHead>
@@ -107,6 +108,13 @@ export default function ReportInstancesListPage() {
                       ?? instance.submittedByUsername
                       ?? t('reportsList.unknownReporter')}
                   </TableCell>
+                  {instances.some((i) => i.submittedAt != null) && (
+                    <TableCell>
+                      {instance.submittedAt != null
+                        ? new Date(instance.submittedAt).toLocaleString()
+                        : '—'}
+                    </TableCell>
+                  )}
                   <TableCell>
                     <Button
                       component={RouterLink}

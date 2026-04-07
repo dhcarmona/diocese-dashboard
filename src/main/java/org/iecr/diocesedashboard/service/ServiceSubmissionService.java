@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -69,6 +70,7 @@ public class ServiceSubmissionService {
     instance.setChurch(church);
     instance.setServiceDate(request.serviceDate());
     instance.setSubmittedBy(submittedBy);
+    instance.setSubmittedAt(LocalDateTime.now());
 
     if (request.celebrantIds() != null && !request.celebrantIds().isEmpty()) {
       Set<Celebrant> celebrants = new HashSet<>();

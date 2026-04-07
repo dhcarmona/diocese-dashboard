@@ -20,6 +20,7 @@ export interface ServiceInstanceSummary {
   templateName: string;
   submittedByUsername: string | null;
   submittedByFullName: string | null;
+  submittedAt: string | null; // ISO datetime, present for admin users only
 }
 
 export interface ServiceInfoItemType {

@@ -77,6 +77,7 @@ create table service_info_item_response (
 
 create table service_instance (
   service_date date,
+  submitted_at timestamp,
   church_id varchar(255) not null,
   id bigint not null,
   template_id bigint not null,
