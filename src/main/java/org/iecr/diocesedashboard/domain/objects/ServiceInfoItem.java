@@ -1,6 +1,7 @@
 package org.iecr.diocesedashboard.domain.objects;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -45,6 +46,7 @@ public class ServiceInfoItem {
   private ServiceInfoItemType serviceInfoItemType;
 
   @Column(name = "sort_order")
+  @JsonProperty(access = JsonProperty.Access.READ_ONLY)
   private Integer sortOrder;
 
   @JsonIgnore

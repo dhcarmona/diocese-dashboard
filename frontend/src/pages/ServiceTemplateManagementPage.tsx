@@ -109,13 +109,13 @@ function SortableInfoItemRow({ item, index, submitting, onRemove }: SortableInfo
     <Box ref={setNodeRef} style={style}>
       {index > 0 && <Divider />}
       <Box sx={{ py: 1.5, display: 'flex', alignItems: 'flex-start', gap: 1 }}>
-        <Box
+        <IconButton
           {...attributes}
           {...listeners}
           aria-label={t('serviceTemplates.actions.dragHandle')}
+          size="small"
+          disabled={submitting}
           sx={{
-            display: 'flex',
-            alignItems: 'center',
             cursor: submitting ? 'default' : 'grab',
             color: isDragging ? 'primary.main' : 'action.active',
             mt: 0.25,
@@ -123,7 +123,7 @@ function SortableInfoItemRow({ item, index, submitting, onRemove }: SortableInfo
           }}
         >
           <DragIndicatorIcon fontSize="small" />
-        </Box>
+        </IconButton>
         <Box sx={{ flex: 1 }}>
           <Typography variant="body1" fontWeight={600}>
             {item.title}

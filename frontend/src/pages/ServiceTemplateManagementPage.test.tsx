@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import i18n from 'i18next';
 import { MemoryRouter } from 'react-router-dom';
@@ -10,7 +10,49 @@ import {
   getServiceTemplates,
   updateServiceTemplate,
 } from '../api/serviceTemplates';
+import { reorderServiceInfoItems } from '../api/serviceInfoItems';
 import ServiceTemplateManagementPage from './ServiceTemplateManagementPage';
+
+// Capture the DragEnd callback so tests can simulate drag events.
+const dndState = vi.hoisted(() => ({
+  onDragEnd: null as ((event: { active: { id: number }; over: { id: number } | null }) => void) | null,
+}));
+
+vi.mock('@dnd-kit/core', () => ({
+  DndContext: ({ children, onDragEnd }: { children: unknown; onDragEnd: (e: unknown) => void }) => {
+    dndState.onDragEnd = onDragEnd as typeof dndState.onDragEnd;
+    return children;
+  },
+  closestCenter: {},
+  KeyboardSensor: class {},
+  PointerSensor: class {},
+  useSensor: () => null,
+  useSensors: () => [],
+}));
+
+vi.mock('@dnd-kit/sortable', () => ({
+  SortableContext: ({ children }: { children: unknown }) => children,
+  useSortable: () => ({
+    attributes: {},
+    listeners: {},
+    setNodeRef: () => {},
+    transform: null,
+    transition: undefined,
+    isDragging: false,
+  }),
+  arrayMove: <T,>(arr: T[], from: number, to: number): T[] => {
+    const result = [...arr];
+    const [removed] = result.splice(from, 1);
+    result.splice(to, 0, removed);
+    return result;
+  },
+  sortableKeyboardCoordinates: {},
+  verticalListSortingStrategy: {},
+}));
+
+vi.mock('@dnd-kit/utilities', () => ({
+  CSS: { Transform: { toString: () => '' } },
+}));
 
 vi.mock('../api/serviceTemplates', () => ({
   getServiceTemplates: vi.fn(),
@@ -32,6 +74,7 @@ describe('ServiceTemplateManagementPage', () => {
   const mockedCreateServiceTemplate = vi.mocked(createServiceTemplate);
   const mockedUpdateServiceTemplate = vi.mocked(updateServiceTemplate);
   const mockedDeleteServiceTemplate = vi.mocked(deleteServiceTemplate);
+  const mockedReorderServiceInfoItems = vi.mocked(reorderServiceInfoItems);
 
   const sampleTemplate = {
     id: 1,
@@ -40,12 +83,22 @@ describe('ServiceTemplateManagementPage', () => {
     bannerUrl: undefined,
   };
 
+  const sampleTemplateWithItems = {
+    ...sampleTemplate,
+    serviceInfoItems: [
+      { id: 10, title: 'Attendance', required: true, serviceInfoItemType: 'NUMERICAL' as const },
+      { id: 20, title: 'Offering', required: false, serviceInfoItemType: 'DOLLARS' as const },
+    ],
+  };
+
   beforeEach(async () => {
     mockedGetServiceTemplates.mockReset();
     mockedGetServiceTemplateById.mockReset();
     mockedCreateServiceTemplate.mockReset();
     mockedUpdateServiceTemplate.mockReset();
     mockedDeleteServiceTemplate.mockReset();
+    mockedReorderServiceInfoItems.mockReset();
+    dndState.onDragEnd = null;
     await i18n.changeLanguage('en');
   });
 
@@ -155,5 +208,49 @@ describe('ServiceTemplateManagementPage', () => {
 
     expect(screen.queryByRole('button', { name: /sunday mass/i })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: /vespers/i })).toBeInTheDocument();
+  });
+
+  it('calls reorderServiceInfoItems with the new order after a drag', async () => {
+    const user = userEvent.setup();
+    mockedGetServiceTemplates.mockResolvedValueOnce([sampleTemplateWithItems]);
+    mockedGetServiceTemplateById.mockResolvedValueOnce(sampleTemplateWithItems);
+    mockedReorderServiceInfoItems.mockResolvedValueOnce(undefined);
+
+    renderPage();
+    await user.click(await screen.findByRole('button', { name: /sunday mass/i }));
+    await screen.findByText('Attendance');
+
+    await act(async () => {
+      dndState.onDragEnd?.({ active: { id: 10 }, over: { id: 20 } });
+    });
+
+    await waitFor(() => {
+      expect(mockedReorderServiceInfoItems).toHaveBeenCalledWith([20, 10]);
+    });
+  });
+
+  it('reverts item order and shows error when reorder API call fails', async () => {
+    const user = userEvent.setup();
+    mockedGetServiceTemplates.mockResolvedValueOnce([sampleTemplateWithItems]);
+    mockedGetServiceTemplateById.mockResolvedValueOnce(sampleTemplateWithItems);
+    mockedReorderServiceInfoItems.mockRejectedValueOnce(new Error('network error'));
+
+    renderPage();
+    await user.click(await screen.findByRole('button', { name: /sunday mass/i }));
+    await screen.findByText('Attendance');
+
+    await act(async () => {
+      dndState.onDragEnd?.({ active: { id: 10 }, over: { id: 20 } });
+    });
+
+    await screen.findByText('We could not save the new item order right now.');
+    const attendanceEl = screen.getByText('Attendance');
+    const offeringEl = screen.getByText('Offering');
+    expect(attendanceEl).toBeInTheDocument();
+    expect(offeringEl).toBeInTheDocument();
+    // Attendance should appear before Offering in the DOM (original order preserved)
+    expect(
+      attendanceEl.compareDocumentPosition(offeringEl) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
   });
 });
