@@ -23,6 +23,7 @@ vi.mock('../api/serviceTemplates', () => ({
 vi.mock('../api/serviceInfoItems', () => ({
   createServiceInfoItem: vi.fn(),
   deleteServiceInfoItem: vi.fn(),
+  reorderServiceInfoItems: vi.fn(),
 }));
 
 describe('ServiceTemplateManagementPage', () => {

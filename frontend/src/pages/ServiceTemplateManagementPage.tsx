@@ -1,6 +1,24 @@
+import {
+  DndContext,
+  type DragEndEvent,
+  KeyboardSensor,
+  PointerSensor,
+  closestCenter,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
+import {
+  SortableContext,
+  arrayMove,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import AddOutlinedIcon from '@mui/icons-material/AddOutlined';
 import CloseOutlinedIcon from '@mui/icons-material/CloseOutlined';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import ImageOutlinedIcon from '@mui/icons-material/ImageOutlined';
 import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined';
@@ -30,6 +48,7 @@ import { useTranslation } from 'react-i18next';
 import {
   createServiceInfoItem,
   deleteServiceInfoItem,
+  reorderServiceInfoItems,
   type ServiceInfoItemDraft,
 } from '../api/serviceInfoItems';
 import {
@@ -71,6 +90,68 @@ const defaultInfoItemDraft: InfoItemDraft = {
   serviceInfoItemType: 'NUMERICAL',
 };
 
+interface SortableInfoItemRowProps {
+  item: ServiceInfoItemSummary;
+  index: number;
+  submitting: boolean;
+  onRemove: (id: number) => void;
+}
+
+function SortableInfoItemRow({ item, index, submitting, onRemove }: SortableInfoItemRowProps) {
+  const { t } = useTranslation();
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: item.id,
+    disabled: submitting,
+  });
+  const style = { transform: CSS.Transform.toString(transform), transition };
+
+  return (
+    <Box ref={setNodeRef} style={style}>
+      {index > 0 && <Divider />}
+      <Box sx={{ py: 1.5, display: 'flex', alignItems: 'flex-start', gap: 1 }}>
+        <Box
+          {...attributes}
+          {...listeners}
+          aria-label={t('serviceTemplates.actions.dragHandle')}
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            cursor: submitting ? 'default' : 'grab',
+            color: isDragging ? 'primary.main' : 'action.active',
+            mt: 0.25,
+            flexShrink: 0,
+          }}
+        >
+          <DragIndicatorIcon fontSize="small" />
+        </Box>
+        <Box sx={{ flex: 1 }}>
+          <Typography variant="body1" fontWeight={600}>
+            {item.title}
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            {t(`serviceInfoItemType.${item.serviceInfoItemType}`)}
+            {item.required ? ` · ${t('serviceTemplates.form.itemRequiredLabel')}` : ''}
+          </Typography>
+          {item.description && (
+            <Typography variant="body2" color="text.secondary">
+              {item.description}
+            </Typography>
+          )}
+        </Box>
+        <Button
+          variant="outlined"
+          color="error"
+          size="small"
+          disabled={submitting}
+          onClick={() => onRemove(item.id)}
+        >
+          {t('serviceTemplates.actions.removeItem')}
+        </Button>
+      </Box>
+    </Box>
+  );
+}
+
 function sortTemplates(templates: ServiceTemplate[]): ServiceTemplate[] {
   return [...templates].sort((left, right) =>
     left.serviceTemplateName.localeCompare(right.serviceTemplateName, undefined, {
@@ -94,10 +175,14 @@ export default function ServiceTemplateManagementPage() {
   const [submitting, setSubmitting] = useState(false);
   const [feedback, setFeedback] = useState<FeedbackState | null>(null);
 
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
+
   const sortedTemplates = useMemo(() => sortTemplates(templates), [templates]);
   const normalizedSearch = searchTerm.trim().toLocaleLowerCase();
-  const filteredTemplates = useMemo(
-    () =>
+  const filteredTemplates = useMemo(    () =>
       sortedTemplates.filter((tmpl) =>
         tmpl.serviceTemplateName.toLocaleLowerCase().includes(normalizedSearch),
       ),
@@ -284,6 +369,27 @@ export default function ServiceTemplateManagementPage() {
     }
   }
 
+  async function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    const oldIndex = infoItems.findIndex((item) => item.id === active.id);
+    const newIndex = infoItems.findIndex((item) => item.id === over.id);
+    const reordered = arrayMove(infoItems, oldIndex, newIndex);
+    const previous = infoItems;
+    setInfoItems(reordered);
+
+    try {
+      await reorderServiceInfoItems(reordered.map((item) => item.id));
+    } catch {
+      setInfoItems(previous);
+      setFeedback({
+        severity: 'error',
+        message: t('serviceTemplates.feedback.reorderError'),
+      });
+    }
+  }
+
   return (
     <>
       <PageHeader
@@ -386,38 +492,28 @@ export default function ServiceTemplateManagementPage() {
 
               <Stack spacing={2}>
                 {infoItems.length > 0 && (
-                  <List disablePadding>
-                    {infoItems.map((item, index) => (
-                      <Box key={item.id}>
-                        {index > 0 && <Divider />}
-                        <Box sx={{ py: 1.5, display: 'flex', alignItems: 'flex-start', gap: 2 }}>
-                          <Box sx={{ flex: 1 }}>
-                            <Typography variant="body1" fontWeight={600}>
-                              {item.title}
-                            </Typography>
-                            <Typography variant="body2" color="text.secondary">
-                              {t(`serviceInfoItemType.${item.serviceInfoItemType}`)}
-                              {item.required ? ` · ${t('serviceTemplates.form.itemRequiredLabel')}` : ''}
-                            </Typography>
-                            {item.description && (
-                              <Typography variant="body2" color="text.secondary">
-                                {item.description}
-                              </Typography>
-                            )}
-                          </Box>
-                          <Button
-                            variant="outlined"
-                            color="error"
-                            size="small"
-                            disabled={submitting}
-                            onClick={() => void handleRemoveInfoItem(item.id)}
-                          >
-                            {t('serviceTemplates.actions.removeItem')}
-                          </Button>
-                        </Box>
-                      </Box>
-                    ))}
-                  </List>
+                  <DndContext
+                    sensors={sensors}
+                    collisionDetection={closestCenter}
+                    onDragEnd={(event) => void handleDragEnd(event)}
+                  >
+                    <SortableContext
+                      items={infoItems.map((item) => item.id)}
+                      strategy={verticalListSortingStrategy}
+                    >
+                      <List disablePadding>
+                        {infoItems.map((item, index) => (
+                          <SortableInfoItemRow
+                            key={item.id}
+                            item={item}
+                            index={index}
+                            submitting={submitting}
+                            onRemove={(id) => void handleRemoveInfoItem(id)}
+                          />
+                        ))}
+                      </List>
+                    </SortableContext>
+                  </DndContext>
                 )}
 
                 <Divider />

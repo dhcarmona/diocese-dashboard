@@ -10,10 +10,12 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.OrderBy;
 import jakarta.persistence.Transient;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
+import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -40,7 +42,8 @@ public class ServiceTemplate {
   private Set<ServiceInstance> serviceInstances;
 
   @OneToMany(mappedBy = "serviceTemplate")
-  private Set<ServiceInfoItem> serviceInfoItems;
+  @OrderBy("sortOrder ASC")
+  private List<ServiceInfoItem> serviceInfoItems;
 
   public ServiceTemplate() {
   }
@@ -85,11 +88,11 @@ public class ServiceTemplate {
     this.serviceInstances = serviceInstances;
   }
 
-  public Set<ServiceInfoItem> getServiceInfoItems() {
+  public List<ServiceInfoItem> getServiceInfoItems() {
     return serviceInfoItems;
   }
 
-  public void setServiceInfoItems(Set<ServiceInfoItem> serviceInfoItems) {
+  public void setServiceInfoItems(List<ServiceInfoItem> serviceInfoItems) {
     this.serviceInfoItems = serviceInfoItems;
   }
 

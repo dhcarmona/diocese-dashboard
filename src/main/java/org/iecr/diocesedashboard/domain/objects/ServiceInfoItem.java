@@ -44,6 +44,9 @@ public class ServiceInfoItem {
   @JdbcTypeCode(SqlTypes.VARCHAR)
   private ServiceInfoItemType serviceInfoItemType;
 
+  @Column(name = "sort_order")
+  private Integer sortOrder;
+
   @JsonIgnore
   @OneToMany(mappedBy = "serviceInfoItem")
   private Set<ServiceInfoItemResponse> responses;
@@ -97,6 +100,14 @@ public class ServiceInfoItem {
 
   public void setServiceInfoItemType(ServiceInfoItemType serviceInfoItemType) {
     this.serviceInfoItemType = serviceInfoItemType;
+  }
+
+  public Integer getSortOrder() {
+    return sortOrder;
+  }
+
+  public void setSortOrder(Integer sortOrder) {
+    this.sortOrder = sortOrder;
   }
 
   public Set<ServiceInfoItemResponse> getResponses() {

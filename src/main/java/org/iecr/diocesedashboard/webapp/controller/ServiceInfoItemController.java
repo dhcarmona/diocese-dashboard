@@ -61,6 +61,7 @@ public class ServiceInfoItemController {
 
   /**
    * Creates a new service info item, associated with the given template.
+   * The item is appended at the end of the template's existing item list.
    *
    * @param templateId the ID of the owning service template
    * @param item the item to create
@@ -73,7 +74,7 @@ public class ServiceInfoItemController {
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
             "ServiceTemplate not found: " + templateId));
     item.setServiceTemplate(template);
-    return ResponseEntity.status(HttpStatus.CREATED).body(serviceInfoItemService.save(item));
+    return ResponseEntity.status(HttpStatus.CREATED).body(serviceInfoItemService.createItem(item));
   }
 
   /**
@@ -111,6 +112,19 @@ public class ServiceInfoItemController {
       return ResponseEntity.notFound().build();
     }
     serviceInfoItemService.deleteById(id);
+    return ResponseEntity.noContent().build();
+  }
+
+  /**
+   * Reorders service info items within a template.
+   * The items are assigned sortOrder values matching the position in {@code request.orderedIds()}.
+   *
+   * @param request the reorder request containing the item IDs in the desired order
+   * @return 204 on success
+   */
+  @PutMapping("/reorder")
+  public ResponseEntity<Void> reorder(@RequestBody ReorderRequest request) {
+    serviceInfoItemService.reorder(request.orderedIds());
     return ResponseEntity.noContent().build();
   }
 }
