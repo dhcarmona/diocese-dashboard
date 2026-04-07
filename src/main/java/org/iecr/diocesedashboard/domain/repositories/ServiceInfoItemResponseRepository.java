@@ -10,4 +10,6 @@ public interface ServiceInfoItemResponseRepository
     extends JpaRepository<ServiceInfoItemResponse, Long> {
 
   List<ServiceInfoItemResponse> findByServiceInstance(ServiceInstance instance);
+
+  void deleteByServiceInstance(ServiceInstance instance);
 }
