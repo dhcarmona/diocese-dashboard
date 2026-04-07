@@ -46,3 +46,11 @@ export async function deleteServiceInfoItem(id: number): Promise<void> {
     headers: await getCsrfHeaders(),
   });
 }
+
+export async function reorderServiceInfoItems(orderedIds: number[]): Promise<void> {
+  await api.put(
+    '/api/service-info-items/reorder',
+    { orderedIds },
+    { headers: await getCsrfHeaders() },
+  );
+}

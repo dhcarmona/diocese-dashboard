@@ -295,7 +295,8 @@
       "reset": "Start New",
       "delete": "Delete Template",
       "addItem": "Add Info Item",
-      "removeItem": "Remove"
+      "removeItem": "Remove",
+      "dragHandle": "Drag to reorder"
     },
     "search": {
       "label": "Search templates",
@@ -330,7 +331,8 @@
       "deleteError": "We could not delete the template right now.",
       "itemAdded": "Info item added.",
       "itemRemoved": "Info item removed.",
-      "itemError": "We could not save the info item right now."
+      "itemError": "We could not save the info item right now.",
+      "reorderError": "We could not save the new item order right now."
     },
     "validation": {
       "nameRequired": "Enter a template name before saving.",

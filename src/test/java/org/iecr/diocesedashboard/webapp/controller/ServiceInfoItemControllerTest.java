@@ -115,7 +115,7 @@ class ServiceInfoItemControllerTest {
     ServiceTemplate template = new ServiceTemplate();
     template.setId(1L);
     when(serviceTemplateService.findById(1L)).thenReturn(Optional.of(template));
-    when(serviceInfoItemService.save(any(ServiceInfoItem.class))).thenReturn(item);
+    when(serviceInfoItemService.createItem(any(ServiceInfoItem.class))).thenReturn(item);
 
     mockMvc.perform(post("/api/service-info-items")
         .param("templateId", "1")
@@ -190,5 +190,38 @@ class ServiceInfoItemControllerTest {
 
     mockMvc.perform(delete("/api/service-info-items/99").with(csrf()))
         .andExpect(status().isNotFound());
+  }
+
+  // --- PUT /api/service-info-items/reorder ---
+
+  @Test
+  @WithMockUser(roles = "ADMIN")
+  void reorder_asAdmin_returns204() throws Exception {
+    mockMvc.perform(put("/api/service-info-items/reorder")
+        .with(csrf())
+        .contentType(MediaType.APPLICATION_JSON)
+        .content("{\"orderedIds\":[3,1,2]}"))
+        .andExpect(status().isNoContent());
+
+    verify(serviceInfoItemService).reorder(List.of(3L, 1L, 2L));
+  }
+
+  @Test
+  @WithMockUser(roles = "USER")
+  void reorder_asUser_returns403() throws Exception {
+    mockMvc.perform(put("/api/service-info-items/reorder")
+        .with(csrf())
+        .contentType(MediaType.APPLICATION_JSON)
+        .content("{\"orderedIds\":[1,2]}"))
+        .andExpect(status().isForbidden());
+  }
+
+  @Test
+  void reorder_unauthenticated_returns401() throws Exception {
+    mockMvc.perform(put("/api/service-info-items/reorder")
+        .with(csrf())
+        .contentType(MediaType.APPLICATION_JSON)
+        .content("{\"orderedIds\":[1,2]}"))
+        .andExpect(status().isUnauthorized());
   }
 }

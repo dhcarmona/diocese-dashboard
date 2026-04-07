@@ -295,7 +295,8 @@
       "reset": "Empezar de nuevo",
       "delete": "Eliminar plantilla",
       "addItem": "Agregar ítem",
-      "removeItem": "Eliminar"
+      "removeItem": "Eliminar",
+      "dragHandle": "Arrastrar para reordenar"
     },
     "search": {
       "label": "Buscar plantillas",
@@ -330,7 +331,8 @@
       "deleteError": "No se pudo eliminar la plantilla en este momento.",
       "itemAdded": "Ítem agregado.",
       "itemRemoved": "Ítem eliminado.",
-      "itemError": "No se pudo guardar el ítem en este momento."
+      "itemError": "No se pudo guardar el ítem en este momento.",
+      "reorderError": "No se pudo guardar el nuevo orden en este momento."
     },
     "validation": {
       "nameRequired": "Ingrese un nombre de plantilla antes de guardar.",

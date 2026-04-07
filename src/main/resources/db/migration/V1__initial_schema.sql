@@ -59,6 +59,7 @@ create table reporter_link (
 
 create table service_info_item (
   required boolean,
+  sort_order integer,
   service_info_item_type varchar(255) not null,
   id bigint not null,
   service_template_id bigint not null,
