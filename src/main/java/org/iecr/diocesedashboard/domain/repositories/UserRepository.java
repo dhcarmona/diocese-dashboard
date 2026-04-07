@@ -3,7 +3,10 @@ package org.iecr.diocesedashboard.domain.repositories;
 import org.iecr.diocesedashboard.domain.objects.DashboardUser;
 import org.iecr.diocesedashboard.domain.objects.UserRole;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
+import java.util.List;
 import java.util.Optional;
 
 /** Repository for {@link DashboardUser} persistence. */
@@ -32,4 +35,14 @@ public interface UserRepository extends JpaRepository<DashboardUser, Long> {
    * @return true if at least one user has the role
    */
   boolean existsByRole(UserRole role);
+
+  /**
+   * Finds all REPORTER users assigned to the given church.
+   *
+   * @param churchName the church name to search by
+   * @return list of reporter users assigned to that church
+   */
+  @Query("SELECT u FROM DashboardUser u JOIN u.assignedChurches c "
+      + "WHERE u.role = 'REPORTER' AND c.name = :churchName")
+  List<DashboardUser> findReportersByAssignedChurchName(@Param("churchName") String churchName);
 }

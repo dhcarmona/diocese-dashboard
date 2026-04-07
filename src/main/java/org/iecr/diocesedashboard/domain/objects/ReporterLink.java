@@ -9,6 +9,8 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.SequenceGenerator;
 
+import java.time.LocalDate;
+
 /**
  * A short-URL token that links a specific REPORTER user to a specific ServiceTemplate,
  * allowing them to submit a service report without knowing the template ID.
@@ -36,6 +38,9 @@ public class ReporterLink {
   @ManyToOne
   @JoinColumn(name = "service_template_id", nullable = false)
   private ServiceTemplate serviceTemplate;
+
+  @Column(name = "active_date", nullable = false)
+  private LocalDate activeDate;
 
   /** Default no-arg constructor required by JPA. */
   public ReporterLink() {
@@ -79,6 +84,14 @@ public class ReporterLink {
 
   public void setServiceTemplate(ServiceTemplate serviceTemplate) {
     this.serviceTemplate = serviceTemplate;
+  }
+
+  public LocalDate getActiveDate() {
+    return activeDate;
+  }
+
+  public void setActiveDate(LocalDate activeDate) {
+    this.activeDate = activeDate;
   }
 
   private String getMaskedToken() {

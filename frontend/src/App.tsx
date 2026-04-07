@@ -9,20 +9,21 @@ import Typography from '@mui/material/Typography';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { useTranslation } from 'react-i18next';
-import { BrowserRouter, Navigate, Outlet, Route, Routes } from 'react-router-dom';
+import { BrowserRouter, Navigate, Outlet, Route, Routes, useSearchParams } from 'react-router-dom';
 import { AuthProvider } from './auth/AuthProvider';
 import { useAuth } from './auth/auth-context';
 import AppShell from './components/AppShell';
 import ChurchManagementPage from './pages/ChurchManagementPage';
 import LoginPage from './pages/LoginPage';
 import CelebrantManagementPage from './pages/CelebrantManagementPage';
-import FeaturePlaceholderPage from './pages/FeaturePlaceholderPage';
 import HomePage from './pages/HomePage';
 import AdminReportTemplateSelectionPage from './pages/AdminReportTemplateSelectionPage';
 import ReportInstanceDetailPage from './pages/ReportInstanceDetailPage';
 import ReportInstancesListPage from './pages/ReportInstancesListPage';
-import ReportsHubPage from './pages/ReportsHubPage';
+import ReporterLinkManagementPage from './pages/ReporterLinkManagementPage';
+import ReporterLinkPage from './pages/ReporterLinkPage';
 import ReporterUserManagementPage from './pages/ReporterUserManagementPage';
+import ReportsHubPage from './pages/ReportsHubPage';
 import ServiceSubmitPage from './pages/ServiceSubmitPage';
 import ServiceTemplateManagementPage from './pages/ServiceTemplateManagementPage';
 import TemplateSelectionPage from './pages/TemplateSelectionPage';
@@ -95,9 +96,11 @@ function AdminRoute() {
 
 function LoginRoute() {
   const { status } = useAuth();
+  const [searchParams] = useSearchParams();
+  const redirectTo = searchParams.get('redirect');
 
   if (status === 'authenticated') {
-    return <Navigate to="/" replace />;
+    return <Navigate to={redirectTo ?? '/'} replace />;
   }
 
   return <LoginPage />;
@@ -115,6 +118,7 @@ function AppRoutes() {
   return (
     <Routes>
       <Route path="/login" element={<LoginRoute />} />
+      <Route path="/r/:token" element={<ReporterLinkPage />} />
       <Route element={<ProtectedRoute />}>
         <Route element={<AuthenticatedLayout />}>
           <Route path="/" element={<HomePage />} />
@@ -142,12 +146,7 @@ function AppRoutes() {
             />
             <Route
               path="/reporter-links/manage"
-              element={
-                <FeaturePlaceholderPage
-                  titleKey="areas.reporterLinks.title"
-                  descriptionKey="areas.reporterLinks.description"
-                />
-              }
+              element={<ReporterLinkManagementPage />}
             />
             <Route path="/reports/view" element={<ReportsHubPage />} />
             <Route

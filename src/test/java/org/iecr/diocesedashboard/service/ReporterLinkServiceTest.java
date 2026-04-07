@@ -11,13 +11,16 @@ import org.iecr.diocesedashboard.domain.objects.ReporterLink;
 import org.iecr.diocesedashboard.domain.objects.ServiceTemplate;
 import org.iecr.diocesedashboard.domain.objects.UserRole;
 import org.iecr.diocesedashboard.domain.repositories.ReporterLinkRepository;
+import org.iecr.diocesedashboard.domain.repositories.UserRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.MessageSource;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -29,8 +32,23 @@ class ReporterLinkServiceTest {
   @Mock
   private ReporterLinkRepository reporterLinkRepository;
 
-  @InjectMocks
+  @Mock
+  private UserRepository userRepository;
+
+  @Mock
+  private WhatsAppService whatsAppService;
+
+  @Mock
+  private MessageSource messageSource;
+
   private ReporterLinkService reporterLinkService;
+
+  @BeforeEach
+  void setUp() {
+    reporterLinkService = new ReporterLinkService(
+        reporterLinkRepository, userRepository, whatsAppService,
+        messageSource, "http://localhost:8080");
+  }
 
   private DashboardUser buildReporter() {
     DashboardUser user = new DashboardUser();
@@ -63,7 +81,8 @@ class ReporterLinkServiceTest {
     when(reporterLinkRepository.save(any(ReporterLink.class))).thenReturn(saved);
 
     reporter.setAssignedChurches(Set.of(church));
-    ReporterLink result = reporterLinkService.createLink(reporter, church, template);
+    ReporterLink result = reporterLinkService.createLink(reporter, church, template,
+        LocalDate.now());
 
     ArgumentCaptor<ReporterLink> captor = ArgumentCaptor.forClass(ReporterLink.class);
     verify(reporterLinkRepository).save(captor.capture());
@@ -80,7 +99,7 @@ class ReporterLinkServiceTest {
     when(reporterLinkRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
     ReporterLink result = reporterLinkService.createLink(
-        buildReporter(), buildChurch(), buildTemplate());
+        buildReporter(), buildChurch(), buildTemplate(), LocalDate.now());
 
     // should not throw — UUID.fromString validates the format
     UUID.fromString(result.getToken());

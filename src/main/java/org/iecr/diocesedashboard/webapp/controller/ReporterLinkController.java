@@ -25,6 +25,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 /** REST controller for managing and using reporter short-URL links. */
@@ -65,11 +67,13 @@ public class ReporterLinkController {
   /**
    * Creates a new reporter link for a specific REPORTER user and service template. ADMIN only.
    *
-   * @param request the creation request containing reporterId and serviceTemplateId
+   * @param request the creation request containing reporterId, churchName, serviceTemplateId,
+   *                and activeDate
    * @return 201 with the created reporter link details
    */
   @PostMapping
-  public ResponseEntity<ReporterLinkResponse> create(@RequestBody @Valid ReporterLinkRequest request) {
+  public ResponseEntity<ReporterLinkResponse> create(
+      @RequestBody @Valid ReporterLinkRequest request) {
     DashboardUser reporter = userService.findById(request.reporterId())
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
             "User not found: " + request.reporterId()));
@@ -87,8 +91,43 @@ public class ReporterLinkController {
     var template = serviceTemplateService.findById(request.serviceTemplateId())
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
             "Service template not found: " + request.serviceTemplateId()));
-    ReporterLink created = reporterLinkService.createLink(reporter, church, template);
+    ReporterLink created = reporterLinkService.createLink(
+        reporter, church, template, request.activeDate());
     return ResponseEntity.status(HttpStatus.CREATED).body(ReporterLinkResponse.from(created));
+  }
+
+  /**
+   * Bulk-creates reporter links for the given service template, active date, and list of churches.
+   * Each church is automatically matched to its assigned reporter. Churches with no reporter are
+   * returned in the {@code skippedChurches} list. ADMIN only.
+   *
+   * @param request the bulk creation request
+   * @return 201 with created links and any skipped churches
+   */
+  @PostMapping("/bulk")
+  public ResponseEntity<ReporterLinkBulkResponse> createBulk(
+      @RequestBody @Valid ReporterLinkBulkRequest request) {
+    var template = serviceTemplateService.findById(request.serviceTemplateId())
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+            "Service template not found: " + request.serviceTemplateId()));
+
+    List<Church> churches = new ArrayList<>();
+    for (String churchName : request.churchNames()) {
+      Church church = churchService.findById(churchName)
+          .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
+              "Church not found: " + churchName));
+      churches.add(church);
+    }
+
+    ReporterLinkService.BulkCreateResult result =
+        reporterLinkService.createLinksForChurches(churches, template, request.activeDate());
+
+    List<ReporterLinkResponse> createdResponses = result.created().stream()
+        .map(ReporterLinkResponse::from)
+        .toList();
+    ReporterLinkBulkResponse body =
+        new ReporterLinkBulkResponse(createdResponses, result.skippedChurches());
+    return ResponseEntity.status(HttpStatus.CREATED).body(body);
   }
 
   /**
@@ -127,7 +166,8 @@ public class ReporterLinkController {
   /**
    * Submits a new service instance via the reporter link identified by the given token.
    * The service template and church are resolved from the link itself. Only the reporter
-   * named in the link may submit.
+   * named in the link may submit. The link must be active (its activeDate must be today or past),
+   * and it is revoked upon successful submission.
    *
    * @param token   the link token
    * @param request the submission data (celebrants, date, responses)
@@ -149,6 +189,10 @@ public class ReporterLinkController {
       throw new ResponseStatusException(HttpStatus.FORBIDDEN,
           "Reporter account is not assigned to this church");
     }
+    if (link.getActiveDate().isAfter(LocalDate.now())) {
+      throw new ResponseStatusException(HttpStatus.CONFLICT,
+          "This reporter link is not yet active until " + link.getActiveDate());
+    }
     ServiceInstanceRequest instanceRequest = new ServiceInstanceRequest(
         link.getChurch().getName(),
         request.celebrantIds(),
@@ -156,6 +200,7 @@ public class ReporterLinkController {
         request.responses());
     ServiceInstance created = serviceSubmissionService.submit(
         link.getServiceTemplate().getId(), instanceRequest, user);
+    reporterLinkService.deleteByToken(token);
     return ResponseEntity.status(HttpStatus.CREATED)
         .body(ReporterLinkSubmissionResponse.from(created));
   }
