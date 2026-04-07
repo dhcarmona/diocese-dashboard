@@ -89,7 +89,8 @@ public class ServiceInfoItemController {
   public ResponseEntity<ServiceInfoItem> update(@PathVariable Long id,
       @RequestParam Long templateId,
       @RequestBody @Valid ServiceInfoItem item) {
-    if (!serviceInfoItemService.existsById(id)) {
+    ServiceInfoItem existing = serviceInfoItemService.findById(id).orElse(null);
+    if (existing == null) {
       return ResponseEntity.notFound().build();
     }
     ServiceTemplate template = serviceTemplateService.findById(templateId)
@@ -97,6 +98,7 @@ public class ServiceInfoItemController {
             "ServiceTemplate not found: " + templateId));
     item.setId(id);
     item.setServiceTemplate(template);
+    item.setSortOrder(existing.getSortOrder());
     return ResponseEntity.ok(serviceInfoItemService.save(item));
   }
 
@@ -123,7 +125,7 @@ public class ServiceInfoItemController {
    * @return 204 on success
    */
   @PutMapping("/reorder")
-  public ResponseEntity<Void> reorder(@RequestBody ReorderRequest request) {
+  public ResponseEntity<Void> reorder(@RequestBody @Valid ReorderRequest request) {
     serviceInfoItemService.reorder(request.orderedIds());
     return ResponseEntity.noContent().build();
   }

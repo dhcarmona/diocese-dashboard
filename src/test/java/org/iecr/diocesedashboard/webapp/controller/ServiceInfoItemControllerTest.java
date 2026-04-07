@@ -144,7 +144,7 @@ class ServiceInfoItemControllerTest {
     ServiceInfoItem item = buildItem(1L, "attendance");
     ServiceTemplate template = new ServiceTemplate();
     template.setId(1L);
-    when(serviceInfoItemService.existsById(1L)).thenReturn(true);
+    when(serviceInfoItemService.findById(1L)).thenReturn(Optional.of(item));
     when(serviceTemplateService.findById(1L)).thenReturn(Optional.of(template));
     when(serviceInfoItemService.save(any(ServiceInfoItem.class))).thenReturn(item);
 
@@ -160,7 +160,7 @@ class ServiceInfoItemControllerTest {
   @Test
   @WithMockUser(roles = "ADMIN")
   void update_notFound_returns404() throws Exception {
-    when(serviceInfoItemService.existsById(99L)).thenReturn(false);
+    when(serviceInfoItemService.findById(99L)).thenReturn(Optional.empty());
 
     mockMvc.perform(put("/api/service-info-items/99")
         .param("templateId", "1")
@@ -204,6 +204,26 @@ class ServiceInfoItemControllerTest {
         .andExpect(status().isNoContent());
 
     verify(serviceInfoItemService).reorder(List.of(3L, 1L, 2L));
+  }
+
+  @Test
+  @WithMockUser(roles = "ADMIN")
+  void reorder_withEmptyList_returns400() throws Exception {
+    mockMvc.perform(put("/api/service-info-items/reorder")
+        .with(csrf())
+        .contentType(MediaType.APPLICATION_JSON)
+        .content("{\"orderedIds\":[]}"))
+        .andExpect(status().isBadRequest());
+  }
+
+  @Test
+  @WithMockUser(roles = "ADMIN")
+  void reorder_withNullOrderedIds_returns400() throws Exception {
+    mockMvc.perform(put("/api/service-info-items/reorder")
+        .with(csrf())
+        .contentType(MediaType.APPLICATION_JSON)
+        .content("{\"orderedIds\":null}"))
+        .andExpect(status().isBadRequest());
   }
 
   @Test
