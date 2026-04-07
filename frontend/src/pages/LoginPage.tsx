@@ -12,7 +12,7 @@ import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import { useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { isBackendUnavailableError, isUnauthorizedError, requestReporterOtp } from '../api/auth';
 import { useAuth } from '../auth/auth-context';
 import LanguageSwitcher from '../components/LanguageSwitcher';
@@ -28,6 +28,8 @@ type LoginErrorKey =
 
 export default function LoginPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const redirectTo = searchParams.get('redirect');
   const { t } = useTranslation();
   const { signIn, reporterSignIn, status, authErrorKey } = useAuth();
   const [loginMode, setLoginMode] = useState<LoginMode>('reporterRequest');
@@ -56,7 +58,7 @@ export default function LoginPage() {
     setLoading(true);
     try {
       await signIn(username, password);
-      navigate('/');
+      navigate(redirectTo ?? '/');
     } catch (error) {
       if (isUnauthorizedError(error)) {
         setErrorKey('login.invalidCredentials');
@@ -96,7 +98,7 @@ export default function LoginPage() {
     setLoading(true);
     try {
       await reporterSignIn(username, otpCode);
-      navigate('/');
+      navigate(redirectTo ?? '/');
     } catch (error) {
       if (isUnauthorizedError(error)) {
         setErrorKey('login.invalidCode');

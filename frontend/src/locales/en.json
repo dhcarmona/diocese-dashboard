@@ -129,8 +129,54 @@
     },
     "reporterLinks": {
       "title": "Reporter Links",
-      "description": "This area will let administrators create links for a reporter, church, and service template."
+      "description": "Create and send report links to reporter users for a specific template and date."
     }
+  },
+  "reporterLinks": {
+    "subtitle": "Create links and send them to reporters for a specific template and date.",
+    "loading": "Loading...",
+    "loadError": "We could not load the data right now.",
+    "form": {
+      "title": "Create Reporter Links",
+      "templateLabel": "Service Template",
+      "dateLabel": "Report Date",
+      "churchesLabel": "Select Churches",
+      "selectAll": "Select All",
+      "clearAll": "Clear All",
+      "noChurches": "No churches have been added yet.",
+      "selectedCount": "{{count}} church(es) selected",
+      "submit": "Create & Send Links",
+      "reset": "Reset"
+    },
+    "feedback": {
+      "created": "{{count}} reporter link(s) created and sent.",
+      "partialSuccess": "{{count}} link(s) created. The following churches had no reporter assigned and were skipped: {{skipped}}.",
+      "createError": "We could not create the reporter links right now.",
+      "revoked": "The reporter link was revoked.",
+      "revokeError": "We could not revoke the reporter link right now."
+    },
+    "validation": {
+      "churchesRequired": "Select at least one church."
+    },
+    "list": {
+      "title": "Active Reporter Links",
+      "subtitle": "{{count}} active link(s)",
+      "empty": "No active reporter links.",
+      "reporter": "Reporter: {{name}}",
+      "activeDate": "Active from: {{date}}"
+    },
+    "actions": {
+      "revoke": "Revoke link"
+    }
+  },
+  "reporterLink": {
+    "loading": "Loading report link...",
+    "loadError": "We could not load this report link.",
+    "notFound": "This report link does not exist or has already been used.",
+    "wrongUser": "This report link belongs to a different reporter account.",
+    "backHome": "Back to Home",
+    "notYetActiveSubtitle": "This link is not yet active.",
+    "notYetActive": "This report link will be available starting {{date}}. Please come back on that date."
   },
   "celebrants": {
     "subtitle": "Add, update, and remove celebrants.",

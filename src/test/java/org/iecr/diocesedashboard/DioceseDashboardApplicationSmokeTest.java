@@ -16,7 +16,8 @@ import org.springframework.context.ApplicationContext;
         "spring.datasource.username=sa",
         "spring.datasource.password=",
         "spring.jpa.hibernate.ddl-auto=validate",
-        "dashboard.bootstrap-admin.enabled=false"
+        "dashboard.bootstrap-admin.enabled=false",
+        "app.base-url=http://localhost:8080"
     })
 class DioceseDashboardApplicationSmokeTest {
 

@@ -107,6 +107,7 @@ class ReporterLinkControllerTest {
     link.setReporter(buildReporter(reporterId, churchName));
     link.setChurch(buildChurch(churchName));
     link.setServiceTemplate(buildTemplate(2L));
+    link.setActiveDate(LocalDate.now().minusDays(1));
     return link;
   }
 
@@ -150,9 +151,9 @@ class ReporterLinkControllerTest {
     when(userService.findById(5L)).thenReturn(Optional.of(reporter));
     when(churchService.findById("Trinity")).thenReturn(Optional.of(church));
     when(serviceTemplateService.findById(2L)).thenReturn(Optional.of(template));
-    when(reporterLinkService.createLink(any(), any(), any())).thenReturn(link);
+    when(reporterLinkService.createLink(any(), any(), any(), any())).thenReturn(link);
 
-    ReporterLinkRequest request = new ReporterLinkRequest(5L, "Trinity", 2L);
+    ReporterLinkRequest request = new ReporterLinkRequest(5L, "Trinity", 2L, LocalDate.now());
     mockMvc.perform(post("/api/reporter-links")
         .with(csrf())
         .contentType(MediaType.APPLICATION_JSON)
@@ -171,7 +172,7 @@ class ReporterLinkControllerTest {
   void create_reporterNotFound_returns404() throws Exception {
     when(userService.findById(99L)).thenReturn(Optional.empty());
 
-    ReporterLinkRequest request = new ReporterLinkRequest(99L, "Trinity", 2L);
+    ReporterLinkRequest request = new ReporterLinkRequest(99L, "Trinity", 2L, LocalDate.now());
     mockMvc.perform(post("/api/reporter-links")
         .with(csrf())
         .contentType(MediaType.APPLICATION_JSON)
@@ -187,7 +188,7 @@ class ReporterLinkControllerTest {
     admin.setRole(UserRole.ADMIN);
     when(userService.findById(3L)).thenReturn(Optional.of(admin));
 
-    ReporterLinkRequest request = new ReporterLinkRequest(3L, "Trinity", 2L);
+    ReporterLinkRequest request = new ReporterLinkRequest(3L, "Trinity", 2L, LocalDate.now());
     mockMvc.perform(post("/api/reporter-links")
         .with(csrf())
         .contentType(MediaType.APPLICATION_JSON)
@@ -201,7 +202,7 @@ class ReporterLinkControllerTest {
     when(userService.findById(5L)).thenReturn(Optional.of(buildReporter(5L, "Trinity")));
     when(churchService.findById("Unknown")).thenReturn(Optional.empty());
 
-    ReporterLinkRequest request = new ReporterLinkRequest(5L, "Unknown", 2L);
+    ReporterLinkRequest request = new ReporterLinkRequest(5L, "Unknown", 2L, LocalDate.now());
     mockMvc.perform(post("/api/reporter-links")
         .with(csrf())
         .contentType(MediaType.APPLICATION_JSON)
@@ -215,7 +216,7 @@ class ReporterLinkControllerTest {
     when(userService.findById(5L)).thenReturn(Optional.of(buildReporter(5L, "StPaul")));
     when(churchService.findById("Trinity")).thenReturn(Optional.of(buildChurch("Trinity")));
 
-    ReporterLinkRequest request = new ReporterLinkRequest(5L, "Trinity", 2L);
+    ReporterLinkRequest request = new ReporterLinkRequest(5L, "Trinity", 2L, LocalDate.now());
     mockMvc.perform(post("/api/reporter-links")
         .with(csrf())
         .contentType(MediaType.APPLICATION_JSON)
@@ -230,7 +231,7 @@ class ReporterLinkControllerTest {
     when(churchService.findById("Trinity")).thenReturn(Optional.of(buildChurch("Trinity")));
     when(serviceTemplateService.findById(99L)).thenReturn(Optional.empty());
 
-    ReporterLinkRequest request = new ReporterLinkRequest(5L, "Trinity", 99L);
+    ReporterLinkRequest request = new ReporterLinkRequest(5L, "Trinity", 99L, LocalDate.now());
     mockMvc.perform(post("/api/reporter-links")
         .with(csrf())
         .contentType(MediaType.APPLICATION_JSON)
@@ -241,7 +242,7 @@ class ReporterLinkControllerTest {
   @Test
   @WithMockUser(roles = "REPORTER")
   void create_asReporter_returns403() throws Exception {
-    ReporterLinkRequest request = new ReporterLinkRequest(5L, "Trinity", 2L);
+    ReporterLinkRequest request = new ReporterLinkRequest(5L, "Trinity", 2L, LocalDate.now());
     mockMvc.perform(post("/api/reporter-links")
         .with(csrf())
         .contentType(MediaType.APPLICATION_JSON)

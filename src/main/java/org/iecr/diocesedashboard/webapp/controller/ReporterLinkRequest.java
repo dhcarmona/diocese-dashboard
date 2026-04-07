@@ -3,6 +3,8 @@ package org.iecr.diocesedashboard.webapp.controller;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
+import java.time.LocalDate;
+
 /**
  * Request body for creating a new reporter link.
  * Only ADMIN users may create links.
@@ -10,5 +12,6 @@ import jakarta.validation.constraints.NotNull;
 public record ReporterLinkRequest(
 @NotNull Long reporterId,
 @NotBlank String churchName,
-@NotNull Long serviceTemplateId) {
+@NotNull Long serviceTemplateId,
+@NotNull LocalDate activeDate) {
 }

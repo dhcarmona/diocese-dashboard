@@ -129,8 +129,54 @@
     },
     "reporterLinks": {
       "title": "Enlaces de reportero",
-      "description": "Esta área permitirá a los administradores crear enlaces para un reportero, una iglesia y una plantilla de servicio."
+      "description": "Cree y envíe enlaces de reporte a usuarios reporteros para una plantilla y fecha específicas."
     }
+  },
+  "reporterLinks": {
+    "subtitle": "Cree enlaces y envíelos a reporteros para una plantilla y fecha específicas.",
+    "loading": "Cargando...",
+    "loadError": "No se pudieron cargar los datos en este momento.",
+    "form": {
+      "title": "Crear enlaces de reportero",
+      "templateLabel": "Plantilla de servicio",
+      "dateLabel": "Fecha del reporte",
+      "churchesLabel": "Seleccionar iglesias",
+      "selectAll": "Seleccionar todo",
+      "clearAll": "Limpiar",
+      "noChurches": "Aún no se han agregado iglesias.",
+      "selectedCount": "{{count}} iglesia(s) seleccionada(s)",
+      "submit": "Crear y enviar enlaces",
+      "reset": "Reiniciar"
+    },
+    "feedback": {
+      "created": "Se crearon y enviaron {{count}} enlace(s) de reportero.",
+      "partialSuccess": "Se crearon {{count}} enlace(s). Las siguientes iglesias no tenían reportero asignado y fueron omitidas: {{skipped}}.",
+      "createError": "No se pudieron crear los enlaces de reportero en este momento.",
+      "revoked": "El enlace de reportero fue revocado.",
+      "revokeError": "No se pudo revocar el enlace de reportero en este momento."
+    },
+    "validation": {
+      "churchesRequired": "Seleccione al menos una iglesia."
+    },
+    "list": {
+      "title": "Enlaces de reportero activos",
+      "subtitle": "{{count}} enlace(s) activo(s)",
+      "empty": "No hay enlaces de reportero activos.",
+      "reporter": "Reportero: {{name}}",
+      "activeDate": "Activo desde: {{date}}"
+    },
+    "actions": {
+      "revoke": "Revocar enlace"
+    }
+  },
+  "reporterLink": {
+    "loading": "Cargando enlace de reporte...",
+    "loadError": "No se pudo cargar este enlace de reporte.",
+    "notFound": "Este enlace de reporte no existe o ya fue utilizado.",
+    "wrongUser": "Este enlace de reporte pertenece a otra cuenta de reportero.",
+    "backHome": "Volver al inicio",
+    "notYetActiveSubtitle": "Este enlace aún no está activo.",
+    "notYetActive": "Este enlace de reporte estará disponible a partir del {{date}}. Por favor, regrese en esa fecha."
   },
   "celebrants": {
     "subtitle": "Agregue, actualice y elimine celebrantes.",
