@@ -77,9 +77,11 @@ create table service_info_item_response (
 
 create table service_instance (
   service_date date,
+  submitted_at timestamp,
   church_id varchar(255) not null,
   id bigint not null,
   template_id bigint not null,
+  submitted_by_id bigint,
   primary key (id)
 );
 
@@ -154,3 +156,8 @@ alter table if exists service_instance
   add constraint FKhnfh5nf16lvrtafq78pbw8vs4
   foreign key (template_id)
   references service_template;
+
+alter table if exists service_instance
+  add constraint FKservice_instance_submitted_by
+  foreign key (submitted_by_id)
+  references dashboard_user;

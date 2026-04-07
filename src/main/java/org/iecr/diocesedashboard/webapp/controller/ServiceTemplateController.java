@@ -128,7 +128,7 @@ public class ServiceTemplateController {
       throw new ResponseStatusException(HttpStatus.FORBIDDEN,
           "Reporters may only submit for their assigned churches");
     }
-    ServiceInstance created = serviceSubmissionService.submit(id, request);
+    ServiceInstance created = serviceSubmissionService.submit(id, request, user);
     return ResponseEntity.status(HttpStatus.CREATED).body(created);
   }
 

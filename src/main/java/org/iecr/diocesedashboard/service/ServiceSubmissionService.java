@@ -2,6 +2,7 @@ package org.iecr.diocesedashboard.service;
 
 import org.iecr.diocesedashboard.domain.objects.Celebrant;
 import org.iecr.diocesedashboard.domain.objects.Church;
+import org.iecr.diocesedashboard.domain.objects.DashboardUser;
 import org.iecr.diocesedashboard.domain.objects.ServiceInfoItem;
 import org.iecr.diocesedashboard.domain.objects.ServiceInfoItemResponse;
 import org.iecr.diocesedashboard.domain.objects.ServiceInstance;
@@ -13,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -49,12 +51,14 @@ public class ServiceSubmissionService {
    * Creates and persists a new {@link ServiceInstance} from the given template and request,
    * including all associated celebrants and survey responses.
    *
-   * @param templateId the ID of the {@link ServiceTemplate} to use
-   * @param request    the submission request containing church, celebrants, date, and responses
+   * @param templateId  the ID of the {@link ServiceTemplate} to use
+   * @param request     the submission request containing church, celebrants, date, and responses
+   * @param submittedBy the {@link DashboardUser} who is submitting the report (may be null)
    * @return the saved {@link ServiceInstance}
    */
   @Transactional
-  public ServiceInstance submit(Long templateId, ServiceInstanceRequest request) {
+  public ServiceInstance submit(Long templateId, ServiceInstanceRequest request,
+      DashboardUser submittedBy) {
     ServiceTemplate template = serviceTemplateService.findById(templateId)
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Template not found"));
 
@@ -65,6 +69,8 @@ public class ServiceSubmissionService {
     instance.setServiceTemplate(template);
     instance.setChurch(church);
     instance.setServiceDate(request.serviceDate());
+    instance.setSubmittedBy(submittedBy);
+    instance.setSubmittedAt(LocalDateTime.now());
 
     if (request.celebrantIds() != null && !request.celebrantIds().isEmpty()) {
       Set<Celebrant> celebrants = new HashSet<>();

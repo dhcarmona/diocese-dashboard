@@ -67,6 +67,10 @@
       "createReporterLinks": {
         "title": "Crear enlaces de reportero",
         "description": "Cree enlaces para una combinación específica de reportero, iglesia y plantilla."
+      },
+      "seeReports": {
+        "title": "Ver reportes",
+        "description": "Consulte los reportes enviados, obtenga estadísticas y más."
       }
     }
   },
@@ -339,5 +343,69 @@
     "DOLLARS": "Dólares",
     "COLONES": "Colones",
     "STRING": "Texto"
+  },
+  "reportsHub": {
+    "title": "Reportes",
+    "subtitle": "Consulte los reportes enviados y obtenga estadísticas.",
+    "tiles": {
+      "individualReports": {
+        "title": "Ver reportes individuales",
+        "description": "Consulte los reportes enviados para una plantilla específica."
+      }
+    }
+  },
+  "reportsList": {
+    "title": "Reportes enviados",
+    "subtitle": "Reportes enviados para \"{{templateName}}\".",
+    "loading": "Cargando reportes...",
+    "loadError": "No se pudieron cargar los reportes.",
+    "empty": "Aún no se han enviado reportes para esta plantilla.",
+    "columns": {
+      "date": "Fecha",
+      "church": "Iglesia",
+      "reporter": "Reportero",
+      "submittedAt": "Fecha de envío",
+      "actions": "Acciones"
+    },
+    "viewDetails": "Ver detalles",
+    "unknownReporter": "Desconocido"
+  },
+  "reportDetail": {
+    "title": "Detalles del reporte",
+    "loading": "Cargando reporte...",
+    "loadError": "No se pudo cargar este reporte.",
+    "backToList": "Volver a la lista",
+    "meta": {
+      "date": "Fecha",
+      "church": "Iglesia",
+      "template": "Plantilla",
+      "reporter": "Reportero"
+    },
+    "responsesTitle": "Respuestas",
+    "actions": {
+      "save": "Guardar cambios",
+      "saving": "Guardando...",
+      "delete": "Eliminar reporte",
+      "deleting": "Eliminando..."
+    },
+    "saveError": "No se pudieron guardar los cambios. Intente de nuevo.",
+    "deleteError": "No se pudo eliminar el reporte. Intente de nuevo.",
+    "notifyDialog": {
+      "editTitle": "¿Notificar al reportero?",
+      "editMessage": "¿Desea enviar una notificación de WhatsApp al reportero sobre los cambios realizados?",
+      "deleteTitle": "¿Notificar al reportero?",
+      "deleteMessage": "¿Desea notificar al reportero que este reporte fue eliminado?",
+      "yes": "Sí, notificar",
+      "no": "No, omitir",
+      "noReporterPhone": "El reportero no tiene número de teléfono registrado; no se enviará notificación."
+    },
+    "deleteConfirmDialog": {
+      "title": "Eliminar reporte",
+      "message": "¿Está seguro de que desea eliminar este reporte? Esta acción no se puede deshacer.",
+      "confirm": "Eliminar",
+      "cancel": "Cancelar"
+    },
+    "deleteSuccess": "El reporte fue eliminado correctamente.",
+    "saveSuccess": "Los cambios se guardaron correctamente."
   }
 }

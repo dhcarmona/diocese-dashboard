@@ -67,6 +67,10 @@
       "createReporterLinks": {
         "title": "Create Reporter Links",
         "description": "Create links for a specific reporter, church, and template."
+      },
+      "seeReports": {
+        "title": "See Reports",
+        "description": "View submitted reports, gather statistics and more."
       }
     }
   },
@@ -339,5 +343,69 @@
     "DOLLARS": "US Dollars",
     "COLONES": "Colones",
     "STRING": "Text"
+  },
+  "reportsHub": {
+    "title": "Reports",
+    "subtitle": "View submitted reports and gather statistics.",
+    "tiles": {
+      "individualReports": {
+        "title": "See Individual Reports",
+        "description": "Browse submitted reports for a specific service template."
+      }
+    }
+  },
+  "reportsList": {
+    "title": "Submitted Reports",
+    "subtitle": "Reports submitted for \"{{templateName}}\".",
+    "loading": "Loading reports...",
+    "loadError": "We could not load the reports.",
+    "empty": "No reports have been submitted for this template yet.",
+    "columns": {
+      "date": "Date",
+      "church": "Church",
+      "reporter": "Reporter",
+      "submittedAt": "Submitted At",
+      "actions": "Actions"
+    },
+    "viewDetails": "View Details",
+    "unknownReporter": "Unknown"
+  },
+  "reportDetail": {
+    "title": "Report Details",
+    "loading": "Loading report...",
+    "loadError": "We could not load this report.",
+    "backToList": "Back to list",
+    "meta": {
+      "date": "Date",
+      "church": "Church",
+      "template": "Template",
+      "reporter": "Reporter"
+    },
+    "responsesTitle": "Answers",
+    "actions": {
+      "save": "Save Changes",
+      "saving": "Saving...",
+      "delete": "Delete Report",
+      "deleting": "Deleting..."
+    },
+    "saveError": "We could not save the changes. Please try again.",
+    "deleteError": "We could not delete the report. Please try again.",
+    "notifyDialog": {
+      "editTitle": "Notify Reporter?",
+      "editMessage": "Would you like to send a WhatsApp notification to the reporter about the changes you made?",
+      "deleteTitle": "Notify Reporter?",
+      "deleteMessage": "Would you like to notify the reporter that this report was deleted?",
+      "yes": "Yes, Notify",
+      "no": "No, Skip",
+      "noReporterPhone": "The reporter has no phone number on file; no notification will be sent."
+    },
+    "deleteConfirmDialog": {
+      "title": "Delete Report",
+      "message": "Are you sure you want to delete this report? This action cannot be undone.",
+      "confirm": "Delete",
+      "cancel": "Cancel"
+    },
+    "deleteSuccess": "The report was deleted successfully.",
+    "saveSuccess": "Changes were saved successfully."
   }
 }
