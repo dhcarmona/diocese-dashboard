@@ -323,11 +323,6 @@ export default function ReportInstanceDetailPage() {
               ? t('reportDetail.notifyDialog.editMessage')
               : t('reportDetail.notifyDialog.deleteMessage')}
           </DialogContentText>
-          {detail.submittedByUsername && !detail.submittedByFullName && (
-            <DialogContentText sx={{ mt: 1, fontStyle: 'italic' }}>
-              {t('reportDetail.notifyDialog.noReporterPhone')}
-            </DialogContentText>
-          )}
         </DialogContent>
         <DialogActions>
           <Button onClick={() => handleNotifyChoice(false)}>

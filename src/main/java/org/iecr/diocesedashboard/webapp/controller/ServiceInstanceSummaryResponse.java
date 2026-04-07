@@ -3,6 +3,7 @@ package org.iecr.diocesedashboard.webapp.controller;
 import org.iecr.diocesedashboard.domain.objects.ServiceInstance;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 /** A lightweight projection of a ServiceInstance for list views. */
 public record ServiceInstanceSummaryResponse(
@@ -12,10 +13,18 @@ String churchName,
 Long templateId,
 String templateName,
 String submittedByUsername,
-String submittedByFullName) {
+String submittedByFullName,
+LocalDateTime submittedAt) {
 
-  /** Builds a summary response from the given entity. */
-  public static ServiceInstanceSummaryResponse from(ServiceInstance instance) {
+  /**
+   * Builds a summary response from the given entity.
+   *
+   * @param instance      the service instance
+   * @param includeSubmittedAt whether to populate the submittedAt field (admin only)
+   * @return the summary response
+   */
+  public static ServiceInstanceSummaryResponse from(
+      ServiceInstance instance, boolean includeSubmittedAt) {
     String username = instance.getSubmittedBy() != null
         ? instance.getSubmittedBy().getUsername() : null;
     String fullName = instance.getSubmittedBy() != null
@@ -28,6 +37,7 @@ String submittedByFullName) {
         instance.getServiceTemplate() != null
             ? instance.getServiceTemplate().getServiceTemplateName() : null,
         username,
-        fullName);
+        fullName,
+        includeSubmittedAt ? instance.getSubmittedAt() : null);
   }
 }

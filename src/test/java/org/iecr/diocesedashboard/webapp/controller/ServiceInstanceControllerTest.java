@@ -42,6 +42,7 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
@@ -134,6 +135,30 @@ class ServiceInstanceControllerTest {
   }
 
   // --- GET /api/service-instances ---
+
+  @Test
+  @WithMockDashboardUser
+  void getAll_asAdmin_submittedAtIsIncluded() throws Exception {
+    ServiceInstance instance = buildFullInstance(1L, "Trinity", "Sunday Mass", null);
+    instance.setSubmittedAt(LocalDateTime.of(2026, 1, 15, 10, 30));
+    when(serviceInstanceService.findAll()).thenReturn(List.of(instance));
+
+    mockMvc.perform(get("/api/service-instances"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$[0].submittedAt").value("2026-01-15T10:30:00"));
+  }
+
+  @Test
+  @WithMockDashboardUser(role = UserRole.REPORTER, churchName = "Trinity")
+  void getAll_asReporter_submittedAtIsNull() throws Exception {
+    ServiceInstance instance = buildInstanceForChurch(1L, "Trinity");
+    instance.setSubmittedAt(LocalDateTime.of(2026, 1, 15, 10, 30));
+    when(serviceInstanceService.findByChurches(any())).thenReturn(List.of(instance));
+
+    mockMvc.perform(get("/api/service-instances"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$[0].submittedAt").doesNotExist());
+  }
 
   @Test
   @WithMockDashboardUser

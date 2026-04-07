@@ -364,6 +364,7 @@
       "date": "Fecha",
       "church": "Iglesia",
       "reporter": "Reportero",
+      "submittedAt": "Fecha de envío",
       "actions": "Acciones"
     },
     "viewDetails": "Ver detalles",

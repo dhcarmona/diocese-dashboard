@@ -78,7 +78,8 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET,
                     "/reports/view",
                     "/reports/view/individual",
-                    "/reports/view/individual/*").permitAll()
+                    "/reports/view/individual/*",
+                    "/reports/view/individual/*/*").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/auth/csrf").permitAll()
                 .requestMatchers("/api/auth/login", "/api/auth/logout").permitAll()
                 .requestMatchers(HttpMethod.POST,

@@ -364,6 +364,7 @@
       "date": "Date",
       "church": "Church",
       "reporter": "Reporter",
+      "submittedAt": "Submitted At",
       "actions": "Actions"
     },
     "viewDetails": "View Details",

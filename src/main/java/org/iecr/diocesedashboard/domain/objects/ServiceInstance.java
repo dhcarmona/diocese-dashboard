@@ -10,6 +10,7 @@ import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Set;
 
 @Entity
@@ -36,6 +37,9 @@ public class ServiceInstance {
   @ManyToOne
   @JoinColumn(name = "submitted_by_id")
   private DashboardUser submittedBy;
+
+  @Column(name = "submitted_at")
+  private LocalDateTime submittedAt;
 
   public ServiceInstance() {
   }
@@ -86,6 +90,14 @@ public class ServiceInstance {
 
   public void setSubmittedBy(DashboardUser submittedBy) {
     this.submittedBy = submittedBy;
+  }
+
+  public LocalDateTime getSubmittedAt() {
+    return submittedAt;
+  }
+
+  public void setSubmittedAt(LocalDateTime submittedAt) {
+    this.submittedAt = submittedAt;
   }
 
   @Override
