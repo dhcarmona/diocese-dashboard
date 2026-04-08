@@ -2,6 +2,7 @@ package org.iecr.diocesedashboard.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.contains;
 import static org.mockito.ArgumentMatchers.eq;
@@ -57,7 +58,7 @@ class ReporterOtpServiceTest {
 
     reporterOtpService.generateAndSendOtp("rep1");
 
-    verify(whatsAppService).sendMessage(eq("+50688888888"), contains("Diocese Dashboard"));
+    verify(whatsAppService).sendOtpAndLog(eq("+50688888888"), contains("Diocese Dashboard"), any());
   }
 
   @Test
@@ -120,7 +121,7 @@ class ReporterOtpServiceTest {
     reporterOtpService.generateAndSendOtp("rep1");
 
     var codeCaptor = ArgumentCaptor.forClass(String.class);
-    verify(whatsAppService).sendMessage(anyString(), codeCaptor.capture());
+    verify(whatsAppService).sendOtpAndLog(anyString(), codeCaptor.capture(), any());
     String code = codeCaptor.getValue().replaceAll(".*?(\\d{6}).*", "$1");
 
     assertThat(reporterOtpService.verifyAndConsumeOtp("rep1", code)).isTrue();
@@ -147,7 +148,7 @@ class ReporterOtpServiceTest {
 
     var codeCaptor = ArgumentCaptor.forClass(String.class);
     reporterOtpService.generateAndSendOtp("rep1");
-    verify(whatsAppService).sendMessage(anyString(), codeCaptor.capture());
+    verify(whatsAppService).sendOtpAndLog(anyString(), codeCaptor.capture(), any());
     String code = codeCaptor.getValue().replaceAll(".*?(\\d{6}).*", "$1");
 
     assertThat(reporterOtpService.verifyAndConsumeOtp("rep1", code)).isTrue();

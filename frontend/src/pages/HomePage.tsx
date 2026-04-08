@@ -70,6 +70,13 @@ export default function HomePage() {
       to: '/reports/view',
       imageUrl: tileArtwork.viewReports,
     },
+    {
+      id: 'whatsapp-log',
+      title: t('home.tiles.whatsappLog.title'),
+      description: t('home.tiles.whatsappLog.description'),
+      to: '/whatsapp-logs',
+      imageUrl: tileArtwork.whatsappLog,
+    },
   ];
 
   const tiles = user?.role === 'ADMIN' ? [...reporterTiles, ...adminTiles] : reporterTiles;

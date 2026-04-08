@@ -146,7 +146,8 @@ public class ReporterLinkService {
             + activeDate + "): " + linkUrl,
         WHATSAPP_LOCALE);
     try {
-      whatsAppService.sendMessage(phone, message);
+      whatsAppService.sendMessageAndLog(phone, message,
+          "Link for \"" + templateName + "\" sent.", reporter.getUsername());
     } catch (Exception ex) {
       logger.warn("WhatsApp delivery failed for reporter {} ({}): {}",
           reporter.getId(), reporter.getUsername(), ex.getMessage());

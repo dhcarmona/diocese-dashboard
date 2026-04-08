@@ -27,6 +27,7 @@ import ReportsHubPage from './pages/ReportsHubPage';
 import ServiceSubmitPage from './pages/ServiceSubmitPage';
 import ServiceTemplateManagementPage from './pages/ServiceTemplateManagementPage';
 import TemplateSelectionPage from './pages/TemplateSelectionPage';
+import WhatsAppMessageLogPage from './pages/WhatsAppMessageLogPage';
 
 function FullPageStatus({
   children,
@@ -147,6 +148,10 @@ function AppRoutes() {
             <Route
               path="/reporter-links/manage"
               element={<ReporterLinkManagementPage />}
+            />
+            <Route
+              path="/whatsapp-logs"
+              element={<WhatsAppMessageLogPage />}
             />
             <Route path="/reports/view" element={<ReportsHubPage />} />
             <Route

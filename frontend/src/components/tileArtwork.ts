@@ -27,4 +27,5 @@ export const tileArtwork = {
   churches: buildArtwork('#E0F7FA', '#B2EBF2', '#00838F'),
   links: buildArtwork('#FBE9E7', '#FFCCBC', '#D84315'),
   viewReports: buildArtwork('#FFF8E1', '#FFECB3', '#F57F17'),
+  whatsappLog: buildArtwork('#E8F5E9', '#A5D6A7', '#1B5E20'),
 } as const;
