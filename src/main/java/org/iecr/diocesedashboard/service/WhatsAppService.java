@@ -8,6 +8,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.util.logging.Logger;
+
 /**
  * Service for sending WhatsApp messages via the Twilio API.
  *
@@ -26,6 +28,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class WhatsAppService {
 
+  private static final Logger LOG = Logger.getLogger(WhatsAppService.class.getName());
   private static final String WHATSAPP_PREFIX = "whatsapp:";
 
   private final String accountSid;
@@ -74,7 +77,7 @@ public class WhatsAppService {
   public void sendMessageAndLog(String to, String body, String logSummary,
       String recipientUsername) {
     sendMessage(to, body);
-    messageLogService.logMessage(recipientUsername, logSummary);
+    tryLogMessage(recipientUsername, logSummary);
   }
 
   /**
@@ -86,7 +89,7 @@ public class WhatsAppService {
    */
   public void sendMessageAndLog(String to, String body, String recipientUsername) {
     sendMessage(to, body);
-    messageLogService.logMessage(recipientUsername, body);
+    tryLogMessage(recipientUsername, body);
   }
 
   /**
@@ -98,7 +101,24 @@ public class WhatsAppService {
    */
   public void sendOtpAndLog(String to, String body, String recipientUsername) {
     sendMessage(to, body);
-    messageLogService.logOtp(recipientUsername);
+    tryLogOtp(recipientUsername);
+  }
+
+  private void tryLogMessage(String recipientUsername, String body) {
+    try {
+      messageLogService.logMessage(recipientUsername, body);
+    } catch (Exception ex) {
+      LOG.warning("Failed to log WhatsApp message for "
+          + recipientUsername + ": " + ex.getMessage());
+    }
+  }
+
+  private void tryLogOtp(String recipientUsername) {
+    try {
+      messageLogService.logOtp(recipientUsername);
+    } catch (Exception ex) {
+      LOG.warning("Failed to log WhatsApp OTP for " + recipientUsername + ": " + ex.getMessage());
+    }
   }
 
   /** Dispatches the message via Twilio; package-private to allow spy-based testing. */

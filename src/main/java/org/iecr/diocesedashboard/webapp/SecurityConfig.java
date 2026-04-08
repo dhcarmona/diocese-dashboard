@@ -75,6 +75,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/celebrants/manage").permitAll()
                 .requestMatchers(HttpMethod.GET, "/churches/manage").permitAll()
                 .requestMatchers(HttpMethod.GET, "/reporter-links/manage").permitAll()
+                .requestMatchers(HttpMethod.GET, "/whatsapp-logs").permitAll()
                 .requestMatchers(HttpMethod.GET,
                     "/reports/view",
                     "/reports/view/individual",
