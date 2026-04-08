@@ -43,6 +43,7 @@ public interface UserRepository extends JpaRepository<DashboardUser, Long> {
    * @return list of reporter users assigned to that church
    */
   @Query("SELECT u FROM DashboardUser u JOIN u.assignedChurches c "
-      + "WHERE u.role = 'REPORTER' AND c.name = :churchName")
+      + "WHERE u.role = org.iecr.diocesedashboard.domain.objects.UserRole.REPORTER "
+      + "AND c.name = :churchName ORDER BY u.id ASC")
   List<DashboardUser> findReportersByAssignedChurchName(@Param("churchName") String churchName);
 }

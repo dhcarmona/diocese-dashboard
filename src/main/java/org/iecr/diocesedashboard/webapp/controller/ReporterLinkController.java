@@ -1,5 +1,6 @@
 package org.iecr.diocesedashboard.webapp.controller;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.iecr.diocesedashboard.domain.objects.Church;
 import org.iecr.diocesedashboard.domain.objects.DashboardUser;
@@ -24,6 +25,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -106,7 +108,7 @@ public class ReporterLinkController {
    */
   @PostMapping("/bulk")
   public ResponseEntity<ReporterLinkBulkResponse> createBulk(
-      @RequestBody @Valid ReporterLinkBulkRequest request) {
+      @RequestBody @Valid ReporterLinkBulkRequest request, HttpServletRequest httpRequest) {
     var template = serviceTemplateService.findById(request.serviceTemplateId())
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
             "Service template not found: " + request.serviceTemplateId()));
@@ -119,8 +121,14 @@ public class ReporterLinkController {
       churches.add(church);
     }
 
+    String origin = httpRequest.getHeader("Origin");
+    String baseUrl = origin != null && !origin.isBlank()
+        ? origin
+        : ServletUriComponentsBuilder.fromRequest(httpRequest)
+        .replacePath("").replaceQuery(null).toUriString();
     ReporterLinkService.BulkCreateResult result =
-        reporterLinkService.createLinksForChurches(churches, template, request.activeDate());
+        reporterLinkService.createLinksForChurches(churches, template, request.activeDate(),
+            baseUrl);
 
     List<ReporterLinkResponse> createdResponses = result.created().stream()
         .map(ReporterLinkResponse::from)
