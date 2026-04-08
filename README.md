@@ -27,7 +27,7 @@ The application targets two types of users:
 #### Copilot and agent-specific instructions
 
 - Agents should not run or suggest running `git add` or `git commit`. The user would like to have complete manual control over that.
-- UI should be kept consistent, so consult the design documents when developing UI elements.
+- UI should be kept consistent, so consult `frontend/management-page-design.md` when developing UI elements.
 - Until and unless the user specifies that the app is in production by removing this line from this file, don't add schema migrations with database modifications. Modify the initial schema and initial migration instead. Migrations will be left for production updates.
 
 ---
