@@ -24,7 +24,7 @@ The application targets two types of users:
 - Each Service Instance is tied to a specific date, and users may submit multiple instances for the same template.
 - Can only view service instances belonging to their assigned church.
 
-#### Copilot and agent specific instructions
+#### Copilot and agent-specific instructions
 
 - Agents should not run or suggest running `git add` or `git commit`. The user would like to have complete manual control over that.
 - UI should be kept consistent, so consult the design documents when developing UI elements.
