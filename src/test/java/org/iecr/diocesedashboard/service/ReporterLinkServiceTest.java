@@ -2,6 +2,8 @@ package org.iecr.diocesedashboard.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -17,6 +19,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.MessageSource;
 
@@ -46,8 +49,7 @@ class ReporterLinkServiceTest {
   @BeforeEach
   void setUp() {
     reporterLinkService = new ReporterLinkService(
-        reporterLinkRepository, userRepository, whatsAppService,
-        messageSource, "http://localhost:8080");
+        reporterLinkRepository, userRepository, whatsAppService, messageSource);
   }
 
   private DashboardUser buildReporter() {
@@ -146,5 +148,78 @@ class ReporterLinkServiceTest {
     reporterLinkService.deleteByToken("tok");
 
     verify(reporterLinkRepository).deleteByToken("tok");
+  }
+
+  @Test
+  void createLinksForChurches_skipsChurchWithNoReporter() {
+    when(userRepository.findReportersByAssignedChurchName("Trinity")).thenReturn(List.of());
+
+    ReporterLinkService.BulkCreateResult result = reporterLinkService.createLinksForChurches(
+        List.of(buildChurch()), buildTemplate(), LocalDate.now(), "http://localhost:8080");
+
+    assertThat(result.created()).isEmpty();
+    assertThat(result.skippedChurches()).containsExactly("Trinity");
+    verify(reporterLinkRepository, never()).save(any());
+  }
+
+  @Test
+  void createLinksForChurches_createsLinkForEachChurchWithReporter() {
+    DashboardUser reporter = buildReporter();
+    when(userRepository.findReportersByAssignedChurchName("Trinity"))
+        .thenReturn(List.of(reporter));
+    when(reporterLinkRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+    ReporterLinkService.BulkCreateResult result = reporterLinkService.createLinksForChurches(
+        List.of(buildChurch()), buildTemplate(), LocalDate.now(), "http://localhost:8080");
+
+    assertThat(result.created()).hasSize(1);
+    assertThat(result.skippedChurches()).isEmpty();
+    verify(reporterLinkRepository).save(any());
+  }
+
+  @Test
+  void createLinksForChurches_sendsWhatsAppWhenPhonePresent() {
+    DashboardUser reporter = buildReporter();
+    reporter.setPhoneNumber("+50688887777");
+    when(userRepository.findReportersByAssignedChurchName("Trinity"))
+        .thenReturn(List.of(reporter));
+    when(reporterLinkRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+    when(messageSource.getMessage(any(), any(), any(), any())).thenReturn("link message");
+
+    reporterLinkService.createLinksForChurches(
+        List.of(buildChurch()), buildTemplate(), LocalDate.now(), "http://testserver");
+
+    verify(whatsAppService).sendMessage(eq("+50688887777"), eq("link message"));
+  }
+
+  @Test
+  void createLinksForChurches_skipsNotificationWhenNoPhone() {
+    DashboardUser reporter = buildReporter();
+    reporter.setPhoneNumber(null);
+    when(userRepository.findReportersByAssignedChurchName("Trinity"))
+        .thenReturn(List.of(reporter));
+    when(reporterLinkRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+    reporterLinkService.createLinksForChurches(
+        List.of(buildChurch()), buildTemplate(), LocalDate.now(), "http://testserver");
+
+    verify(whatsAppService, never()).sendMessage(any(), any());
+  }
+
+  @Test
+  void createLinksForChurches_whatsAppFailureDoesNotAbortPersistence() {
+    DashboardUser reporter = buildReporter();
+    reporter.setPhoneNumber("+50688887777");
+    when(userRepository.findReportersByAssignedChurchName("Trinity"))
+        .thenReturn(List.of(reporter));
+    when(reporterLinkRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+    when(messageSource.getMessage(any(), any(), any(), any())).thenReturn("msg");
+    Mockito.doThrow(new RuntimeException("network error"))
+        .when(whatsAppService).sendMessage(any(), any());
+
+    ReporterLinkService.BulkCreateResult result = reporterLinkService.createLinksForChurches(
+        List.of(buildChurch()), buildTemplate(), LocalDate.now(), "http://testserver");
+
+    assertThat(result.created()).hasSize(1);
   }
 }

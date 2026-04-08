@@ -448,4 +448,114 @@ class ReporterLinkControllerTest {
         .content(objectMapper.writeValueAsString(request)))
         .andExpect(status().isUnauthorized());
   }
+
+  @Test
+  @WithMockDashboardUser(role = UserRole.REPORTER, churchNames = {"Trinity"})
+  void submit_linkNotYetActive_returns409() throws Exception {
+    ReporterLink futureLink = buildLink(TOKEN, 1L, "Trinity");
+    futureLink.setActiveDate(LocalDate.now().plusDays(7));
+    when(reporterLinkService.findByToken(TOKEN)).thenReturn(Optional.of(futureLink));
+
+    ReporterLinkSubmitRequest request = new ReporterLinkSubmitRequest(
+        List.of(), LocalDate.now(), List.of());
+
+    mockMvc.perform(post("/api/reporter-links/" + TOKEN + "/submit")
+        .with(csrf())
+        .contentType(MediaType.APPLICATION_JSON)
+        .content(objectMapper.writeValueAsString(request)))
+        .andExpect(status().isConflict());
+  }
+
+  @Test
+  @WithMockDashboardUser(role = UserRole.REPORTER, churchNames = {"StPaul", "Trinity"})
+  void submit_success_deletesLinkByToken() throws Exception {
+    when(reporterLinkService.findByToken(TOKEN)).thenReturn(
+        Optional.of(buildLink(TOKEN, 1L, "Trinity")));
+    ServiceInstance instance = new ServiceInstance();
+    instance.setId(42L);
+    when(serviceSubmissionService.submit(eq(2L), any(ServiceInstanceRequest.class), any()))
+        .thenReturn(instance);
+
+    ReporterLinkSubmitRequest request = new ReporterLinkSubmitRequest(
+        List.of(10L), LocalDate.of(2024, 1, 14),
+        List.of(new ServiceInstanceRequest.ResponseEntry(5L, "120")));
+
+    mockMvc.perform(post("/api/reporter-links/" + TOKEN + "/submit")
+        .with(csrf())
+        .contentType(MediaType.APPLICATION_JSON)
+        .content(objectMapper.writeValueAsString(request)))
+        .andExpect(status().isCreated());
+
+    verify(reporterLinkService).deleteByToken(TOKEN);
+  }
+
+  @Test
+  @WithMockUser(roles = "ADMIN")
+  void createBulk_success_returns201WithCreatedAndSkipped() throws Exception {
+    ServiceTemplate template = buildTemplate(2L);
+    ReporterLink link = buildLink(TOKEN, 5L, "Trinity");
+    when(serviceTemplateService.findById(2L)).thenReturn(Optional.of(template));
+    when(churchService.findById("Trinity")).thenReturn(Optional.of(buildChurch("Trinity")));
+    when(churchService.findById("StPaul")).thenReturn(Optional.of(buildChurch("StPaul")));
+    when(reporterLinkService.createLinksForChurches(any(), eq(template), any(), any()))
+        .thenReturn(new ReporterLinkService.BulkCreateResult(
+            List.of(link), List.of("StPaul")));
+
+    ReporterLinkBulkRequest request =
+        new ReporterLinkBulkRequest(2L, LocalDate.now(), List.of("Trinity", "StPaul"));
+
+    mockMvc.perform(post("/api/reporter-links/bulk")
+        .with(csrf())
+        .contentType(MediaType.APPLICATION_JSON)
+        .content(objectMapper.writeValueAsString(request)))
+        .andExpect(status().isCreated())
+        .andExpect(jsonPath("$.created.length()").value(1))
+        .andExpect(jsonPath("$.created[0].token").value(TOKEN))
+        .andExpect(jsonPath("$.skippedChurches.length()").value(1))
+        .andExpect(jsonPath("$.skippedChurches[0]").value("StPaul"));
+  }
+
+  @Test
+  @WithMockUser(roles = "ADMIN")
+  void createBulk_unknownChurch_returns400() throws Exception {
+    when(serviceTemplateService.findById(2L)).thenReturn(Optional.of(buildTemplate(2L)));
+    when(churchService.findById("Unknown")).thenReturn(Optional.empty());
+
+    ReporterLinkBulkRequest request =
+        new ReporterLinkBulkRequest(2L, LocalDate.now(), List.of("Unknown"));
+
+    mockMvc.perform(post("/api/reporter-links/bulk")
+        .with(csrf())
+        .contentType(MediaType.APPLICATION_JSON)
+        .content(objectMapper.writeValueAsString(request)))
+        .andExpect(status().isBadRequest());
+  }
+
+  @Test
+  @WithMockUser(roles = "ADMIN")
+  void createBulk_templateNotFound_returns404() throws Exception {
+    when(serviceTemplateService.findById(99L)).thenReturn(Optional.empty());
+
+    ReporterLinkBulkRequest request =
+        new ReporterLinkBulkRequest(99L, LocalDate.now(), List.of("Trinity"));
+
+    mockMvc.perform(post("/api/reporter-links/bulk")
+        .with(csrf())
+        .contentType(MediaType.APPLICATION_JSON)
+        .content(objectMapper.writeValueAsString(request)))
+        .andExpect(status().isNotFound());
+  }
+
+  @Test
+  @WithMockUser(roles = "REPORTER")
+  void createBulk_asReporter_returns403() throws Exception {
+    ReporterLinkBulkRequest request =
+        new ReporterLinkBulkRequest(2L, LocalDate.now(), List.of("Trinity"));
+
+    mockMvc.perform(post("/api/reporter-links/bulk")
+        .with(csrf())
+        .contentType(MediaType.APPLICATION_JSON)
+        .content(objectMapper.writeValueAsString(request)))
+        .andExpect(status().isForbidden());
+  }
 }
