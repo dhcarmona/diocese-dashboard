@@ -245,7 +245,7 @@ public class ServiceInstanceController {
         "whatsapp.report.updated",
         new Object[]{templateName, church, date, changeList},
         WHATSAPP_LOCALE);
-    whatsAppService.sendMessage(reporter.getPhoneNumber(), body);
+    whatsAppService.sendMessageAndLog(reporter.getPhoneNumber(), body, reporter.getUsername());
   }
 
   private void sendDeleteNotification(ServiceInstance instance) {
@@ -263,7 +263,7 @@ public class ServiceInstanceController {
         "whatsapp.report.deleted",
         new Object[]{templateName, church, date},
         WHATSAPP_LOCALE);
-    whatsAppService.sendMessage(reporter.getPhoneNumber(), body);
+    whatsAppService.sendMessageAndLog(reporter.getPhoneNumber(), body, reporter.getUsername());
   }
 
   private boolean isAccessible(ServiceInstance instance, DashboardUser user) {

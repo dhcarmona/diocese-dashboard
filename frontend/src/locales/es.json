@@ -71,7 +71,27 @@
       "seeReports": {
         "title": "Ver reportes",
         "description": "Consulte los reportes enviados, obtenga estadísticas y más."
+      },
+      "whatsappLog": {
+        "title": "Registro de mensajes de WhatsApp",
+        "description": "Consulte todos los mensajes de WhatsApp enviados por el sistema."
       }
+    }
+  },
+  "whatsappLog": {
+    "title": "Registro de mensajes de WhatsApp",
+    "subtitle": "Todos los mensajes de WhatsApp enviados por el sistema, más recientes primero.",
+    "loading": "Cargando mensajes...",
+    "loadError": "No se pudo cargar el registro de mensajes.",
+    "empty": "Aún no se han enviado mensajes.",
+    "otpSent": "OTP enviado",
+    "columns": {
+      "sentAt": "Fecha y hora",
+      "recipient": "Destinatario",
+      "message": "Mensaje"
+    },
+    "pagination": {
+      "rowsPerPage": "Mensajes por página:"
     }
   },
   "reports": {

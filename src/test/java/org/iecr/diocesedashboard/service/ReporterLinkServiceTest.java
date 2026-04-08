@@ -2,6 +2,7 @@ package org.iecr.diocesedashboard.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.contains;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -189,7 +190,8 @@ class ReporterLinkServiceTest {
     reporterLinkService.createLinksForChurches(
         List.of(buildChurch()), buildTemplate(), LocalDate.now(), "http://testserver");
 
-    verify(whatsAppService).sendMessage(eq("+50688887777"), eq("link message"));
+    verify(whatsAppService).sendMessageAndLog(eq("+50688887777"), eq("link message"),
+        contains("Sunday Mass"), eq("reporter1"));
   }
 
   @Test
@@ -203,7 +205,7 @@ class ReporterLinkServiceTest {
     reporterLinkService.createLinksForChurches(
         List.of(buildChurch()), buildTemplate(), LocalDate.now(), "http://testserver");
 
-    verify(whatsAppService, never()).sendMessage(any(), any());
+    verify(whatsAppService, never()).sendMessageAndLog(any(), any(), any(), any());
   }
 
   @Test
@@ -215,7 +217,7 @@ class ReporterLinkServiceTest {
     when(reporterLinkRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
     when(messageSource.getMessage(any(), any(), any(), any())).thenReturn("msg");
     Mockito.doThrow(new RuntimeException("network error"))
-        .when(whatsAppService).sendMessage(any(), any());
+        .when(whatsAppService).sendMessageAndLog(any(), any(), any(), any());
 
     ReporterLinkService.BulkCreateResult result = reporterLinkService.createLinksForChurches(
         List.of(buildChurch()), buildTemplate(), LocalDate.now(), "http://testserver");

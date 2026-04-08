@@ -2,9 +2,11 @@ package org.iecr.diocesedashboard.service;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 
+import org.iecr.diocesedashboard.service.WhatsAppMessageLogService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -17,7 +19,9 @@ class WhatsAppServiceTest {
 
   @BeforeEach
   void setUp() {
-    service = spy(new WhatsAppService("test_sid", "test_token", "+14155238886"));
+    service = spy(new WhatsAppService(
+        "test_sid", "test_token", "+14155238886",
+        mock(WhatsAppMessageLogService.class)));
   }
 
   @Test
@@ -36,7 +40,8 @@ class WhatsAppServiceTest {
   @Test
   void sendMessage_usesConfiguredFromNumber() {
     WhatsAppService customService = spy(
-        new WhatsAppService("test_sid", "test_token", "+50600000000"));
+        new WhatsAppService("test_sid", "test_token", "+50600000000",
+            mock(WhatsAppMessageLogService.class)));
     doNothing().when(customService).dispatchMessage(any(), any(), any());
 
     customService.sendMessage("+50688888888", "Test");

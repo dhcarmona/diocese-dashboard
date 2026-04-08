@@ -345,7 +345,7 @@ class ServiceInstanceControllerTest {
         .content(body))
         .andExpect(status().isOk());
 
-    verify(whatsAppService, never()).sendMessage(any(), any());
+    verify(whatsAppService, never()).sendMessageAndLog(any(), any(), any());
   }
 
   @Test
@@ -366,7 +366,7 @@ class ServiceInstanceControllerTest {
         .andExpect(status().isOk());
 
     verify(responseService).save(existing);
-    verify(whatsAppService, never()).sendMessage(any(), any());
+    verify(whatsAppService, never()).sendMessageAndLog(any(), any(), any());
   }
 
   @Test
@@ -389,7 +389,7 @@ class ServiceInstanceControllerTest {
         .content(body))
         .andExpect(status().isOk());
 
-    verify(whatsAppService).sendMessage(eq("+50612345678"), eq("cambio en reporte"));
+    verify(whatsAppService).sendMessageAndLog(eq("+50612345678"), eq("cambio en reporte"), any());
   }
 
   @Test
@@ -409,7 +409,7 @@ class ServiceInstanceControllerTest {
         .content(body))
         .andExpect(status().isOk());
 
-    verify(whatsAppService, never()).sendMessage(any(), any());
+    verify(whatsAppService, never()).sendMessageAndLog(any(), any(), any());
   }
 
   @Test
@@ -493,7 +493,7 @@ class ServiceInstanceControllerTest {
         .andExpect(status().isNoContent());
 
     InOrder order = inOrder(whatsAppService, responseService, serviceInstanceService);
-    order.verify(whatsAppService).sendMessage(eq("+50612345678"), eq("reporte eliminado"));
+    order.verify(whatsAppService).sendMessageAndLog(eq("+50612345678"), eq("reporte eliminado"), any());
     order.verify(responseService).deleteByServiceInstance(instance);
     order.verify(serviceInstanceService).deleteById(1L);
   }
@@ -508,7 +508,7 @@ class ServiceInstanceControllerTest {
         .param("notify", "true"))
         .andExpect(status().isNoContent());
 
-    verify(whatsAppService, never()).sendMessage(any(), any());
+    verify(whatsAppService, never()).sendMessageAndLog(any(), any(), any());
     verify(responseService).deleteByServiceInstance(instance);
     verify(serviceInstanceService).deleteById(1L);
   }
@@ -523,7 +523,7 @@ class ServiceInstanceControllerTest {
         .param("notify", "true"))
         .andExpect(status().isNoContent());
 
-    verify(whatsAppService, never()).sendMessage(any(), any());
+    verify(whatsAppService, never()).sendMessageAndLog(any(), any(), any());
   }
 
   @Test
@@ -583,7 +583,7 @@ class ServiceInstanceControllerTest {
         eq("whatsapp.report.updated"), any(Object[].class), any(Locale.class)))
         .thenReturn("Updated message");
     doThrow(new RuntimeException("Twilio error"))
-        .when(whatsAppService).sendMessage(any(), any());
+        .when(whatsAppService).sendMessageAndLog(any(), any(), any());
     String body = objectMapper.writeValueAsString(new ServiceInstanceUpdateRequest(
         List.of(new ServiceInstanceUpdateRequest.ResponseEntry(5L, "99")), true));
 
@@ -605,7 +605,7 @@ class ServiceInstanceControllerTest {
         eq("whatsapp.report.deleted"), any(Object[].class), any(Locale.class)))
         .thenReturn("Deleted message");
     doThrow(new RuntimeException("Twilio error"))
-        .when(whatsAppService).sendMessage(any(), any());
+        .when(whatsAppService).sendMessageAndLog(any(), any(), any());
 
     mockMvc.perform(delete("/api/service-instances/1")
         .with(csrf())

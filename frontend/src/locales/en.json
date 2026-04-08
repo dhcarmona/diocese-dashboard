@@ -71,7 +71,27 @@
       "seeReports": {
         "title": "See Reports",
         "description": "View submitted reports, gather statistics and more."
+      },
+      "whatsappLog": {
+        "title": "WhatsApp Message Log",
+        "description": "View all WhatsApp messages sent by the system."
       }
+    }
+  },
+  "whatsappLog": {
+    "title": "WhatsApp Message Log",
+    "subtitle": "All WhatsApp messages sent by the system, newest first.",
+    "loading": "Loading messages...",
+    "loadError": "We could not load the message log.",
+    "empty": "No messages have been sent yet.",
+    "otpSent": "OTP sent",
+    "columns": {
+      "sentAt": "Date & Time",
+      "recipient": "Recipient",
+      "message": "Message"
+    },
+    "pagination": {
+      "rowsPerPage": "Messages per page:"
     }
   },
   "reports": {

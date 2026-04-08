@@ -31,15 +31,18 @@ public class WhatsAppService {
   private final String accountSid;
   private final String authToken;
   private final String fromNumber;
+  private final WhatsAppMessageLogService messageLogService;
 
   @Autowired
   public WhatsAppService(
       @Value("${twilio.account-sid}") String accountSid,
       @Value("${twilio.auth-token}") String authToken,
-      @Value("${twilio.whatsapp.from}") String fromNumber) {
+      @Value("${twilio.whatsapp.from}") String fromNumber,
+      WhatsAppMessageLogService messageLogService) {
     this.accountSid = accountSid;
     this.authToken = authToken;
     this.fromNumber = fromNumber;
+    this.messageLogService = messageLogService;
   }
 
   /** Initializes the Twilio client with the configured credentials. */
@@ -56,6 +59,46 @@ public class WhatsAppService {
    */
   public void sendMessage(String to, String body) {
     dispatchMessage(WHATSAPP_PREFIX + fromNumber, WHATSAPP_PREFIX + to, body);
+  }
+
+  /**
+   * Sends a WhatsApp message and records a summary in the message log.
+   * Use this when the message body contains sensitive or verbose data (e.g. URLs with tokens)
+   * that should not be stored verbatim.
+   *
+   * @param to                recipient phone number in E.164 format
+   * @param body              the full message text to send
+   * @param logSummary        the redacted summary to store in the log
+   * @param recipientUsername the dashboard username of the recipient
+   */
+  public void sendMessageAndLog(String to, String body, String logSummary,
+      String recipientUsername) {
+    sendMessage(to, body);
+    messageLogService.logMessage(recipientUsername, logSummary);
+  }
+
+  /**
+   * Sends a WhatsApp message and records it in the message log.
+   *
+   * @param to                recipient phone number in E.164 format
+   * @param body              the message text
+   * @param recipientUsername the dashboard username of the recipient
+   */
+  public void sendMessageAndLog(String to, String body, String recipientUsername) {
+    sendMessage(to, body);
+    messageLogService.logMessage(recipientUsername, body);
+  }
+
+  /**
+   * Sends an OTP WhatsApp message and records it in the message log without storing the content.
+   *
+   * @param to                recipient phone number in E.164 format
+   * @param body              the OTP message text (not persisted)
+   * @param recipientUsername the dashboard username of the recipient
+   */
+  public void sendOtpAndLog(String to, String body, String recipientUsername) {
+    sendMessage(to, body);
+    messageLogService.logOtp(recipientUsername);
   }
 
   /** Dispatches the message via Twilio; package-private to allow spy-based testing. */
