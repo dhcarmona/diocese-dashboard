@@ -15,19 +15,30 @@ interface ActionTileProps {
 
 export default function ActionTile({
   title,
-  description,
   to,
   imageUrl,
 }: Readonly<ActionTileProps>) {
   return (
-    <Card elevation={3} sx={{ height: '100%', borderRadius: 4, overflow: 'hidden' }}>
+    <Card
+      elevation={2}
+      sx={{
+        height: '100%',
+        borderRadius: 3,
+        overflow: 'hidden',
+        transition: 'box-shadow 0.2s, transform 0.2s',
+        '&:hover': {
+          boxShadow: 8,
+          transform: 'translateY(-2px)',
+        },
+      }}
+    >
       <CardActionArea
         component={RouterLink}
         to={to}
         sx={{
           position: 'relative',
           height: '100%',
-          minHeight: 224,
+          minHeight: 180,
           display: 'flex',
           alignItems: 'stretch',
           textAlign: 'left',
@@ -38,11 +49,15 @@ export default function ActionTile({
           sx={{
             position: 'absolute',
             inset: 0,
+            backgroundColor: imageUrl ? '#E8EEF8' : 'transparent',
             backgroundImage: imageUrl
-              ? `linear-gradient(180deg, rgba(255,255,255,0.82), rgba(255,255,255,0.94)), url(${imageUrl})`
-              : 'linear-gradient(135deg, rgba(25,118,210,0.08), rgba(25,118,210,0.18))',
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
+              ? `linear-gradient(to right, #ffffff 40%, rgba(255,255,255,0) 68%), url("${imageUrl}")`
+              : 'linear-gradient(135deg, rgba(28,58,110,0.06), rgba(28,58,110,0.14))',
+            // Two comma-separated values — one per background layer.
+            // Gradient covers the full tile; SVG is 75% height, anchored bottom-right.
+            backgroundSize: imageUrl ? '100% 100%, auto 75%' : '100% 100%',
+            backgroundPosition: imageUrl ? '0 0, right bottom' : '0 0',
+            backgroundRepeat: 'no-repeat',
           }}
         />
         <CardContent
@@ -52,24 +67,20 @@ export default function ActionTile({
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'space-between',
-            gap: 2,
+            gap: 1.5,
             width: '100%',
             p: 3,
           }}
         >
-          <Box>
-            <Typography variant="h5" component="h2" fontWeight={700} sx={{ mb: 1.5 }}>
-              {title}
-            </Typography>
-            <Typography variant="body1" color="text.secondary" sx={{ fontSize: '1rem' }}>
-              {description}
-            </Typography>
-          </Box>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: 'primary.main' }}>
-            <ArrowForwardOutlinedIcon />
+          <Typography variant="h6" component="h2" fontWeight={700} color="text.primary">
+            {title}
+          </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, color: 'primary.main' }}>
+            <ArrowForwardOutlinedIcon fontSize="small" />
           </Box>
         </CardContent>
       </CardActionArea>
     </Card>
   );
 }
+
