@@ -11,5 +11,7 @@ public interface ServiceInfoItemResponseRepository
 
   List<ServiceInfoItemResponse> findByServiceInstance(ServiceInstance instance);
 
+  List<ServiceInfoItemResponse> findByServiceInstanceIn(List<ServiceInstance> instances);
+
   void deleteByServiceInstance(ServiceInstance instance);
 }

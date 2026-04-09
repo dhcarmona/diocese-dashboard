@@ -52,20 +52,22 @@ public class StatisticsService {
    * Computes statistics for a specific church and template over the given date range.
    *
    * @param template  the service template
-   * @param church    the church to scope the report to
-   * @param startDate first date (inclusive)
-   * @param endDate   last date (inclusive)
+   * @param church          the church to scope the report to
+   * @param startDate       first date (inclusive)
+   * @param endDate         last date (inclusive)
+   * @param reporterUserId  when non-null, pending links are filtered to this reporter only
    * @return the aggregated statistics response
    */
   @Transactional(readOnly = true)
   public StatisticsResponse computeForChurch(ServiceTemplate template, Church church,
-      LocalDate startDate, LocalDate endDate) {
+      LocalDate startDate, LocalDate endDate, Long reporterUserId) {
     List<ServiceInstance> instances =
         instanceRepository.findByServiceTemplateAndChurchAndServiceDateBetween(
             template, church, startDate, endDate);
     List<ReporterLink> links =
         reporterLinkRepository.findByChurchAndServiceTemplate(church, template);
-    return build(template, church.getName(), false, startDate, endDate, instances, links);
+    return build(template, church.getName(), false, startDate, endDate, instances, links,
+        reporterUserId);
   }
 
   /**
@@ -85,12 +87,12 @@ public class StatisticsService {
     List<Church> allChurches = churchService.findAll();
     List<ReporterLink> links =
         reporterLinkRepository.findByChurchInAndServiceTemplate(allChurches, template);
-    return build(template, null, true, startDate, endDate, instances, links);
+    return build(template, null, true, startDate, endDate, instances, links, null);
   }
 
   private StatisticsResponse build(ServiceTemplate template, String churchName, boolean global,
       LocalDate startDate, LocalDate endDate,
-      List<ServiceInstance> instances, List<ReporterLink> links) {
+      List<ServiceInstance> instances, List<ReporterLink> links, Long reporterUserId) {
 
     List<CelebrantStat> celebrantStats = computeCelebrantStats(instances);
 
@@ -111,6 +113,7 @@ public class StatisticsService {
     List<AggregatedItem> moneyAgg = buildAggregatedItems(moneyItems, perItemPerDate);
 
     List<PendingLink> pendingLinks = links.stream()
+        .filter(l -> reporterUserId == null || reporterUserId.equals(l.getReporter().getId()))
         .map(l -> new PendingLink(
             l.getToken(),
             l.getReporter().getUsername(),
@@ -156,21 +159,23 @@ public class StatisticsService {
 
   private Map<Long, Map<LocalDate, Double>> aggregateByItemAndDate(
       List<ServiceInstance> instances) {
+    if (instances.isEmpty()) {
+      return Map.of();
+    }
     Map<Long, Map<LocalDate, Double>> result = new HashMap<>();
 
-    for (ServiceInstance instance : instances) {
-      LocalDate date = instance.getServiceDate();
-      List<ServiceInfoItemResponse> responses = responseRepository.findByServiceInstance(instance);
-      for (ServiceInfoItemResponse response : responses) {
-        ServiceInfoItem item = response.getServiceInfoItem();
-        ServiceInfoItemType type = item.getServiceInfoItemType();
-        if (type == ServiceInfoItemType.STRING) {
-          continue;
-        }
-        double val = parseDouble(response.getResponseValue());
-        result.computeIfAbsent(item.getId(), k -> new TreeMap<>())
-            .merge(date, val, Double::sum);
+    List<ServiceInfoItemResponse> allResponses =
+        responseRepository.findByServiceInstanceIn(instances);
+    for (ServiceInfoItemResponse response : allResponses) {
+      ServiceInfoItem item = response.getServiceInfoItem();
+      ServiceInfoItemType type = item.getServiceInfoItemType();
+      if (type == ServiceInfoItemType.STRING) {
+        continue;
       }
+      LocalDate date = response.getServiceInstance().getServiceDate();
+      double val = parseDouble(response.getResponseValue());
+      result.computeIfAbsent(item.getId(), k -> new TreeMap<>())
+          .merge(date, val, Double::sum);
     }
 
     return result;

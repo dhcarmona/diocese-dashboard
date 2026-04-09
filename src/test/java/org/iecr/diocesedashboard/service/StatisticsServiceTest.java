@@ -1,6 +1,7 @@
 package org.iecr.diocesedashboard.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.when;
 
 import org.iecr.diocesedashboard.domain.objects.Celebrant;
@@ -112,10 +113,10 @@ class StatisticsServiceTest {
         template, church, START, END)).thenReturn(List.of(inst1, inst2));
     when(reporterLinkRepository.findByChurchAndServiceTemplate(church, template))
         .thenReturn(List.of());
-    when(responseRepository.findByServiceInstance(inst1)).thenReturn(List.of());
-    when(responseRepository.findByServiceInstance(inst2)).thenReturn(List.of());
+    when(responseRepository.findByServiceInstanceIn(List.of(inst1, inst2))).thenReturn(List.of());
 
-    StatisticsResponse result = statisticsService.computeForChurch(template, church, START, END);
+    StatisticsResponse result = statisticsService.computeForChurch(template, church, START, END,
+        null);
 
     assertThat(result.totalServiceCount()).isEqualTo(2);
     assertThat(result.churchName()).isEqualTo("Trinity");
@@ -130,13 +131,14 @@ class StatisticsServiceTest {
         template, church, START, END)).thenReturn(List.of(inst));
     when(reporterLinkRepository.findByChurchAndServiceTemplate(church, template))
         .thenReturn(List.of());
-    when(responseRepository.findByServiceInstance(inst)).thenReturn(List.of(
+    when(responseRepository.findByServiceInstanceIn(List.of(inst))).thenReturn(List.of(
         buildResponse(numericalItem, inst, "120"),
         buildResponse(moneyItem, inst, "500.50"),
         buildResponse(stringItem, inst, "some notes")
     ));
 
-    StatisticsResponse result = statisticsService.computeForChurch(template, church, START, END);
+    StatisticsResponse result = statisticsService.computeForChurch(template, church, START, END,
+        null);
 
     assertThat(result.numericalItems()).hasSize(1);
     assertThat(result.numericalItems().get(0).itemTitle()).isEqualTo("Attendance");
@@ -156,12 +158,13 @@ class StatisticsServiceTest {
         template, church, START, END)).thenReturn(List.of(inst1, inst2));
     when(reporterLinkRepository.findByChurchAndServiceTemplate(church, template))
         .thenReturn(List.of());
-    when(responseRepository.findByServiceInstance(inst1))
-        .thenReturn(List.of(buildResponse(numericalItem, inst1, "80")));
-    when(responseRepository.findByServiceInstance(inst2))
-        .thenReturn(List.of(buildResponse(numericalItem, inst2, "95")));
+    when(responseRepository.findByServiceInstanceIn(anyList())).thenReturn(List.of(
+        buildResponse(numericalItem, inst1, "80"),
+        buildResponse(numericalItem, inst2, "95")
+    ));
 
-    StatisticsResponse result = statisticsService.computeForChurch(template, church, START, END);
+    StatisticsResponse result = statisticsService.computeForChurch(template, church, START, END,
+        null);
 
     assertThat(result.numericalItems().get(0).total()).isEqualTo(175.0);
     assertThat(result.numericalItems().get(0).timeSeriesData()).hasSize(2);
@@ -187,11 +190,10 @@ class StatisticsServiceTest {
         template, church, START, END)).thenReturn(List.of(inst1, inst2, inst3));
     when(reporterLinkRepository.findByChurchAndServiceTemplate(church, template))
         .thenReturn(List.of());
-    when(responseRepository.findByServiceInstance(inst1)).thenReturn(List.of());
-    when(responseRepository.findByServiceInstance(inst2)).thenReturn(List.of());
-    when(responseRepository.findByServiceInstance(inst3)).thenReturn(List.of());
+    when(responseRepository.findByServiceInstanceIn(anyList())).thenReturn(List.of());
 
-    StatisticsResponse result = statisticsService.computeForChurch(template, church, START, END);
+    StatisticsResponse result = statisticsService.computeForChurch(template, church, START, END,
+        null);
 
     assertThat(result.celebrantStats()).hasSize(2);
     assertThat(result.celebrantStats().get(0).celebrantName()).isEqualTo("Alice");
@@ -218,7 +220,8 @@ class StatisticsServiceTest {
     when(reporterLinkRepository.findByChurchAndServiceTemplate(church, template))
         .thenReturn(List.of(futureLink, pastLink));
 
-    StatisticsResponse result = statisticsService.computeForChurch(template, church, START, END);
+    StatisticsResponse result = statisticsService.computeForChurch(template, church, START, END,
+        null);
 
     // Both links exist in the DB → both are pending (links are deleted on use/admin-delete)
     assertThat(result.pendingLinks()).hasSize(2);
@@ -245,11 +248,12 @@ class StatisticsServiceTest {
         template, church, START, END)).thenReturn(List.of(inst));
     when(reporterLinkRepository.findByChurchAndServiceTemplate(church, template))
         .thenReturn(List.of());
-    when(responseRepository.findByServiceInstance(inst))
-        .thenReturn(List.of(buildResponse(numericalItem, inst, ""),
+    when(responseRepository.findByServiceInstanceIn(List.of(inst))).thenReturn(
+        List.of(buildResponse(numericalItem, inst, ""),
             buildResponse(numericalItem, inst, "not-a-number")));
 
-    StatisticsResponse result = statisticsService.computeForChurch(template, church, START, END);
+    StatisticsResponse result = statisticsService.computeForChurch(template, church, START, END,
+        null);
 
     assertThat(result.numericalItems().get(0).total()).isEqualTo(0.0);
   }
@@ -270,7 +274,8 @@ class StatisticsServiceTest {
     when(reporterLinkRepository.findByChurchAndServiceTemplate(church, template))
         .thenReturn(List.of(link1, link2, link3));
 
-    StatisticsResponse result = statisticsService.computeForChurch(template, church, START, END);
+    StatisticsResponse result = statisticsService.computeForChurch(template, church, START, END,
+        null);
 
     assertThat(result.pendingLinks()).hasSize(3);
     assertThat(result.pendingLinks().get(0).activeDate()).isEqualTo(today.plusDays(3));
@@ -287,9 +292,10 @@ class StatisticsServiceTest {
         template, church, START, END)).thenReturn(List.of(inst));
     when(reporterLinkRepository.findByChurchAndServiceTemplate(church, template))
         .thenReturn(List.of());
-    when(responseRepository.findByServiceInstance(inst)).thenReturn(List.of());
+    when(responseRepository.findByServiceInstanceIn(List.of(inst))).thenReturn(List.of());
 
-    StatisticsResponse result = statisticsService.computeForChurch(template, church, START, END);
+    StatisticsResponse result = statisticsService.computeForChurch(template, church, START, END,
+        null);
 
     assertThat(result.celebrantStats()).isEmpty();
   }
@@ -304,14 +310,14 @@ class StatisticsServiceTest {
         template, church, START, END)).thenReturn(List.of(instMar, instJan, instFeb));
     when(reporterLinkRepository.findByChurchAndServiceTemplate(church, template))
         .thenReturn(List.of());
-    when(responseRepository.findByServiceInstance(instMar))
-        .thenReturn(List.of(buildResponse(numericalItem, instMar, "10")));
-    when(responseRepository.findByServiceInstance(instJan))
-        .thenReturn(List.of(buildResponse(numericalItem, instJan, "10")));
-    when(responseRepository.findByServiceInstance(instFeb))
-        .thenReturn(List.of(buildResponse(numericalItem, instFeb, "10")));
+    when(responseRepository.findByServiceInstanceIn(anyList())).thenReturn(List.of(
+        buildResponse(numericalItem, instMar, "10"),
+        buildResponse(numericalItem, instJan, "10"),
+        buildResponse(numericalItem, instFeb, "10")
+    ));
 
-    StatisticsResponse result = statisticsService.computeForChurch(template, church, START, END);
+    StatisticsResponse result = statisticsService.computeForChurch(template, church, START, END,
+        null);
 
     List<StatisticsResponse.TimeSeriesPoint> series =
         result.numericalItems().get(0).timeSeriesData();
@@ -337,14 +343,42 @@ class StatisticsServiceTest {
     when(churchService.findAll()).thenReturn(List.of(church, church2));
     when(reporterLinkRepository.findByChurchInAndServiceTemplate(
         List.of(church, church2), template)).thenReturn(List.of());
-    when(responseRepository.findByServiceInstance(inst1))
-        .thenReturn(List.of(buildResponse(numericalItem, inst1, "50")));
-    when(responseRepository.findByServiceInstance(inst2))
-        .thenReturn(List.of(buildResponse(numericalItem, inst2, "50")));
+    when(responseRepository.findByServiceInstanceIn(anyList())).thenReturn(List.of(
+        buildResponse(numericalItem, inst1, "50"),
+        buildResponse(numericalItem, inst2, "50")
+    ));
 
     StatisticsResponse result = statisticsService.computeGlobal(template, START, END);
 
     assertThat(result.numericalItems().get(0).total()).isEqualTo(100.0);
+  }
+
+  @Test
+  void computeForChurch_pendingLinks_filtersToReporterWhenReporterIdProvided() {
+    DashboardUser rep1 = new DashboardUser();
+    rep1.setId(1L);
+    rep1.setUsername("rep1");
+    rep1.setRole(UserRole.REPORTER);
+
+    DashboardUser rep2 = new DashboardUser();
+    rep2.setId(2L);
+    rep2.setUsername("rep2");
+    rep2.setRole(UserRole.REPORTER);
+
+    ReporterLink link1 = buildLink(rep1, LocalDate.of(2025, 6, 1));
+    ReporterLink link2 = buildLink(rep2, LocalDate.of(2025, 6, 8));
+
+    when(instanceRepository.findByServiceTemplateAndChurchAndServiceDateBetween(
+        template, church, START, END)).thenReturn(List.of());
+    when(reporterLinkRepository.findByChurchAndServiceTemplate(church, template))
+        .thenReturn(List.of(link1, link2));
+
+    StatisticsResponse result = statisticsService.computeForChurch(template, church, START, END,
+        1L);
+
+    // Only rep1's link should be visible when filtering by rep1's ID
+    assertThat(result.pendingLinks()).hasSize(1);
+    assertThat(result.pendingLinks().get(0).reporterUsername()).isEqualTo("rep1");
   }
 
   private ReporterLink buildLink(DashboardUser reporter, LocalDate activeDate) {
