@@ -78,7 +78,7 @@ class StatisticsControllerTest {
   void getStatistics_admin_churchScoped_returns200WithData() throws Exception {
     when(serviceTemplateService.findById(1L)).thenReturn(Optional.of(template));
     when(churchService.findById("Trinity")).thenReturn(Optional.of(church));
-    when(statisticsService.computeForChurch(eq(template), eq(church), any(), any()))
+    when(statisticsService.computeForChurch(eq(template), eq(church), any(), any(), any()))
         .thenReturn(fakeResponse);
 
     mockMvc.perform(get("/api/statistics")
@@ -118,7 +118,7 @@ class StatisticsControllerTest {
   void getStatistics_reporter_assignedChurch_returns200() throws Exception {
     when(serviceTemplateService.findById(1L)).thenReturn(Optional.of(template));
     when(churchService.findById("Trinity")).thenReturn(Optional.of(church));
-    when(statisticsService.computeForChurch(eq(template), eq(church), any(), any()))
+    when(statisticsService.computeForChurch(eq(template), eq(church), any(), any(), any()))
         .thenReturn(fakeResponse);
 
     mockMvc.perform(get("/api/statistics")

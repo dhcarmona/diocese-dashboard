@@ -81,6 +81,7 @@ public class StatisticsController {
           "Reporter is not assigned to church: " + churchName);
     }
 
-    return statisticsService.computeForChurch(template, church, startDate, endDate);
+    Long reporterUserId = user.getRole() == UserRole.REPORTER ? user.getId() : null;
+    return statisticsService.computeForChurch(template, church, startDate, endDate, reporterUserId);
   }
 }
