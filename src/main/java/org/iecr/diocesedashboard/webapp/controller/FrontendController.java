@@ -23,7 +23,13 @@ public class FrontendController {
       "/users/manage",
       "/celebrants/manage",
       "/churches/manage",
-      "/reporter-links/manage"
+      "/reporter-links/manage",
+      "/statistics",
+      "/statistics/{templateId}",
+      "/statistics/{templateId}/report",
+      "/whatsapp-logs",
+      "/reports/view/individual/{church}/{template}",
+      "/reports/view/individual/{church}/{template}/{reportId}"
   })
   public String forwardToIndex() {
     return "forward:/index.html";

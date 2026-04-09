@@ -81,6 +81,11 @@ public class SecurityConfig {
                     "/reports/view/individual",
                     "/reports/view/individual/*",
                     "/reports/view/individual/*/*").permitAll()
+                .requestMatchers(HttpMethod.GET,
+                    "/statistics",
+                    "/statistics/*",
+                    "/statistics/*/*").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/statistics").hasAnyRole("ADMIN", "REPORTER")
                 .requestMatchers(HttpMethod.GET, "/api/auth/csrf").permitAll()
                 .requestMatchers("/api/auth/login", "/api/auth/logout").permitAll()
                 .requestMatchers(HttpMethod.POST,

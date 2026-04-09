@@ -1,8 +1,11 @@
 package org.iecr.diocesedashboard.domain.repositories;
 
+import org.iecr.diocesedashboard.domain.objects.Church;
 import org.iecr.diocesedashboard.domain.objects.ReporterLink;
+import org.iecr.diocesedashboard.domain.objects.ServiceTemplate;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.List;
 import java.util.Optional;
 
 /** Repository for {@link ReporterLink} persistence. */
@@ -30,4 +33,23 @@ public interface ReporterLinkRepository extends JpaRepository<ReporterLink, Long
    * @param token the token of the link to delete
    */
   void deleteByToken(String token);
+
+  /**
+   * Finds all reporter links for a given church and service template.
+   *
+   * @param church          the church to filter by
+   * @param serviceTemplate the service template to filter by
+   * @return list of matching reporter links
+   */
+  List<ReporterLink> findByChurchAndServiceTemplate(Church church, ServiceTemplate serviceTemplate);
+
+  /**
+   * Finds all reporter links for any of the given churches and a given service template.
+   *
+   * @param churches        the churches to filter by
+   * @param serviceTemplate the service template to filter by
+   * @return list of matching reporter links
+   */
+  List<ReporterLink> findByChurchInAndServiceTemplate(
+      Iterable<Church> churches, ServiceTemplate serviceTemplate);
 }

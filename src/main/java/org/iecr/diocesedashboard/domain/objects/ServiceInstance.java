@@ -6,6 +6,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 
@@ -29,7 +30,11 @@ public class ServiceInstance {
   @JoinColumn(name = "template_id", nullable = false)
   private ServiceTemplate serviceTemplate;
 
-  @ManyToMany(mappedBy = "servicesCelebrated")
+  @ManyToMany
+  @JoinTable(
+      name = "celebrant_service",
+      joinColumns = @JoinColumn(name = "services_celebrated_id"),
+      inverseJoinColumns = @JoinColumn(name = "celebrants_id"))
   private Set<Celebrant> celebrants;
 
   private LocalDate serviceDate;

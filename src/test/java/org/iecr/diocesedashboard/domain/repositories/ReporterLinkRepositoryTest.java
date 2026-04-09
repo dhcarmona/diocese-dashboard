@@ -14,6 +14,7 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -141,5 +142,70 @@ class ReporterLinkRepositoryTest {
     assertThat(reporterLinkRepository.findAll())
         .extracting(link -> link.getChurch().getName())
         .containsExactlyInAnyOrder("Trinity", "StPaul");
+  }
+
+  @Test
+  void findByChurchAndServiceTemplate_returnsOnlyMatchingLinks() {
+    ServiceTemplate otherTemplate = new ServiceTemplate();
+    otherTemplate.setServiceTemplateName("Evening Prayer");
+    entityManager.persist(otherTemplate);
+    entityManager.flush();
+
+    entityManager.persist(buildLink(UUID.randomUUID().toString(), church));
+    ReporterLink wrongChurch = buildLink(UUID.randomUUID().toString(), secondChurch);
+    entityManager.persist(wrongChurch);
+    ReporterLink wrongTemplate = new ReporterLink();
+    wrongTemplate.setToken(UUID.randomUUID().toString());
+    wrongTemplate.setReporter(reporter);
+    wrongTemplate.setChurch(church);
+    wrongTemplate.setServiceTemplate(otherTemplate);
+    wrongTemplate.setActiveDate(LocalDate.now());
+    entityManager.persist(wrongTemplate);
+    entityManager.flush();
+
+    List<ReporterLink> result =
+        reporterLinkRepository.findByChurchAndServiceTemplate(church, template);
+
+    assertThat(result).hasSize(1);
+    assertThat(result.get(0).getChurch().getName()).isEqualTo("Trinity");
+    assertThat(result.get(0).getServiceTemplate().getServiceTemplateName())
+        .isEqualTo("Sunday Mass");
+  }
+
+  @Test
+  void findByChurchInAndServiceTemplate_returnsLinksForMultipleChurches() {
+    entityManager.persist(buildLink(UUID.randomUUID().toString(), church));
+    entityManager.persist(buildLink(UUID.randomUUID().toString(), secondChurch));
+    entityManager.flush();
+
+    List<ReporterLink> result = reporterLinkRepository.findByChurchInAndServiceTemplate(
+        List.of(church, secondChurch), template);
+
+    assertThat(result).hasSize(2);
+    assertThat(result).extracting(l -> l.getChurch().getName())
+        .containsExactlyInAnyOrder("Trinity", "StPaul");
+  }
+
+  @Test
+  void findByChurchInAndServiceTemplate_excludesOtherTemplate() {
+    ServiceTemplate other = new ServiceTemplate();
+    other.setServiceTemplateName("Vespers");
+    entityManager.persist(other);
+    entityManager.flush();
+
+    entityManager.persist(buildLink(UUID.randomUUID().toString(), church));
+    ReporterLink wrongTemplate = new ReporterLink();
+    wrongTemplate.setToken(UUID.randomUUID().toString());
+    wrongTemplate.setReporter(reporter);
+    wrongTemplate.setChurch(church);
+    wrongTemplate.setServiceTemplate(other);
+    wrongTemplate.setActiveDate(LocalDate.now());
+    entityManager.persist(wrongTemplate);
+    entityManager.flush();
+
+    List<ReporterLink> result = reporterLinkRepository.findByChurchInAndServiceTemplate(
+        List.of(church), template);
+
+    assertThat(result).hasSize(1);
   }
 }

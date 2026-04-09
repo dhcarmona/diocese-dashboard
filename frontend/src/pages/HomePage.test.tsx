@@ -45,6 +45,16 @@ describe('HomePage', () => {
     expect(screen.queryByRole('link', { name: /manage churches/i })).not.toBeInTheDocument();
   });
 
+  it('shows the statistics tile for reporters', () => {
+    renderHomePage({});
+
+    expect(screen.getByRole('link', { name: /statistics/i })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /statistics/i })).toHaveAttribute(
+      'href',
+      '/statistics',
+    );
+  });
+
   it('shows reporter and admin tiles for admins', () => {
     renderHomePage({
       user: {
@@ -61,5 +71,13 @@ describe('HomePage', () => {
     expect(screen.getByRole('link', { name: /manage celebrants/i })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /manage churches/i })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /create reporter links/i })).toBeInTheDocument();
+  });
+
+  it('shows the statistics tile for admins', () => {
+    renderHomePage({
+      user: { id: 2, username: 'admin', role: 'ADMIN', assignedChurchNames: [] },
+    });
+
+    expect(screen.getByRole('link', { name: /statistics/i })).toBeInTheDocument();
   });
 });

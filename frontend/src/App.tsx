@@ -27,6 +27,9 @@ import ReportsHubPage from './pages/ReportsHubPage';
 import ServiceSubmitPage from './pages/ServiceSubmitPage';
 import ServiceTemplateManagementPage from './pages/ServiceTemplateManagementPage';
 import TemplateSelectionPage from './pages/TemplateSelectionPage';
+import StatisticsFilterPage from './pages/StatisticsFilterPage';
+import StatisticsReportPage from './pages/StatisticsReportPage';
+import StatisticsTemplateSelectionPage from './pages/StatisticsTemplateSelectionPage';
 import WhatsAppMessageLogPage from './pages/WhatsAppMessageLogPage';
 
 function FullPageStatus({
@@ -128,6 +131,9 @@ function AppRoutes() {
             path="/submit/service-templates/:templateId"
             element={<ServiceSubmitPage />}
           />
+          <Route path="/statistics" element={<StatisticsTemplateSelectionPage />} />
+          <Route path="/statistics/:templateId" element={<StatisticsFilterPage />} />
+          <Route path="/statistics/:templateId/report" element={<StatisticsReportPage />} />
           <Route element={<AdminRoute />}>
             <Route
               path="/service-templates/manage"
