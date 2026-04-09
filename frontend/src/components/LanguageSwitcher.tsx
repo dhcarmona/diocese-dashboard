@@ -14,6 +14,7 @@ export default function LanguageSwitcher({
 }: Readonly<LanguageSwitcherProps>) {
   const { i18n, t } = useTranslation();
   const current = i18n.language.startsWith('es') ? 'es' : 'en';
+  const onDark = placement === 'static';
 
   function handleChange(_e: MouseEvent<HTMLElement>, lang: string | null) {
     if (lang) void i18n.changeLanguage(lang);
@@ -27,7 +28,25 @@ export default function LanguageSwitcher({
           : undefined
       }
     >
-      <ToggleButtonGroup value={current} exclusive onChange={handleChange} size="small">
+      <ToggleButtonGroup
+        value={current}
+        exclusive
+        onChange={handleChange}
+        size="small"
+        sx={onDark ? {
+          '& .MuiToggleButton-root': {
+            color: 'rgba(255,255,255,0.7)',
+            borderColor: 'rgba(255,255,255,0.3)',
+            '&:hover': { bgcolor: 'rgba(255,255,255,0.08)', borderColor: 'rgba(255,255,255,0.5)' },
+            '&.Mui-selected': {
+              color: 'primary.main',
+              bgcolor: 'rgba(255,255,255,0.92)',
+              borderColor: 'rgba(255,255,255,0.6)',
+              '&:hover': { bgcolor: 'rgba(255,255,255,0.82)' },
+            },
+          },
+        } : undefined}
+      >
         <ToggleButton value="en" aria-label={t('language.english')}>
           EN
         </ToggleButton>
@@ -38,3 +57,4 @@ export default function LanguageSwitcher({
     </Box>
   );
 }
+

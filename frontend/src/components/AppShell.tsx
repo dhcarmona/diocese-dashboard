@@ -22,38 +22,53 @@ export default function AppShell({ children }: Readonly<{ children: ReactNode }>
   }
 
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: 'grey.100' }}>
-      <AppBar position="sticky" color="inherit" elevation={1}>
+    <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
+      <AppBar position="sticky" color="primary" elevation={0}>
         <Toolbar
           sx={{
             flexWrap: 'wrap',
             gap: 2,
             alignItems: 'center',
-            py: 1.5,
+            py: 1,
           }}
         >
-          <Box sx={{ flexGrow: 1, minWidth: 240 }}>
-            <Typography variant="h5" fontWeight={700} color="text.primary">
-              {t('common.appName')}
-            </Typography>
-            <Typography variant="body1" color="text.secondary">
-              {t('shell.signedInAs', { username: user?.username ?? '' })}
-            </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexGrow: 1, minWidth: 200 }}>
+            <Box
+              component="img"
+              src="/logo.png"
+              alt="Diocese logo"
+              sx={{ height: 36, width: 36, objectFit: 'contain', flexShrink: 0 }}
+            />
+            <Box>
+              <Typography variant="subtitle1" fontWeight={700} color="primary.contrastText"
+                sx={{ lineHeight: 1.2 }}>
+                {t('common.appName')}
+              </Typography>
+              <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.65)', lineHeight: 1 }}>
+                {t('shell.signedInAs', { username: user?.username ?? '' })}
+              </Typography>
+            </Box>
           </Box>
           <LanguageSwitcher placement="static" />
           <Button
             component={RouterLink}
             to="/"
             variant="outlined"
-            size="large"
+            size="small"
             startIcon={<HomeOutlinedIcon />}
+            sx={{
+              color: 'primary.contrastText',
+              borderColor: 'rgba(255,255,255,0.4)',
+              '&:hover': { borderColor: 'primary.contrastText', bgcolor: 'rgba(255,255,255,0.08)' },
+            }}
           >
             {t('navigation.home')}
           </Button>
           <Button
             onClick={() => void handleSignOut()}
             variant="contained"
-            size="large"
+            color="secondary"
+            size="small"
             startIcon={<LogoutOutlinedIcon />}
           >
             {t('common.signOut')}
@@ -66,3 +81,4 @@ export default function AppShell({ children }: Readonly<{ children: ReactNode }>
     </Box>
   );
 }
+
