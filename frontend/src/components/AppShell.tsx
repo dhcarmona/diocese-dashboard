@@ -36,7 +36,7 @@ export default function AppShell({ children }: Readonly<{ children: ReactNode }>
             <Box
               component="img"
               src="/logo.png"
-              alt="Diocese logo"
+              alt={t('common.appName')}
               sx={{ height: 36, width: 36, objectFit: 'contain', flexShrink: 0 }}
             />
             <Box>

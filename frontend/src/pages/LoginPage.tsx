@@ -157,7 +157,7 @@ export default function LoginPage() {
         <Box
           component="img"
           src="/logo.png"
-          alt="Iglesia Episcopal Costarricense"
+          alt={t('common.appName')}
           sx={{ width: 160, height: 160, objectFit: 'contain', filter: 'drop-shadow(0 4px 24px rgba(0,0,0,0.4))' }}
         />
         <Box sx={{ textAlign: 'center', maxWidth: 340 }}>

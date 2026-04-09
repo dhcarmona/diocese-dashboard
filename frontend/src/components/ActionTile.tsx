@@ -8,7 +8,7 @@ import { Link as RouterLink } from 'react-router-dom';
 
 interface ActionTileProps {
   title: string;
-  description: string;
+  description?: string;
   to: string;
   imageUrl?: string;
 }
