@@ -25,6 +25,13 @@ export default function HomePage() {
       to: '/reports/new',
       imageUrl: tileArtwork.report,
     },
+    {
+      id: 'statistics',
+      title: t('home.tiles.statistics.title'),
+      description: t('home.tiles.statistics.description'),
+      to: '/statistics',
+      imageUrl: tileArtwork.viewReports,
+    },
   ];
 
   const adminTiles: HomeTile[] = [

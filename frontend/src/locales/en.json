@@ -75,6 +75,10 @@
       "whatsappLog": {
         "title": "WhatsApp Message Log",
         "description": "View all WhatsApp messages sent by the system."
+      },
+      "statistics": {
+        "title": "Statistics",
+        "description": "Generate aggregate reports and charts for a service template."
       }
     }
   },
@@ -419,6 +423,10 @@
       "individualReports": {
         "title": "See Individual Reports",
         "description": "Browse submitted reports for a specific service template."
+      },
+      "statistics": {
+        "title": "Statistics Report",
+        "description": "Generate aggregated statistics for a template and date range."
       }
     }
   },
@@ -475,5 +483,59 @@
     },
     "deleteSuccess": "The report was deleted successfully.",
     "saveSuccess": "Changes were saved successfully."
+  },
+  "statistics": {
+    "templateSelection": {
+      "title": "Statistics",
+      "subtitle": "Select a template to generate a statistics report.",
+      "loading": "Loading templates...",
+      "loadError": "Failed to load templates. Please try again.",
+      "empty": "No service templates found."
+    },
+    "filter": {
+      "title": "Configure Report",
+      "subtitle": "Choose the church and date range for the statistics report.",
+      "churchLabel": "Church",
+      "globalOption": "All Churches (Global Report)",
+      "startDateLabel": "Start Date",
+      "endDateLabel": "End Date",
+      "generate": "Generate Report",
+      "loading": "Loading...",
+      "loadError": "Failed to load churches.",
+      "validationDateRange": "End date must be after start date."
+    },
+    "report": {
+      "title": "Statistics Report",
+      "loading": "Generating report...",
+      "loadError": "Failed to generate the report. Please try again.",
+      "global": "All Churches (Global)",
+      "dateRange": "{{startDate}} – {{endDate}}",
+      "dateRangeLabel": "Date Range",
+      "totalServices": "Total Services",
+      "celebrantsTitle": "Services per Celebrant",
+      "celebrant": "Celebrant",
+      "services": "Services",
+      "noCelebrants": "No celebrant data available for this period.",
+      "numericalTitle": "Numerical Data",
+      "moneyTitle": "Financial Data",
+      "noItems": "No data available for this period.",
+      "total": "Total",
+      "timeSeriesTitle": "Trend Over Time",
+      "pendingLinksTitle": "Reports to Fill",
+      "pendingLinksSubtitle": "Active reporter links not yet submitted.",
+      "noPendingLinks": "No pending reporter links for this church and template.",
+      "pendingLink": {
+        "reporter": "Reporter",
+        "activeDate": "For Date",
+        "church": "Church",
+        "link": "Link"
+      },
+      "backToFilter": "Change Filters",
+      "itemTypes": {
+        "NUMERICAL": "count",
+        "DOLLARS": "USD",
+        "COLONES": "CRC"
+      }
+    }
   }
 }

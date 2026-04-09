@@ -2,6 +2,7 @@ package org.iecr.diocesedashboard.domain.repositories;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import org.iecr.diocesedashboard.domain.objects.Celebrant;
 import org.iecr.diocesedashboard.domain.objects.Church;
 import org.iecr.diocesedashboard.domain.objects.ServiceInstance;
 import org.iecr.diocesedashboard.domain.objects.ServiceTemplate;
@@ -11,7 +12,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 
+import java.time.LocalDate;
 import java.util.List;
+import java.util.Set;
 import java.util.Optional;
 
 @DataJpaTest
@@ -126,5 +129,117 @@ class ServiceInstanceRepositoryTest {
 
     assertThat(result).hasSize(1);
     assertThat(result.get(0).getChurch().getName()).isEqualTo("St. Mary");
+  }
+
+  @Test
+  void findByServiceTemplateAndChurchAndServiceDateBetween_returnsOnlyInRange() {
+    LocalDate jan1 = LocalDate.of(2024, 1, 1);
+    LocalDate jan15 = LocalDate.of(2024, 1, 15);
+    LocalDate feb1 = LocalDate.of(2024, 2, 1);
+
+    ServiceInstance inRange = buildInstance();
+    inRange.setServiceDate(jan15);
+    ServiceInstance onBoundary = buildInstance();
+    onBoundary.setServiceDate(feb1);
+    ServiceInstance beforeRange = buildInstance();
+    beforeRange.setServiceDate(LocalDate.of(2023, 12, 31));
+    ServiceInstance afterRange = buildInstance();
+    afterRange.setServiceDate(feb1.plusDays(1));
+
+    entityManager.persist(inRange);
+    entityManager.persist(onBoundary);
+    entityManager.persist(beforeRange);
+    entityManager.persist(afterRange);
+    entityManager.flush();
+
+    List<ServiceInstance> result =
+        serviceInstanceRepository.findByServiceTemplateAndChurchAndServiceDateBetween(
+            template, church, jan1, feb1);
+
+    assertThat(result).hasSize(2);
+    assertThat(result).extracting(ServiceInstance::getServiceDate)
+        .containsExactlyInAnyOrder(jan15, feb1);
+  }
+
+  @Test
+  void findByServiceTemplateAndChurchAndServiceDateBetween_excludesOtherChurch() {
+    Church other = new Church();
+    other.setName("Other");
+    entityManager.persist(other);
+    entityManager.flush();
+
+    ServiceInstance mine = buildInstance();
+    mine.setServiceDate(LocalDate.of(2024, 6, 1));
+    ServiceInstance theirs = new ServiceInstance();
+    theirs.setChurch(other);
+    theirs.setServiceTemplate(template);
+    theirs.setServiceDate(LocalDate.of(2024, 6, 1));
+
+    entityManager.persist(mine);
+    entityManager.persist(theirs);
+    entityManager.flush();
+
+    List<ServiceInstance> result =
+        serviceInstanceRepository.findByServiceTemplateAndChurchAndServiceDateBetween(
+            template, church, LocalDate.of(2024, 1, 1), LocalDate.of(2024, 12, 31));
+
+    assertThat(result).hasSize(1);
+    assertThat(result.get(0).getChurch().getName()).isEqualTo("St. Mary");
+  }
+
+  @Test
+  void findByServiceTemplateAndServiceDateBetween_returnsAllChurches() {
+    Church other = new Church();
+    other.setName("Other");
+    entityManager.persist(other);
+    entityManager.flush();
+
+    ServiceInstance first = buildInstance();
+    first.setServiceDate(LocalDate.of(2024, 6, 1));
+    ServiceInstance second = new ServiceInstance();
+    second.setChurch(other);
+    second.setServiceTemplate(template);
+    second.setServiceDate(LocalDate.of(2024, 6, 1));
+
+    entityManager.persist(first);
+    entityManager.persist(second);
+    entityManager.flush();
+
+    List<ServiceInstance> result =
+        serviceInstanceRepository.findByServiceTemplateAndServiceDateBetween(
+            template, LocalDate.of(2024, 1, 1), LocalDate.of(2024, 12, 31));
+
+    assertThat(result).hasSize(2);
+  }
+
+  @Test
+  void existsByChurchAndServiceTemplateAndServiceDate_returnsTrueWhenMatch() {
+    LocalDate date = LocalDate.of(2024, 3, 10);
+    ServiceInstance instance = buildInstance();
+    instance.setServiceDate(date);
+    entityManager.persistFlushFind(instance);
+
+    assertThat(serviceInstanceRepository.existsByChurchAndServiceTemplateAndServiceDate(
+        church, template, date)).isTrue();
+  }
+
+  @Test
+  void celebrantsLinkedViaInstance_areVisibleOnLoad() {
+    // Regression test: ServiceInstance must be the owning side of the ManyToMany so that
+    // setCelebrants() actually writes to the join table.  If the owning side is flipped to
+    // Celebrant (with @JoinTable there), this test fails — celebrants come back empty.
+    Celebrant celebrant = new Celebrant();
+    celebrant.setName("Rev. Alice");
+    entityManager.persist(celebrant);
+
+    ServiceInstance instance = buildInstance();
+    instance.setCelebrants(Set.of(celebrant));
+    entityManager.persist(instance);
+    entityManager.flush();
+    entityManager.clear();
+
+    ServiceInstance loaded = entityManager.find(ServiceInstance.class, instance.getId());
+    assertThat(loaded.getCelebrants()).isNotEmpty();
+    assertThat(loaded.getCelebrants()).extracting(Celebrant::getName).containsExactly("Rev. Alice");
   }
 }

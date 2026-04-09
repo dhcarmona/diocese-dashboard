@@ -7,7 +7,6 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Transient;
@@ -30,8 +29,7 @@ public class Celebrant {
   private Church mainChurch;
 
   @JsonIgnore
-  @ManyToMany
-  @JoinTable(name = "celebrant_service")
+  @ManyToMany(mappedBy = "celebrants")
   private Set<ServiceInstance> servicesCelebrated;
 
   @Transient

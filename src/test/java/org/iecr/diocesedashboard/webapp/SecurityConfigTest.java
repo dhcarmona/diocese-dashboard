@@ -248,6 +248,34 @@ class SecurityConfigTest {
   }
 
   // ---------------------------------------------------------------------------
+  // Statistics endpoint security
+  // ---------------------------------------------------------------------------
+
+  @Test
+  void apiStatistics_anonymous_returns401() throws Exception {
+    mockMvc.perform(get("/api/statistics")
+        .param("templateId", "1")
+        .param("startDate", "2024-01-01")
+        .param("endDate", "2024-12-31"))
+        .andExpect(status().isUnauthorized());
+  }
+
+  @Test
+  void statisticsFrontendRoute_anonymous_returns200() throws Exception {
+    mockMvc.perform(get("/statistics")).andExpect(status().isOk());
+  }
+
+  @Test
+  void statisticsFrontendRouteWithId_anonymous_returns200() throws Exception {
+    mockMvc.perform(get("/statistics/1")).andExpect(status().isOk());
+  }
+
+  @Test
+  void statisticsReportFrontendRoute_anonymous_returns200() throws Exception {
+    mockMvc.perform(get("/statistics/1/report")).andExpect(status().isOk());
+  }
+
+  // ---------------------------------------------------------------------------
   // Helpers
   // ---------------------------------------------------------------------------
 

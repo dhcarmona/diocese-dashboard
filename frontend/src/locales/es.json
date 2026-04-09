@@ -75,6 +75,10 @@
       "whatsappLog": {
         "title": "Registro de mensajes de WhatsApp",
         "description": "Consulte todos los mensajes de WhatsApp enviados por el sistema."
+      },
+      "statistics": {
+        "title": "Estadísticas",
+        "description": "Genere reportes acumulados y gráficos para una plantilla de servicio."
       }
     }
   },
@@ -419,6 +423,10 @@
       "individualReports": {
         "title": "Ver reportes individuales",
         "description": "Consulte los reportes enviados para una plantilla específica."
+      },
+      "statistics": {
+        "title": "Reporte Estadístico",
+        "description": "Genere estadísticas acumuladas para una plantilla y rango de fechas."
       }
     }
   },
@@ -475,5 +483,59 @@
     },
     "deleteSuccess": "El reporte fue eliminado correctamente.",
     "saveSuccess": "Los cambios se guardaron correctamente."
+  },
+  "statistics": {
+    "templateSelection": {
+      "title": "Estadísticas",
+      "subtitle": "Seleccione una plantilla para generar un reporte estadístico.",
+      "loading": "Cargando plantillas...",
+      "loadError": "No se pudieron cargar las plantillas. Por favor intente de nuevo.",
+      "empty": "No se encontraron plantillas de servicio."
+    },
+    "filter": {
+      "title": "Configurar Reporte",
+      "subtitle": "Elija la iglesia y el rango de fechas para el reporte estadístico.",
+      "churchLabel": "Iglesia",
+      "globalOption": "Todas las Iglesias (Reporte Global)",
+      "startDateLabel": "Fecha de inicio",
+      "endDateLabel": "Fecha de fin",
+      "generate": "Generar Reporte",
+      "loading": "Cargando...",
+      "loadError": "No se pudieron cargar las iglesias.",
+      "validationDateRange": "La fecha de fin debe ser posterior a la fecha de inicio."
+    },
+    "report": {
+      "title": "Reporte Estadístico",
+      "loading": "Generando reporte...",
+      "loadError": "No se pudo generar el reporte. Por favor intente de nuevo.",
+      "global": "Todas las Iglesias (Global)",
+      "dateRange": "{{startDate}} – {{endDate}}",
+      "dateRangeLabel": "Rango de Fechas",
+      "totalServices": "Total de Servicios",
+      "celebrantsTitle": "Servicios por Celebrante",
+      "celebrant": "Celebrante",
+      "services": "Servicios",
+      "noCelebrants": "No hay datos de celebrantes para este período.",
+      "numericalTitle": "Datos Numéricos",
+      "moneyTitle": "Datos Financieros",
+      "noItems": "No hay datos disponibles para este período.",
+      "total": "Total",
+      "timeSeriesTitle": "Tendencia en el Tiempo",
+      "pendingLinksTitle": "Reportes por Completar",
+      "pendingLinksSubtitle": "Enlaces de reportero activos aún no enviados.",
+      "noPendingLinks": "No hay enlaces de reportero pendientes para esta iglesia y plantilla.",
+      "pendingLink": {
+        "reporter": "Reportero",
+        "activeDate": "Para fecha",
+        "church": "Iglesia",
+        "link": "Enlace"
+      },
+      "backToFilter": "Cambiar Filtros",
+      "itemTypes": {
+        "NUMERICAL": "cantidad",
+        "DOLLARS": "USD",
+        "COLONES": "CRC"
+      }
+    }
   }
 }
