@@ -17,11 +17,14 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /** Service for managing dashboard user accounts and Spring Security authentication. */
 @Service
 public class UserService implements UserDetailsService {
 
+  private static final Logger LOG = Logger.getLogger(UserService.class.getName());
   private static final Locale WHATSAPP_LOCALE = Locale.forLanguageTag("es");
 
   private final UserRepository userRepository;
@@ -105,11 +108,17 @@ public class UserService implements UserDetailsService {
     DashboardUser saved = userRepository.save(user);
     if (role == UserRole.REPORTER && phoneNumber != null && !phoneNumber.isBlank()
         && appBaseUrl != null) {
-      String body = messageSource.getMessage(
-          "reporter.welcome.whatsapp.message",
-          new Object[]{fullName, username, appBaseUrl},
-          WHATSAPP_LOCALE);
-      whatsAppService.sendMessageAndLog(phoneNumber, body, username);
+      try {
+        String body = messageSource.getMessage(
+            "reporter.welcome.whatsapp.message",
+            new Object[]{fullName, username, appBaseUrl},
+            WHATSAPP_LOCALE);
+        whatsAppService.sendMessageAndLog(phoneNumber, body, username);
+      } catch (Exception ex) {
+        LOG.log(Level.WARNING,
+            "Failed to send welcome WhatsApp to new reporter ''{0}'': {1}",
+            new Object[]{username, ex.getMessage()});
+      }
     }
     return saved;
   }

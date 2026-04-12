@@ -137,6 +137,20 @@ class UserServiceTest {
   }
 
   @Test
+  void createUser_reporter_whatsAppFailure_doesNotThrow() {
+    when(userRepository.save(any(DashboardUser.class))).thenAnswer(inv -> inv.getArgument(0));
+    when(messageSource.getMessage(anyString(), any(Object[].class), any()))
+        .thenReturn("Welcome message");
+    org.mockito.Mockito.doThrow(new RuntimeException("Twilio error"))
+        .when(whatsAppService).sendMessageAndLog(any(), any(), any());
+
+    DashboardUser result = userService.createUser("rep", null,
+        UserRole.REPORTER, Set.of(), "Full Name", "+50688888888", "https://example.com");
+
+    assertThat(result.getUsername()).isEqualTo("rep");
+  }
+
+  @Test
   void createUser_reporter_withoutAppBaseUrl_doesNotSendMessage() {
     when(userRepository.save(any(DashboardUser.class))).thenAnswer(inv -> inv.getArgument(0));
 
