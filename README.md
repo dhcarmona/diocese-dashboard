@@ -191,6 +191,20 @@ docker compose down -v
 docker compose up -d db
 ```
 
+### Heroku — Reset the database
+
+To wipe and recreate the Heroku Postgres database:
+
+```bash
+heroku pg:reset DATABASE_URL --confirm <your-app-name>
+```
+
+Flyway will recreate the schema automatically on the next app start. If you also need the bootstrap Admin account recreated, make sure `DASHBOARD_BOOTSTRAP_ADMIN_ENABLED=true` is set, then restart the dyno:
+
+```bash
+heroku restart
+```
+
 If Flyway reports a checksum mismatch, prefer creating a new migration (`V2__...sql`,
 `V3__...sql`, etc.) instead of editing an existing applied migration. If you intentionally
 changed an already-applied migration in your local environment, you can repair Flyway once:
