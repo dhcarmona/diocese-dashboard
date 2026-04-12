@@ -4,11 +4,17 @@ import org.iecr.diocesedashboard.domain.objects.Church;
 import org.iecr.diocesedashboard.domain.objects.ServiceInstance;
 import org.iecr.diocesedashboard.domain.objects.ServiceTemplate;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 public interface ServiceInstanceRepository extends JpaRepository<ServiceInstance, Long> {
+
+  @Query("SELECT i FROM ServiceInstance i LEFT JOIN FETCH i.celebrants WHERE i.id = :id")
+  Optional<ServiceInstance> findByIdWithCelebrants(@Param("id") Long id);
 
   List<ServiceInstance> findByChurch(Church church);
 

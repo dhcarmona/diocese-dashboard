@@ -1,11 +1,15 @@
 package org.iecr.diocesedashboard.webapp.controller;
 
+import org.iecr.diocesedashboard.domain.objects.Celebrant;
 import org.iecr.diocesedashboard.domain.objects.ServiceInfoItemResponse;
 import org.iecr.diocesedashboard.domain.objects.ServiceInfoItemType;
 import org.iecr.diocesedashboard.domain.objects.ServiceInstance;
 
 import java.time.LocalDate;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
 
 /** Full detail projection of a ServiceInstance including all survey responses. */
 public record ServiceInstanceDetailResponse(
@@ -16,7 +20,12 @@ Long templateId,
 String templateName,
 String submittedByUsername,
 String submittedByFullName,
+List<CelebrantInfo> celebrants,
 List<ResponseDetail> responses) {
+
+  /** Minimal celebrant projection used inside an instance detail. */
+  public record CelebrantInfo(Long id, String name) {
+  }
 
   /** Detail for a single survey answer. */
   public record ResponseDetail(
@@ -36,6 +45,12 @@ List<ResponseDetail> responses) {
         ? instance.getSubmittedBy().getUsername() : null;
     String fullName = instance.getSubmittedBy() != null
         ? instance.getSubmittedBy().getFullName() : null;
+    Set<Celebrant> celebrantSet = instance.getCelebrants();
+    List<CelebrantInfo> celebrantInfos = celebrantSet == null ? Collections.emptyList()
+        : celebrantSet.stream()
+        .map(c -> new CelebrantInfo(c.getId(), c.getName()))
+        .sorted(Comparator.comparing(CelebrantInfo::name))
+        .toList();
     List<ResponseDetail> details = responses.stream()
         .map(r -> new ResponseDetail(
             r.getId(),
@@ -55,6 +70,7 @@ List<ResponseDetail> responses) {
             ? instance.getServiceTemplate().getServiceTemplateName() : null,
         username,
         fullName,
+        celebrantInfos,
         details);
   }
 }

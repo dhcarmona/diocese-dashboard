@@ -455,7 +455,8 @@
       "date": "Fecha",
       "church": "Iglesia",
       "template": "Plantilla",
-      "reporter": "Reportero"
+      "reporter": "Reportero",
+      "celebrants": "Celebrantes"
     },
     "responsesTitle": "Respuestas",
     "actions": {

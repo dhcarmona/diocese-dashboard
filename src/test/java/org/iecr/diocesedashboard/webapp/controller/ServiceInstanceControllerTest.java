@@ -15,6 +15,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.iecr.diocesedashboard.domain.objects.Celebrant;
 import org.iecr.diocesedashboard.domain.objects.Church;
 import org.iecr.diocesedashboard.domain.objects.DashboardUser;
 import org.iecr.diocesedashboard.domain.objects.ServiceInfoItem;
@@ -23,6 +24,7 @@ import org.iecr.diocesedashboard.domain.objects.ServiceInfoItemType;
 import org.iecr.diocesedashboard.domain.objects.ServiceInstance;
 import org.iecr.diocesedashboard.domain.objects.ServiceTemplate;
 import org.iecr.diocesedashboard.domain.objects.UserRole;
+import org.iecr.diocesedashboard.service.CelebrantService;
 import org.iecr.diocesedashboard.service.ServiceInfoItemResponseService;
 import org.iecr.diocesedashboard.service.ServiceInfoItemService;
 import org.iecr.diocesedashboard.service.ServiceInstanceService;
@@ -44,9 +46,11 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.Set;
 
 @WebMvcTest(ServiceInstanceController.class)
 @Import(SecurityConfig.class)
@@ -69,6 +73,9 @@ class ServiceInstanceControllerTest {
 
   @MockBean
   private ServiceTemplateService serviceTemplateService;
+
+  @MockBean
+  private CelebrantService celebrantService;
 
   @MockBean
   private WhatsAppService whatsAppService;
@@ -254,7 +261,7 @@ class ServiceInstanceControllerTest {
     ServiceInstance instance = buildFullInstance(1L, "Trinity", "Sunday Mass", "+50612345678");
     ServiceInfoItem item = buildItem(5L, "Attendance");
     ServiceInfoItemResponse response = buildResponse(100L, item, instance, "42");
-    when(serviceInstanceService.findById(1L)).thenReturn(Optional.of(instance));
+    when(serviceInstanceService.findByIdWithCelebrants(1L)).thenReturn(Optional.of(instance));
     when(responseService.findByServiceInstance(instance)).thenReturn(List.of(response));
 
     mockMvc.perform(get("/api/service-instances/1"))
@@ -271,7 +278,7 @@ class ServiceInstanceControllerTest {
   @Test
   @WithMockDashboardUser
   void getById_notFound_returns404() throws Exception {
-    when(serviceInstanceService.findById(99L)).thenReturn(Optional.empty());
+    when(serviceInstanceService.findByIdWithCelebrants(99L)).thenReturn(Optional.empty());
 
     mockMvc.perform(get("/api/service-instances/99"))
         .andExpect(status().isNotFound());
@@ -294,7 +301,7 @@ class ServiceInstanceControllerTest {
   @WithMockDashboardUser(role = UserRole.REPORTER, churchName = "Trinity")
   void getById_asReporter_ownChurch_returns200() throws Exception {
     ServiceInstance instance = buildInstanceForChurch(1L, "Trinity");
-    when(serviceInstanceService.findById(1L)).thenReturn(Optional.of(instance));
+    when(serviceInstanceService.findByIdWithCelebrants(1L)).thenReturn(Optional.of(instance));
     when(responseService.findByServiceInstance(instance)).thenReturn(List.of());
 
     mockMvc.perform(get("/api/service-instances/1"))
@@ -305,7 +312,7 @@ class ServiceInstanceControllerTest {
   @Test
   @WithMockDashboardUser(role = UserRole.REPORTER, churchName = "Trinity")
   void getById_asReporter_otherChurch_returns404() throws Exception {
-    when(serviceInstanceService.findById(2L))
+    when(serviceInstanceService.findByIdWithCelebrants(2L))
         .thenReturn(Optional.of(buildInstanceForChurch(2L, "StPaul")));
 
     mockMvc.perform(get("/api/service-instances/2"))
@@ -319,7 +326,7 @@ class ServiceInstanceControllerTest {
   void update_notFound_returns404() throws Exception {
     when(serviceInstanceService.findById(99L)).thenReturn(Optional.empty());
     String body = objectMapper.writeValueAsString(
-        new ServiceInstanceUpdateRequest(List.of(), false));
+        new ServiceInstanceUpdateRequest(List.of(), null, false));
 
     mockMvc.perform(put("/api/service-instances/99")
         .with(csrf())
@@ -337,7 +344,7 @@ class ServiceInstanceControllerTest {
     when(serviceInstanceService.findById(1L)).thenReturn(Optional.of(instance));
     when(responseService.findByServiceInstance(instance)).thenReturn(List.of(existing));
     String body = objectMapper.writeValueAsString(new ServiceInstanceUpdateRequest(
-        List.of(new ServiceInstanceUpdateRequest.ResponseEntry(5L, "42")), true));
+        List.of(new ServiceInstanceUpdateRequest.ResponseEntry(5L, "42")), null, true));
 
     mockMvc.perform(put("/api/service-instances/1")
         .with(csrf())
@@ -357,7 +364,7 @@ class ServiceInstanceControllerTest {
     when(serviceInstanceService.findById(1L)).thenReturn(Optional.of(instance));
     when(responseService.findByServiceInstance(instance)).thenReturn(List.of(existing));
     String body = objectMapper.writeValueAsString(new ServiceInstanceUpdateRequest(
-        List.of(new ServiceInstanceUpdateRequest.ResponseEntry(5L, "55")), false));
+        List.of(new ServiceInstanceUpdateRequest.ResponseEntry(5L, "55")), null, false));
 
     mockMvc.perform(put("/api/service-instances/1")
         .with(csrf())
@@ -381,7 +388,7 @@ class ServiceInstanceControllerTest {
         eq("whatsapp.report.updated"), any(Object[].class), any(Locale.class)))
         .thenReturn("cambio en reporte");
     String body = objectMapper.writeValueAsString(new ServiceInstanceUpdateRequest(
-        List.of(new ServiceInstanceUpdateRequest.ResponseEntry(5L, "55")), true));
+        List.of(new ServiceInstanceUpdateRequest.ResponseEntry(5L, "55")), null, true));
 
     mockMvc.perform(put("/api/service-instances/1")
         .with(csrf())
@@ -401,7 +408,59 @@ class ServiceInstanceControllerTest {
     when(serviceInstanceService.findById(1L)).thenReturn(Optional.of(instance));
     when(responseService.findByServiceInstance(instance)).thenReturn(List.of(existing));
     String body = objectMapper.writeValueAsString(new ServiceInstanceUpdateRequest(
-        List.of(new ServiceInstanceUpdateRequest.ResponseEntry(5L, "55")), true));
+        List.of(new ServiceInstanceUpdateRequest.ResponseEntry(5L, "55")), null, true));
+
+    mockMvc.perform(put("/api/service-instances/1")
+        .with(csrf())
+        .contentType(MediaType.APPLICATION_JSON)
+        .content(body))
+        .andExpect(status().isOk());
+
+    verify(whatsAppService, never()).sendMessageAndLog(any(), any(), any());
+  }
+
+  @Test
+  @WithMockDashboardUser
+  void update_celebrantsChanged_withNotifyTrue_sendsWhatsApp() throws Exception {
+    Celebrant oldCelebrant = new Celebrant();
+    oldCelebrant.setId(10L);
+    oldCelebrant.setName("Fr. Old");
+    Celebrant newCelebrant = new Celebrant();
+    newCelebrant.setId(20L);
+    newCelebrant.setName("Fr. New");
+    ServiceInstance instance = buildFullInstance(1L, "Trinity", "Sunday Mass", "+50612345678");
+    instance.setCelebrants(new HashSet<>(Set.of(oldCelebrant)));
+    when(serviceInstanceService.findById(1L)).thenReturn(Optional.of(instance));
+    when(responseService.findByServiceInstance(instance)).thenReturn(List.of());
+    when(celebrantService.findAllById(List.of(20L))).thenReturn(List.of(newCelebrant));
+    when(messageSource.getMessage(
+        eq("whatsapp.report.updated"), any(Object[].class), any(Locale.class)))
+        .thenReturn("cambio en reporte");
+    String body = objectMapper.writeValueAsString(
+        new ServiceInstanceUpdateRequest(List.of(), List.of(20L), true));
+
+    mockMvc.perform(put("/api/service-instances/1")
+        .with(csrf())
+        .contentType(MediaType.APPLICATION_JSON)
+        .content(body))
+        .andExpect(status().isOk());
+
+    verify(whatsAppService).sendMessageAndLog(eq("+50612345678"), eq("cambio en reporte"), any());
+  }
+
+  @Test
+  @WithMockDashboardUser
+  void update_celebrantsUnchanged_withNotifyTrue_doesNotSendWhatsApp() throws Exception {
+    Celebrant celebrant = new Celebrant();
+    celebrant.setId(10L);
+    celebrant.setName("Fr. Same");
+    ServiceInstance instance = buildFullInstance(1L, "Trinity", "Sunday Mass", "+50612345678");
+    instance.setCelebrants(new HashSet<>(Set.of(celebrant)));
+    when(serviceInstanceService.findById(1L)).thenReturn(Optional.of(instance));
+    when(responseService.findByServiceInstance(instance)).thenReturn(List.of());
+    when(celebrantService.findAllById(List.of(10L))).thenReturn(List.of(celebrant));
+    String body = objectMapper.writeValueAsString(
+        new ServiceInstanceUpdateRequest(List.of(), List.of(10L), true));
 
     mockMvc.perform(put("/api/service-instances/1")
         .with(csrf())
@@ -560,7 +619,7 @@ class ServiceInstanceControllerTest {
     when(responseService.findByServiceInstance(instance)).thenReturn(List.of());
     when(serviceInfoItemService.findById(77L)).thenReturn(Optional.of(foreignItem));
     String body = objectMapper.writeValueAsString(new ServiceInstanceUpdateRequest(
-        List.of(new ServiceInstanceUpdateRequest.ResponseEntry(77L, "newValue")), false));
+        List.of(new ServiceInstanceUpdateRequest.ResponseEntry(77L, "newValue")), null, false));
 
     mockMvc.perform(put("/api/service-instances/1")
         .with(csrf())
@@ -585,7 +644,7 @@ class ServiceInstanceControllerTest {
     doThrow(new RuntimeException("Twilio error"))
         .when(whatsAppService).sendMessageAndLog(any(), any(), any());
     String body = objectMapper.writeValueAsString(new ServiceInstanceUpdateRequest(
-        List.of(new ServiceInstanceUpdateRequest.ResponseEntry(5L, "99")), true));
+        List.of(new ServiceInstanceUpdateRequest.ResponseEntry(5L, "99")), null, true));
 
     mockMvc.perform(put("/api/service-instances/1")
         .with(csrf())

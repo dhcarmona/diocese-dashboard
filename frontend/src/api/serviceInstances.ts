@@ -35,6 +35,11 @@ export interface ResponseDetail {
   responseValue: string;
 }
 
+export interface CelebrantInfo {
+  id: number;
+  name: string;
+}
+
 export interface ServiceInstanceDetail {
   id: number;
   serviceDate: string;
@@ -43,6 +48,7 @@ export interface ServiceInstanceDetail {
   templateName: string;
   submittedByUsername: string | null;
   submittedByFullName: string | null;
+  celebrants: CelebrantInfo[];
   responses: ResponseDetail[];
 }
 
@@ -76,10 +82,11 @@ export async function updateInstance(
   id: number,
   responses: ResponseEntry[],
   notifyReporter: boolean,
+  celebrantIds?: number[],
 ): Promise<ServiceInstanceDetail> {
   const response = await api.put<ServiceInstanceDetail>(
     `/api/service-instances/${id}`,
-    { responses, notifyReporter },
+    { responses, notifyReporter, celebrantIds: celebrantIds ?? null },
     { headers: await getCsrfHeaders() },
   );
   return response.data;

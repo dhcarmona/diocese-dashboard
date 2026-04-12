@@ -38,6 +38,10 @@ public class CelebrantService {
     celebrantRepository.deleteById(id);
   }
 
+  public List<Celebrant> findAllById(Iterable<Long> ids) {
+    return celebrantRepository.findAllById(ids);
+  }
+
   public boolean existsById(Long id) {
     return celebrantRepository.existsById(id);
   }

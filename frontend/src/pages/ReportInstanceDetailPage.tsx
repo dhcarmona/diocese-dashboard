@@ -1,6 +1,8 @@
 import Alert from '@mui/material/Alert';
+import Autocomplete from '@mui/material/Autocomplete';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
+import Chip from '@mui/material/Chip';
 import CircularProgress from '@mui/material/CircularProgress';
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
@@ -15,6 +17,7 @@ import Typography from '@mui/material/Typography';
 import { type FormEvent, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link as RouterLink, useNavigate, useParams } from 'react-router-dom';
+import { type Celebrant, getCelebrants } from '../api/celebrants';
 import {
   type ResponseDetail,
   type ServiceInstanceDetail,
@@ -42,6 +45,8 @@ export default function ReportInstanceDetailPage() {
 
   const [detail, setDetail] = useState<ServiceInstanceDetail | null>(null);
   const [responses, setResponses] = useState<Record<number, string>>({});
+  const [allCelebrants, setAllCelebrants] = useState<Celebrant[]>([]);
+  const [selectedCelebrants, setSelectedCelebrants] = useState<Celebrant[]>([]);
   const [loading, setLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
 
@@ -75,9 +80,16 @@ export default function ReportInstanceDetailPage() {
       setLoading(true);
       setHasError(false);
       try {
-        const data = await getInstanceDetail(parsedId);
+        const [data, celebrants] = await Promise.all([
+          getInstanceDetail(parsedId),
+          getCelebrants(),
+        ]);
         if (active) {
           setDetail(data);
+          setAllCelebrants(celebrants);
+          setSelectedCelebrants(
+            celebrants.filter((c) => data.celebrants.some((dc) => dc.id === c.id)),
+          );
           const initial: Record<number, string> = {};
           data.responses.forEach((r) => {
             initial[r.serviceInfoItemId] = r.responseValue ?? '';
@@ -121,7 +133,12 @@ export default function ReportInstanceDetailPage() {
         serviceInfoItemId: r.serviceInfoItemId,
         responseValue: responses[r.serviceInfoItemId] ?? '',
       }));
-      const updated = await updateInstance(detail.id, entries, notify);
+      const updated = await updateInstance(
+        detail.id,
+        entries,
+        notify,
+        selectedCelebrants.map((c) => c.id),
+      );
       setDetail(updated);
       setSaveSuccess(true);
     } catch {
@@ -205,6 +222,30 @@ export default function ReportInstanceDetailPage() {
           <strong>{t('reportDetail.meta.reporter')}:</strong> {reporterLabel}
         </Typography>
       </Stack>
+
+      <Autocomplete
+        multiple
+        options={allCelebrants}
+        getOptionLabel={(option) => option.name}
+        value={selectedCelebrants}
+        onChange={(_e, newValue) => setSelectedCelebrants(newValue)}
+        renderTags={(value, getTagProps) =>
+          value.map((option, index) => {
+            const { key, ...tagProps } = getTagProps({ index });
+            return <Chip key={key} label={option.name} {...tagProps} />;
+          })
+        }
+        renderInput={(params) => (
+          <TextField
+            {...params}
+            label={t('reportDetail.meta.celebrants')}
+            placeholder={selectedCelebrants.length === 0
+              ? t('submitService.fields.celebrantsPlaceholder')
+              : ''}
+          />
+        )}
+        sx={{ mb: 3, maxWidth: 640 }}
+      />
 
       <Divider sx={{ mb: 3 }} />
 

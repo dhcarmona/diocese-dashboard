@@ -35,6 +35,10 @@ public class ServiceInstanceService {
     return repository.findByServiceTemplate(template);
   }
 
+  public Optional<ServiceInstance> findByIdWithCelebrants(Long id) {
+    return repository.findByIdWithCelebrants(id);
+  }
+
   public Optional<ServiceInstance> findById(Long id) {
     return repository.findById(id);
   }

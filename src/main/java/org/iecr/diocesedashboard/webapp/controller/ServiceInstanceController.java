@@ -1,11 +1,13 @@
 package org.iecr.diocesedashboard.webapp.controller;
 
+import org.iecr.diocesedashboard.domain.objects.Celebrant;
 import org.iecr.diocesedashboard.domain.objects.DashboardUser;
 import org.iecr.diocesedashboard.domain.objects.ServiceInfoItem;
 import org.iecr.diocesedashboard.domain.objects.ServiceInfoItemResponse;
 import org.iecr.diocesedashboard.domain.objects.ServiceInstance;
 import org.iecr.diocesedashboard.domain.objects.ServiceTemplate;
 import org.iecr.diocesedashboard.domain.objects.UserRole;
+import org.iecr.diocesedashboard.service.CelebrantService;
 import org.iecr.diocesedashboard.service.ServiceInfoItemResponseService;
 import org.iecr.diocesedashboard.service.ServiceInfoItemService;
 import org.iecr.diocesedashboard.service.ServiceInstanceService;
@@ -28,7 +30,9 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
@@ -47,6 +51,7 @@ public class ServiceInstanceController {
   private final ServiceInfoItemResponseService responseService;
   private final ServiceInfoItemService serviceInfoItemService;
   private final ServiceTemplateService serviceTemplateService;
+  private final CelebrantService celebrantService;
   private final WhatsAppService whatsAppService;
   private final MessageSource messageSource;
 
@@ -55,12 +60,14 @@ public class ServiceInstanceController {
       ServiceInfoItemResponseService responseService,
       ServiceInfoItemService serviceInfoItemService,
       ServiceTemplateService serviceTemplateService,
+      CelebrantService celebrantService,
       WhatsAppService whatsAppService,
       MessageSource messageSource) {
     this.serviceInstanceService = serviceInstanceService;
     this.responseService = responseService;
     this.serviceInfoItemService = serviceInfoItemService;
     this.serviceTemplateService = serviceTemplateService;
+    this.celebrantService = celebrantService;
     this.whatsAppService = whatsAppService;
     this.messageSource = messageSource;
   }
@@ -115,7 +122,7 @@ public class ServiceInstanceController {
   public ResponseEntity<ServiceInstanceDetailResponse> getById(
       @PathVariable Long id, Authentication auth) {
     DashboardUser user = ((DashboardUserDetails) auth.getPrincipal()).getDashboardUser();
-    Optional<ServiceInstance> found = serviceInstanceService.findById(id)
+    Optional<ServiceInstance> found = serviceInstanceService.findByIdWithCelebrants(id)
         .filter(inst -> isAccessible(inst, user));
     if (found.isEmpty()) {
       return ResponseEntity.notFound().build();
@@ -185,6 +192,23 @@ public class ServiceInstanceController {
           }
         }
       }
+    }
+
+    if (request.celebrantIds() != null) {
+      List<Celebrant> resolved = celebrantService.findAllById(request.celebrantIds());
+      Set<Long> oldIds = instance.getCelebrants() == null ? Set.of()
+          : instance.getCelebrants().stream().map(Celebrant::getId).collect(Collectors.toSet());
+      Set<Long> newIds = resolved.stream().map(Celebrant::getId).collect(Collectors.toSet());
+      if (!oldIds.equals(newIds)) {
+        String oldNames = instance.getCelebrants() == null ? ""
+            : instance.getCelebrants().stream()
+                .map(Celebrant::getName).sorted().collect(Collectors.joining(", "));
+        String newNames = resolved.stream()
+            .map(Celebrant::getName).sorted().collect(Collectors.joining(", "));
+        changeSummaries.add("\"Celebrants\": \"" + oldNames + "\" → \"" + newNames + "\"");
+      }
+      instance.setCelebrants(new HashSet<>(resolved));
+      serviceInstanceService.save(instance);
     }
 
     if (request.notifyReporter() && !changeSummaries.isEmpty()) {

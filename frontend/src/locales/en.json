@@ -455,7 +455,8 @@
       "date": "Date",
       "church": "Church",
       "template": "Template",
-      "reporter": "Reporter"
+      "reporter": "Reporter",
+      "celebrants": "Celebrants"
     },
     "responsesTitle": "Answers",
     "actions": {
