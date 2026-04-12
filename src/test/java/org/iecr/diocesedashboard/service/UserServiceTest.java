@@ -3,6 +3,8 @@ package org.iecr.diocesedashboard.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -17,6 +19,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.MessageSource;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -33,6 +36,12 @@ class UserServiceTest {
 
   @Mock
   private PasswordEncoder passwordEncoder;
+
+  @Mock
+  private WhatsAppService whatsAppService;
+
+  @Mock
+  private MessageSource messageSource;
 
   @InjectMocks
   private UserService userService;
@@ -79,7 +88,7 @@ class UserServiceTest {
     when(userRepository.save(any(DashboardUser.class))).thenAnswer(inv -> inv.getArgument(0));
 
     DashboardUser result = userService.createUser("reporter1", "plaintext",
-        UserRole.REPORTER, Set.of(), null, null);
+        UserRole.REPORTER, Set.of(), null, null, null);
 
     verify(passwordEncoder).encode("plaintext");
     assertThat(result.getPasswordHash()).isEqualTo("$2a$10$encoded");
@@ -90,7 +99,7 @@ class UserServiceTest {
     when(userRepository.save(any(DashboardUser.class))).thenAnswer(inv -> inv.getArgument(0));
 
     DashboardUser result = userService.createUser("rep", null,
-        UserRole.REPORTER, Set.of(), "Full Name", "+50688888888");
+        UserRole.REPORTER, Set.of(), "Full Name", "+50688888888", null);
 
     verify(passwordEncoder, never()).encode(any());
     assertThat(result.getPasswordHash()).isNull();
@@ -106,12 +115,35 @@ class UserServiceTest {
     when(userRepository.save(any(DashboardUser.class))).thenAnswer(inv -> inv.getArgument(0));
 
     DashboardUser result = userService.createUser("rep", "pass",
-        UserRole.REPORTER, Set.of(church), null, null);
+        UserRole.REPORTER, Set.of(church), null, null, null);
 
     assertThat(result.getUsername()).isEqualTo("rep");
     assertThat(result.getRole()).isEqualTo(UserRole.REPORTER);
     assertThat(result.getAssignedChurches()).containsExactly(church);
     assertThat(result.isEnabled()).isTrue();
+  }
+
+  @Test
+  void createUser_reporter_withAppBaseUrl_sendsWelcomeMessage() {
+    when(userRepository.save(any(DashboardUser.class))).thenAnswer(inv -> inv.getArgument(0));
+    when(messageSource.getMessage(anyString(), any(Object[].class), any()))
+        .thenReturn("Welcome message");
+
+    userService.createUser("rep", null,
+        UserRole.REPORTER, Set.of(), "Full Name", "+50688888888", "https://example.com");
+
+    verify(whatsAppService).sendMessageAndLog(
+        eq("+50688888888"), eq("Welcome message"), eq("rep"));
+  }
+
+  @Test
+  void createUser_reporter_withoutAppBaseUrl_doesNotSendMessage() {
+    when(userRepository.save(any(DashboardUser.class))).thenAnswer(inv -> inv.getArgument(0));
+
+    userService.createUser("rep", null,
+        UserRole.REPORTER, Set.of(), "Full Name", "+50688888888", null);
+
+    verify(whatsAppService, never()).sendMessageAndLog(any(), any(), any());
   }
 
   // --- updateUser ---

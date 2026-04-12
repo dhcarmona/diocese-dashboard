@@ -1,5 +1,6 @@
 package org.iecr.diocesedashboard.webapp.controller;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.iecr.diocesedashboard.domain.objects.Church;
 import org.iecr.diocesedashboard.domain.objects.DashboardUser;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -63,11 +65,14 @@ public class UserController {
   /**
    * Creates a new user account.
    *
-   * @param request the user creation request
+   * @param request     the user creation request
+   * @param httpRequest the incoming HTTP request, used to derive the application base URL
+   *                    for the reporter welcome message
    * @return 201 with the created user
    */
   @PostMapping
-  public ResponseEntity<DashboardUser> create(@RequestBody @Valid UserRequest request) {
+  public ResponseEntity<DashboardUser> create(@RequestBody @Valid UserRequest request,
+      HttpServletRequest httpRequest) {
     Set<Church> churches = resolveChurches(request.churchNames());
     if (request.role() == UserRole.ADMIN) {
       if (request.password() == null || request.password().isBlank()) {
@@ -76,7 +81,7 @@ public class UserController {
       }
       churches = Set.of();
       DashboardUser created = userService.createUser(
-          request.username(), request.password(), UserRole.ADMIN, churches, null, null);
+          request.username(), request.password(), UserRole.ADMIN, churches, null, null, null);
       return ResponseEntity.status(HttpStatus.CREATED).body(created);
     } else {
       if (churches.isEmpty()) {
@@ -91,9 +96,11 @@ public class UserController {
         throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
             "phoneNumber is required for REPORTER role");
       }
+      String appBaseUrl = ServletUriComponentsBuilder.fromContextPath(httpRequest)
+          .build().toUriString();
       DashboardUser created = userService.createUser(
           request.username(), null, UserRole.REPORTER, churches,
-          request.fullName().trim(), request.phoneNumber().trim());
+          request.fullName().trim(), request.phoneNumber().trim(), appBaseUrl);
       return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
   }

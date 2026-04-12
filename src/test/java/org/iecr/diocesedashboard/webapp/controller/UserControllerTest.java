@@ -124,7 +124,7 @@ class UserControllerTest {
   void create_adminUser_returns201() throws Exception {
     DashboardUser created = buildUser(1L, "admin2", UserRole.ADMIN);
     when(userService.createUser(eq("admin2"), eq("secret123"), eq(UserRole.ADMIN),
-        eq(Set.of()), eq(null), eq(null))).thenReturn(created);
+        eq(Set.of()), eq(null), eq(null), eq(null))).thenReturn(created);
 
     mockMvc.perform(post("/api/users")
         .with(csrf())
@@ -144,7 +144,7 @@ class UserControllerTest {
     created.setAssignedChurches(Set.of(church));
     when(churchService.findById("Trinity")).thenReturn(Optional.of(church));
     when(userService.createUser(eq("reporter1"), eq(null), eq(UserRole.REPORTER),
-        anySet(), eq("Reporter One"), eq("+50688888888"))).thenReturn(created);
+        anySet(), eq("Reporter One"), eq("+50688888888"), any())).thenReturn(created);
 
     mockMvc.perform(post("/api/users")
         .with(csrf())
@@ -228,7 +228,7 @@ class UserControllerTest {
     created.setAssignedChurches(Set.of(church));
     when(churchService.findById("Trinity")).thenReturn(Optional.of(church));
     when(userService.createUser(eq("reporter1"), eq(null), eq(UserRole.REPORTER),
-        anySet(), eq("Reporter One"), eq("+50688888888"))).thenReturn(created);
+        anySet(), eq("Reporter One"), eq("+50688888888"), any())).thenReturn(created);
 
     mockMvc.perform(post("/api/users")
         .with(csrf())
@@ -245,7 +245,7 @@ class UserControllerTest {
         .andExpect(status().isCreated());
 
     verify(userService).createUser(eq("reporter1"), eq(null), eq(UserRole.REPORTER),
-        eq(Set.of(church)), eq("Reporter One"), eq("+50688888888"));
+        eq(Set.of(church)), eq("Reporter One"), eq("+50688888888"), any());
   }
 
   // --- PUT /api/users/{id} ---
