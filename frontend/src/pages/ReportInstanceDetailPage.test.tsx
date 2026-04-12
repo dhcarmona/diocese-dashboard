@@ -1,8 +1,9 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import i18n from 'i18next';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { vi } from 'vitest';
+import { getCelebrants } from '../api/celebrants';
 import {
   type ServiceInstanceDetail,
   deleteInstance,
@@ -15,6 +16,10 @@ vi.mock('../api/serviceInstances', () => ({
   getInstanceDetail: vi.fn(),
   updateInstance: vi.fn(),
   deleteInstance: vi.fn(),
+}));
+
+vi.mock('../api/celebrants', () => ({
+  getCelebrants: vi.fn(),
 }));
 
 function renderPage(templateId = '10', instanceId = '1') {
@@ -44,6 +49,7 @@ const DETAIL: ServiceInstanceDetail = {
   templateName: 'Sunday Eucharist',
   submittedByUsername: 'jsmith',
   submittedByFullName: 'Jonathan Smith',
+  celebrants: [{ id: 2, name: 'Fr. John' }],
   responses: [
     {
       responseId: 100,
@@ -61,11 +67,17 @@ describe('ReportInstanceDetailPage', () => {
   const mockedGetInstanceDetail = vi.mocked(getInstanceDetail);
   const mockedUpdateInstance = vi.mocked(updateInstance);
   const mockedDeleteInstance = vi.mocked(deleteInstance);
+  const mockedGetCelebrants = vi.mocked(getCelebrants);
 
   beforeEach(async () => {
     mockedGetInstanceDetail.mockReset();
     mockedUpdateInstance.mockReset();
     mockedDeleteInstance.mockReset();
+    mockedGetCelebrants.mockReset();
+    mockedGetCelebrants.mockResolvedValue([
+      { id: 1, name: 'Fr. Alice' },
+      { id: 2, name: 'Fr. John' },
+    ]);
     await i18n.changeLanguage('en');
   });
 
@@ -88,6 +100,64 @@ describe('ReportInstanceDetailPage', () => {
       ).toBeGreaterThan(0);
     });
   });
+
+  it('pre-selects celebrants that are already on the instance', async () => {
+    mockedGetInstanceDetail.mockResolvedValueOnce(DETAIL);
+
+    renderPage();
+
+    await screen.findByText('Sunday Eucharist');
+
+    // DETAIL has celebrant id=2 "Fr. John"; the chip should appear in the Autocomplete
+    expect(screen.getByRole('button', { name: /fr\. john/i })).toBeInTheDocument();
+    // Fr. Alice (id=1) is not on the instance and should not appear as a chip
+    expect(screen.queryByRole('button', { name: /fr\. alice/i })).not.toBeInTheDocument();
+  });
+
+  it('passes the selected celebrant IDs to updateInstance on save', async () => {
+    const user = userEvent.setup();
+    mockedGetInstanceDetail.mockResolvedValueOnce(DETAIL);
+    mockedUpdateInstance.mockResolvedValueOnce({ ...DETAIL });
+
+    renderPage();
+
+    await screen.findByText('Sunday Eucharist');
+
+    await user.click(screen.getByRole('button', { name: /save changes/i }));
+    await screen.findByRole('heading', { name: /notify reporter/i });
+    await user.click(screen.getByRole('button', { name: /no, skip/i }));
+
+    await waitFor(() => {
+      expect(mockedUpdateInstance).toHaveBeenCalledWith(
+        1, expect.any(Array), false, [2],
+      );
+    });
+  });
+
+  it('updates celebrant IDs when the selection is changed before saving', async () => {
+    const user = userEvent.setup();
+    mockedGetInstanceDetail.mockResolvedValueOnce(DETAIL);
+    mockedUpdateInstance.mockResolvedValueOnce({ ...DETAIL });
+
+    renderPage();
+
+    await screen.findByText('Sunday Eucharist');
+
+    // Remove Fr. John by clicking the delete (cancel) icon inside his chip
+    const frJohnChip = screen.getByRole('button', { name: /fr\. john/i });
+    await user.click(within(frJohnChip).getByTestId('CancelIcon'));
+
+    await user.click(screen.getByRole('button', { name: /save changes/i }));
+    await screen.findByRole('heading', { name: /notify reporter/i });
+    await user.click(screen.getByRole('button', { name: /no, skip/i }));
+
+    await waitFor(() => {
+      expect(mockedUpdateInstance).toHaveBeenCalledWith(
+        1, expect.any(Array), false, [],
+      );
+    });
+  });
+
 
   it('renders report metadata and responses after loading', async () => {
     mockedGetInstanceDetail.mockResolvedValueOnce(DETAIL);
@@ -120,7 +190,9 @@ describe('ReportInstanceDetailPage', () => {
     await user.click(screen.getByRole('button', { name: /yes, notify/i }));
 
     await waitFor(() => {
-      expect(mockedUpdateInstance).toHaveBeenCalledWith(1, expect.any(Array), true);
+      expect(mockedUpdateInstance).toHaveBeenCalledWith(
+        1, expect.any(Array), true, expect.any(Array),
+      );
     });
 
     expect(await screen.findByText('Changes were saved successfully.')).toBeInTheDocument();
@@ -140,7 +212,9 @@ describe('ReportInstanceDetailPage', () => {
     await user.click(screen.getByRole('button', { name: /no, skip/i }));
 
     await waitFor(() => {
-      expect(mockedUpdateInstance).toHaveBeenCalledWith(1, expect.any(Array), false);
+      expect(mockedUpdateInstance).toHaveBeenCalledWith(
+        1, expect.any(Array), false, expect.any(Array),
+      );
     });
   });
 
