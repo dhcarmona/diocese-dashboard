@@ -472,6 +472,23 @@ class ServiceInstanceControllerTest {
   }
 
   @Test
+  @WithMockDashboardUser
+  void update_unknownCelebrantId_returns400() throws Exception {
+    ServiceInstance instance = buildFullInstance(1L, "Trinity", "Sunday Mass", "+50612345678");
+    when(serviceInstanceService.findById(1L)).thenReturn(Optional.of(instance));
+    when(responseService.findByServiceInstance(instance)).thenReturn(List.of());
+    when(celebrantService.findAllById(List.of(99L))).thenReturn(List.of());
+    String body = objectMapper.writeValueAsString(
+        new ServiceInstanceUpdateRequest(List.of(), List.of(99L), false));
+
+    mockMvc.perform(put("/api/service-instances/1")
+        .with(csrf())
+        .contentType(MediaType.APPLICATION_JSON)
+        .content(body))
+        .andExpect(status().isBadRequest());
+  }
+
+  @Test
   @WithMockUser(roles = "USER")
   void update_asUser_returns403() throws Exception {
     mockMvc.perform(put("/api/service-instances/1")
