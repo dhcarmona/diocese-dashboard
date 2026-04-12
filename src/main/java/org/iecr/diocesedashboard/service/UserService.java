@@ -6,6 +6,7 @@ import org.iecr.diocesedashboard.domain.objects.UserRole;
 import org.iecr.diocesedashboard.domain.repositories.UserRepository;
 import org.iecr.diocesedashboard.webapp.DashboardUserDetails;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.MessageSource;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -13,6 +14,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
 
@@ -20,13 +22,20 @@ import java.util.Set;
 @Service
 public class UserService implements UserDetailsService {
 
+  private static final Locale WHATSAPP_LOCALE = Locale.forLanguageTag("es");
+
   private final UserRepository userRepository;
   private final PasswordEncoder passwordEncoder;
+  private final WhatsAppService whatsAppService;
+  private final MessageSource messageSource;
 
   @Autowired
-  public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+  public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder,
+      WhatsAppService whatsAppService, MessageSource messageSource) {
     this.userRepository = userRepository;
     this.passwordEncoder = passwordEncoder;
+    this.whatsAppService = whatsAppService;
+    this.messageSource = messageSource;
   }
 
   /**
@@ -44,10 +53,12 @@ public class UserService implements UserDetailsService {
   }
 
   /**
-   * Convenience overload for creating a user without {@code fullName} or {@code phoneNumber}.
-   * Delegates to {@link #createUser(String, String, UserRole, Set, String, String)}.
+   * Convenience overload for creating a user without {@code fullName}, {@code phoneNumber},
+   * or {@code appBaseUrl}. Delegates to
+   * {@link #createUser(String, String, UserRole, Set, String, String, String)}.
    * Primarily used by the bootstrap initializer for ADMIN accounts; for REPORTER accounts
-   * prefer the 6-argument overload that accepts {@code fullName} and {@code phoneNumber}.
+   * prefer the overload that accepts {@code fullName}, {@code phoneNumber}, and
+   * {@code appBaseUrl}.
    *
    * @param username         the unique username
    * @param rawPassword      plain-text password (required for ADMIN; pass {@code null} for
@@ -58,14 +69,15 @@ public class UserService implements UserDetailsService {
    */
   public DashboardUser createUser(String username, String rawPassword,
       UserRole role, Set<Church> assignedChurches) {
-    return createUser(username, rawPassword, role, assignedChurches, null, null);
+    return createUser(username, rawPassword, role, assignedChurches, null, null, null);
   }
 
   /**
    * Creates and persists a new user account.
    * For ADMIN users, {@code rawPassword} is encoded and stored.
-   * For REPORTER users, pass {@code null} for {@code rawPassword}; provide fullName and
-   * phoneNumber instead.
+   * For REPORTER users, pass {@code null} for {@code rawPassword}; provide fullName,
+   * phoneNumber, and appBaseUrl instead. A welcome WhatsApp message is sent to the reporter
+   * if phoneNumber and appBaseUrl are provided.
    *
    * @param username         the unique username
    * @param rawPassword      plain-text password (ADMIN only; null for REPORTER)
@@ -73,10 +85,13 @@ public class UserService implements UserDetailsService {
    * @param assignedChurches the churches to assign
    * @param fullName         the reporter's full name (REPORTER only)
    * @param phoneNumber      the reporter's phone number in E.164 format (REPORTER only)
+   * @param appBaseUrl       the application base URL included in the welcome message
+   *                         (REPORTER only; null to skip the welcome message)
    * @return the saved {@link DashboardUser}
    */
   public DashboardUser createUser(String username, String rawPassword,
-      UserRole role, Set<Church> assignedChurches, String fullName, String phoneNumber) {
+      UserRole role, Set<Church> assignedChurches, String fullName, String phoneNumber,
+      String appBaseUrl) {
     DashboardUser user = new DashboardUser();
     user.setUsername(username);
     if (rawPassword != null && !rawPassword.isBlank()) {
@@ -87,7 +102,16 @@ public class UserService implements UserDetailsService {
     user.setFullName(fullName);
     user.setPhoneNumber(phoneNumber);
     user.setEnabled(true);
-    return userRepository.save(user);
+    DashboardUser saved = userRepository.save(user);
+    if (role == UserRole.REPORTER && phoneNumber != null && !phoneNumber.isBlank()
+        && appBaseUrl != null) {
+      String body = messageSource.getMessage(
+          "reporter.welcome.whatsapp.message",
+          new Object[]{fullName, username, appBaseUrl},
+          WHATSAPP_LOCALE);
+      whatsAppService.sendMessageAndLog(phoneNumber, body, username);
+    }
+    return saved;
   }
 
   /**

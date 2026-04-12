@@ -48,9 +48,9 @@ List<ResponseDetail> responses) {
     Set<Celebrant> celebrantSet = instance.getCelebrants();
     List<CelebrantInfo> celebrantInfos = celebrantSet == null ? Collections.emptyList()
         : celebrantSet.stream()
-            .map(c -> new CelebrantInfo(c.getId(), c.getName()))
-            .sorted(Comparator.comparing(CelebrantInfo::name))
-            .toList();
+        .map(c -> new CelebrantInfo(c.getId(), c.getName()))
+        .sorted(Comparator.comparing(CelebrantInfo::name))
+        .toList();
     List<ResponseDetail> details = responses.stream()
         .map(r -> new ResponseDetail(
             r.getId(),
