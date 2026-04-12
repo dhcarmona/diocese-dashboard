@@ -170,14 +170,20 @@
       "noChurches": "No churches have been added yet.",
       "selectedCount": "{{count}} church(es) selected",
       "submit": "Create & Send Links",
-      "reset": "Reset"
+      "reset": "Reset",
+      "scheduleButton": "Schedule"
     },
     "feedback": {
       "created": "{{count}} reporter link(s) created and sent.",
       "partialSuccess": "{{count}} link(s) created. The following churches had no reporter assigned and were skipped: {{skipped}}.",
       "createError": "We could not create the reporter links right now.",
       "revoked": "The reporter link was revoked.",
-      "revokeError": "We could not revoke the reporter link right now."
+      "revokeError": "We could not revoke the reporter link right now.",
+      "scheduleCreated": "Schedule saved successfully.",
+      "scheduleUpdated": "Schedule updated successfully.",
+      "scheduleDeleted": "Schedule removed.",
+      "scheduleError": "We could not save the schedule right now.",
+      "scheduleDeleteError": "We could not remove the schedule right now."
     },
     "validation": {
       "churchesRequired": "Select at least one church."
@@ -191,6 +197,17 @@
     },
     "actions": {
       "revoke": "Revoke link"
+    },
+    "schedules": {
+      "title": "Scheduled Links",
+      "subtitle": "{{count}} active schedule(s)",
+      "empty": "No link schedules configured.",
+      "days": "Days: {{days}}",
+      "hour": "Time: {{hour}}:00 (Costa Rica)",
+      "lastTriggered": "Last sent: {{date}}",
+      "neverTriggered": "Never sent yet",
+      "edit": "Edit schedule",
+      "delete": "Delete schedule"
     }
   },
   "reporterLink": {
@@ -538,5 +555,25 @@
         "COLONES": "CRC"
       }
     }
+  },
+  "scheduleDialog": {
+    "titleCreate": "Schedule Link Creation",
+    "titleEdit": "Edit Schedule",
+    "daysLabel": "Days of the week",
+    "hourLabel": "Time of day (Costa Rica, UTC-6)",
+    "confirm": "Save Schedule",
+    "cancel": "Cancel",
+    "daysRequired": "Select at least one day.",
+    "days": {
+      "MONDAY": "Monday",
+      "TUESDAY": "Tuesday",
+      "WEDNESDAY": "Wednesday",
+      "THURSDAY": "Thursday",
+      "FRIDAY": "Friday",
+      "SATURDAY": "Saturday",
+      "SUNDAY": "Sunday"
+    },
+    "churchesLabel": "Churches",
+    "churchesRequired": "Select at least one church."
   }
 }

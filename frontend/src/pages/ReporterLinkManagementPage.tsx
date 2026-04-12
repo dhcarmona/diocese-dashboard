@@ -1,4 +1,5 @@
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import Alert from '@mui/material/Alert';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
@@ -23,6 +24,14 @@ import { type FormEvent, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { type Church, getChurches } from '../api/churches';
 import {
+  type LinkSchedule,
+  type LinkSchedulePayload,
+  createLinkSchedule,
+  deleteLinkSchedule,
+  getLinkSchedules,
+  updateLinkSchedule,
+} from '../api/linkSchedules';
+import {
   createReporterLinksBulk,
   getReporterLinks,
   revokeReporterLink,
@@ -30,6 +39,7 @@ import {
 } from '../api/reporterLinks';
 import { type ServiceTemplate, getServiceTemplates } from '../api/serviceTemplates';
 import PageHeader from '../components/PageHeader';
+import ScheduleDialog, { type ScheduleFormValues } from '../components/ScheduleDialog';
 
 type FeedbackSeverity = 'success' | 'error' | 'warning';
 
@@ -44,6 +54,7 @@ export default function ReporterLinkManagementPage() {
   const [templates, setTemplates] = useState<ServiceTemplate[]>([]);
   const [allChurches, setAllChurches] = useState<Church[]>([]);
   const [activeLinks, setActiveLinks] = useState<ReporterLink[]>([]);
+  const [schedules, setSchedules] = useState<LinkSchedule[]>([]);
   const [loadingData, setLoadingData] = useState(true);
   const [loadError, setLoadError] = useState(false);
 
@@ -54,6 +65,10 @@ export default function ReporterLinkManagementPage() {
   const [submitting, setSubmitting] = useState(false);
   const [feedback, setFeedback] = useState<FeedbackState | null>(null);
 
+  // Schedule dialog state
+  const [scheduleDialogOpen, setScheduleDialogOpen] = useState(false);
+  const [editingSchedule, setEditingSchedule] = useState<LinkSchedule | null>(null);
+
   useEffect(() => {
     let active = true;
 
@@ -61,15 +76,17 @@ export default function ReporterLinkManagementPage() {
       setLoadingData(true);
       setLoadError(false);
       try {
-        const [loadedTemplates, loadedChurches, loadedLinks] = await Promise.all([
+        const [loadedTemplates, loadedChurches, loadedLinks, loadedSchedules] = await Promise.all([
           getServiceTemplates(),
           getChurches(),
           getReporterLinks(),
+          getLinkSchedules(),
         ]);
         if (!active) return;
         setTemplates(loadedTemplates);
         setAllChurches(loadedChurches);
         setActiveLinks(loadedLinks);
+        setSchedules(loadedSchedules);
       } catch {
         if (active) setLoadError(true);
       } finally {
@@ -164,6 +181,58 @@ export default function ReporterLinkManagementPage() {
     }
   }
 
+  function openCreateScheduleDialog() {
+    setEditingSchedule(null);
+    setScheduleDialogOpen(true);
+  }
+
+  function openEditScheduleDialog(schedule: LinkSchedule) {
+    setEditingSchedule(schedule);
+    setScheduleDialogOpen(true);
+  }
+
+  async function handleScheduleConfirm(values: ScheduleFormValues) {
+    if (!editingSchedule && (!selectedTemplateId || selectedChurches.length === 0)) return;
+    setScheduleDialogOpen(false);
+
+    const payload: LinkSchedulePayload = {
+      serviceTemplateId: editingSchedule
+        ? editingSchedule.serviceTemplateId
+        : (selectedTemplateId as number),
+      churchNames: values.churchNames ?? selectedChurches,
+      daysOfWeek: values.daysOfWeek,
+      sendHour: values.sendHour,
+    };
+
+    try {
+      if (editingSchedule) {
+        const updated = await updateLinkSchedule(editingSchedule.id, payload);
+        setSchedules((prev) => prev.map((ss) => (ss.id === updated.id ? updated : ss)));
+        setFeedback({ severity: 'success', message: t('reporterLinks.feedback.scheduleUpdated') });
+      } else {
+        const created = await createLinkSchedule(payload);
+        setSchedules((prev) => [...prev, created]);
+        resetForm();
+        setFeedback({ severity: 'success', message: t('reporterLinks.feedback.scheduleCreated') });
+      }
+    } catch {
+      setFeedback({ severity: 'error', message: t('reporterLinks.feedback.scheduleError') });
+    }
+  }
+
+  async function handleDeleteSchedule(id: number) {
+    try {
+      await deleteLinkSchedule(id);
+      setSchedules((prev) => prev.filter((ss) => ss.id !== id));
+      setFeedback({ severity: 'success', message: t('reporterLinks.feedback.scheduleDeleted') });
+    } catch {
+      setFeedback({
+        severity: 'error',
+        message: t('reporterLinks.feedback.scheduleDeleteError'),
+      });
+    }
+  }
+
   if (loadingData) {
     return (
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mt: 4 }}>
@@ -191,6 +260,9 @@ export default function ReporterLinkManagementPage() {
     selectedDate.isValid() &&
     selectedChurches.length > 0 &&
     !submitting;
+
+  const canSchedule =
+    selectedTemplateId !== '' && selectedChurches.length > 0 && !submitting;
 
   return (
     <>
@@ -330,6 +402,15 @@ export default function ReporterLinkManagementPage() {
                   type="button"
                   variant="outlined"
                   size="large"
+                  disabled={!canSchedule}
+                  onClick={openCreateScheduleDialog}
+                >
+                  {t('reporterLinks.form.scheduleButton')}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outlined"
+                  size="large"
                   disabled={submitting}
                   onClick={resetForm}
                 >
@@ -337,6 +418,91 @@ export default function ReporterLinkManagementPage() {
                 </Button>
               </Stack>
             </Stack>
+          </CardContent>
+        </Card>
+
+        {/* Scheduled links */}
+        <Card elevation={2} sx={{ borderRadius: 4 }}>
+          <CardContent sx={{ p: 0 }}>
+            <Box sx={{ p: 3 }}>
+              <Typography variant="h5" component="h2" fontWeight={700}>
+                {t('reporterLinks.schedules.title')}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                {t('reporterLinks.schedules.subtitle', { count: schedules.length })}
+              </Typography>
+            </Box>
+            <Divider />
+
+            {schedules.length === 0 ? (
+              <Box sx={{ p: 3 }}>
+                <Alert severity="info">{t('reporterLinks.schedules.empty')}</Alert>
+              </Box>
+            ) : (
+              <List disablePadding>
+                {schedules.map((schedule, index) => (
+                  <Box component="li" key={schedule.id} sx={{ listStyle: 'none' }}>
+                    {index > 0 && <Divider component="div" />}
+                    <ListItem
+                      sx={{ px: 3, py: 2 }}
+                      secondaryAction={
+                        <Stack direction="row" spacing={0.5}>
+                          <IconButton
+                            edge="end"
+                            aria-label={t('reporterLinks.schedules.edit')}
+                            onClick={() => openEditScheduleDialog(schedule)}
+                          >
+                            <EditOutlinedIcon />
+                          </IconButton>
+                          <IconButton
+                            edge="end"
+                            aria-label={t('reporterLinks.schedules.delete')}
+                            color="error"
+                            onClick={() => void handleDeleteSchedule(schedule.id)}
+                          >
+                            <DeleteOutlineIcon />
+                          </IconButton>
+                        </Stack>
+                      }
+                    >
+                      <ListItemText
+                        primary={
+                          <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
+                            <Typography variant="body1" fontWeight={700}>
+                              {schedule.serviceTemplateName}
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary">
+                              &mdash; {schedule.churchNames.join(', ')}
+                            </Typography>
+                          </Stack>
+                        }
+                        secondary={
+                          <Stack component="span" spacing={0.25}>
+                            <Typography component="span" variant="body2" color="text.secondary">
+                              {t('reporterLinks.schedules.days', {
+                                days: schedule.daysOfWeek
+                                  .map((dd) => t(`scheduleDialog.days.${dd}`))
+                                  .join(', '),
+                              })}
+                            </Typography>
+                            <Typography component="span" variant="body2" color="text.secondary">
+                              {t('reporterLinks.schedules.hour', { hour: schedule.sendHour })}
+                            </Typography>
+                            <Typography component="span" variant="body2" color="text.secondary">
+                              {schedule.lastTriggeredDate
+                                ? t('reporterLinks.schedules.lastTriggered', {
+                                    date: dayjs(schedule.lastTriggeredDate).format('DD/MM/YYYY'),
+                                  })
+                                : t('reporterLinks.schedules.neverTriggered')}
+                            </Typography>
+                          </Stack>
+                        }
+                      />
+                    </ListItem>
+                  </Box>
+                ))}
+              </List>
+            )}
           </CardContent>
         </Card>
 
@@ -409,6 +575,23 @@ export default function ReporterLinkManagementPage() {
           </CardContent>
         </Card>
       </Box>
+
+      <ScheduleDialog
+        key={editingSchedule ? `edit-${editingSchedule.id}` : 'create'}
+        open={scheduleDialogOpen}
+        initialValues={
+          editingSchedule
+            ? {
+                daysOfWeek: editingSchedule.daysOfWeek,
+                sendHour: editingSchedule.sendHour,
+                churchNames: editingSchedule.churchNames,
+              }
+            : undefined
+        }
+        allChurches={editingSchedule ? allChurches : undefined}
+        onConfirm={(values) => void handleScheduleConfirm(values)}
+        onCancel={() => setScheduleDialogOpen(false)}
+      />
     </>
   );
 }
