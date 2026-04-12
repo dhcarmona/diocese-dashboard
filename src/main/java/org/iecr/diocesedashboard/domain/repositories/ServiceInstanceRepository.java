@@ -13,7 +13,7 @@ import java.util.Optional;
 
 public interface ServiceInstanceRepository extends JpaRepository<ServiceInstance, Long> {
 
-  @Query("SELECT i FROM ServiceInstance i LEFT JOIN FETCH i.celebrants WHERE i.id = :id")
+  @Query("SELECT DISTINCT i FROM ServiceInstance i LEFT JOIN FETCH i.celebrants WHERE i.id = :id")
   Optional<ServiceInstance> findByIdWithCelebrants(@Param("id") Long id);
 
   List<ServiceInstance> findByChurch(Church church);

@@ -2,7 +2,11 @@ package org.iecr.diocesedashboard.webapp.controller;
 
 import java.util.List;
 
-/** Request body for updating the responses of an existing ServiceInstance. */
+/**
+ * Request body for updating an existing ServiceInstance. Supports updating survey responses,
+ * the list of celebrants (optional — omit or set to null to leave unchanged), and whether
+ * to notify the reporter via WhatsApp.
+ */
 public record ServiceInstanceUpdateRequest(
 List<ResponseEntry> responses,
 List<Long> celebrantIds,

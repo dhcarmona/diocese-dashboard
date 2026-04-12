@@ -196,13 +196,22 @@ public class ServiceInstanceController {
 
     if (request.celebrantIds() != null) {
       List<Celebrant> resolved = celebrantService.findAllById(request.celebrantIds());
+      if (resolved.size() != request.celebrantIds().size()) {
+        Set<Long> resolvedIds = resolved.stream()
+            .map(Celebrant::getId).collect(Collectors.toSet());
+        List<Long> missing = request.celebrantIds().stream()
+            .filter(celebrantId -> !resolvedIds.contains(celebrantId))
+            .toList();
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+            "Unknown celebrant IDs: " + missing);
+      }
       Set<Long> oldIds = instance.getCelebrants() == null ? Set.of()
           : instance.getCelebrants().stream().map(Celebrant::getId).collect(Collectors.toSet());
       Set<Long> newIds = resolved.stream().map(Celebrant::getId).collect(Collectors.toSet());
       if (!oldIds.equals(newIds)) {
         String oldNames = instance.getCelebrants() == null ? ""
             : instance.getCelebrants().stream()
-                .map(Celebrant::getName).sorted().collect(Collectors.joining(", "));
+            .map(Celebrant::getName).sorted().collect(Collectors.joining(", "));
         String newNames = resolved.stream()
             .map(Celebrant::getName).sorted().collect(Collectors.joining(", "));
         changeSummaries.add("\"Celebrants\": \"" + oldNames + "\" → \"" + newNames + "\"");
