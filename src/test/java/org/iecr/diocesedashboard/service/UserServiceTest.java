@@ -18,6 +18,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.MessageSource;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -141,7 +142,7 @@ class UserServiceTest {
     when(userRepository.save(any(DashboardUser.class))).thenAnswer(inv -> inv.getArgument(0));
     when(messageSource.getMessage(anyString(), any(Object[].class), any()))
         .thenReturn("Welcome message");
-    org.mockito.Mockito.doThrow(new RuntimeException("Twilio error"))
+    Mockito.doThrow(new RuntimeException("Twilio error"))
         .when(whatsAppService).sendMessageAndLog(any(), any(), any());
 
     DashboardUser result = userService.createUser("rep", null,

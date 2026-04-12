@@ -170,14 +170,20 @@
       "noChurches": "Aún no se han agregado iglesias.",
       "selectedCount": "{{count}} iglesia(s) seleccionada(s)",
       "submit": "Crear y enviar enlaces",
-      "reset": "Reiniciar"
+      "reset": "Reiniciar",
+      "scheduleButton": "Programar"
     },
     "feedback": {
       "created": "Se crearon y enviaron {{count}} enlace(s) de reportero.",
       "partialSuccess": "Se crearon {{count}} enlace(s). Las siguientes iglesias no tenían reportero asignado y fueron omitidas: {{skipped}}.",
       "createError": "No se pudieron crear los enlaces de reportero en este momento.",
       "revoked": "El enlace de reportero fue revocado.",
-      "revokeError": "No se pudo revocar el enlace de reportero en este momento."
+      "revokeError": "No se pudo revocar el enlace de reportero en este momento.",
+      "scheduleCreated": "Programación guardada correctamente.",
+      "scheduleUpdated": "Programación actualizada correctamente.",
+      "scheduleDeleted": "Programación eliminada.",
+      "scheduleError": "No se pudo guardar la programación en este momento.",
+      "scheduleDeleteError": "No se pudo eliminar la programación en este momento."
     },
     "validation": {
       "churchesRequired": "Seleccione al menos una iglesia."
@@ -191,6 +197,17 @@
     },
     "actions": {
       "revoke": "Revocar enlace"
+    },
+    "schedules": {
+      "title": "Envíos programados",
+      "subtitle": "{{count}} programación(es) activa(s)",
+      "empty": "No hay programaciones de enlaces configuradas.",
+      "days": "Días: {{days}}",
+      "hour": "Hora: {{hour}}:00 (Costa Rica)",
+      "lastTriggered": "Último envío: {{date}}",
+      "neverTriggered": "Nunca enviado",
+      "edit": "Editar programación",
+      "delete": "Eliminar programación"
     }
   },
   "reporterLink": {
@@ -538,5 +555,25 @@
         "COLONES": "CRC"
       }
     }
+  },
+  "scheduleDialog": {
+    "titleCreate": "Programar creación de enlaces",
+    "titleEdit": "Editar programación",
+    "daysLabel": "Días de la semana",
+    "hourLabel": "Hora del día (Costa Rica, UTC-6)",
+    "confirm": "Guardar programación",
+    "cancel": "Cancelar",
+    "daysRequired": "Seleccione al menos un día.",
+    "days": {
+      "MONDAY": "Lunes",
+      "TUESDAY": "Martes",
+      "WEDNESDAY": "Miércoles",
+      "THURSDAY": "Jueves",
+      "FRIDAY": "Viernes",
+      "SATURDAY": "Sábado",
+      "SUNDAY": "Domingo"
+    },
+    "churchesLabel": "Congregaciones",
+    "churchesRequired": "Seleccione al menos una congregación."
   }
 }
