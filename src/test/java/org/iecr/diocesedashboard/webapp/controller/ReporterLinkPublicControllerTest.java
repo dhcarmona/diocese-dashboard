@@ -19,8 +19,8 @@ import org.iecr.diocesedashboard.domain.objects.ServiceInstance;
 import org.iecr.diocesedashboard.domain.objects.ServiceTemplate;
 import org.iecr.diocesedashboard.domain.objects.UserRole;
 import org.iecr.diocesedashboard.service.CelebrantService;
+import org.iecr.diocesedashboard.service.ReporterLinkPublicSubmissionService;
 import org.iecr.diocesedashboard.service.ReporterLinkService;
-import org.iecr.diocesedashboard.service.ServiceSubmissionService;
 import org.iecr.diocesedashboard.webapp.SecurityConfig;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -56,7 +56,7 @@ class ReporterLinkPublicControllerTest {
   private CelebrantService celebrantService;
 
   @MockBean
-  private ServiceSubmissionService serviceSubmissionService;
+  private ReporterLinkPublicSubmissionService submissionService;
 
   @MockBean
   private UserDetailsService userDetailsService;
@@ -150,11 +150,11 @@ class ReporterLinkPublicControllerTest {
   void submit_activeLink_returns201AndClaimsToken() throws Exception {
     when(reporterLinkService.findByToken(TOKEN)).thenReturn(
         Optional.of(buildLink(TOKEN, 5L, "Trinity")));
-    when(reporterLinkService.claimToken(TOKEN)).thenReturn(true);
     ServiceInstance instance = new ServiceInstance();
     instance.setId(42L);
-    when(serviceSubmissionService.submit(eq(2L), any(ServiceInstanceRequest.class), any()))
-        .thenReturn(instance);
+    when(submissionService.claimAndSubmit(any(ReporterLink.class), eq(TOKEN),
+        any(ServiceInstanceRequest.class), any(DashboardUser.class)))
+        .thenReturn(Optional.of(instance));
 
     ReporterLinkSubmitRequest request = new ReporterLinkSubmitRequest(
         List.of(10L), LocalDate.of(2024, 1, 14),
@@ -166,7 +166,8 @@ class ReporterLinkPublicControllerTest {
         .andExpect(status().isCreated())
         .andExpect(jsonPath("$.serviceInstanceId").value(42));
 
-    verify(reporterLinkService).claimToken(TOKEN);
+    verify(submissionService).claimAndSubmit(any(ReporterLink.class), eq(TOKEN),
+        any(ServiceInstanceRequest.class), any(DashboardUser.class));
   }
 
   @Test
@@ -201,11 +202,11 @@ class ReporterLinkPublicControllerTest {
   void submit_noCsrfRequired_publiclyAccessible() throws Exception {
     when(reporterLinkService.findByToken(TOKEN)).thenReturn(
         Optional.of(buildLink(TOKEN, 5L, "Trinity")));
-    when(reporterLinkService.claimToken(TOKEN)).thenReturn(true);
     ServiceInstance instance = new ServiceInstance();
     instance.setId(7L);
-    when(serviceSubmissionService.submit(eq(2L), any(ServiceInstanceRequest.class), any()))
-        .thenReturn(instance);
+    when(submissionService.claimAndSubmit(any(ReporterLink.class), eq(TOKEN),
+        any(ServiceInstanceRequest.class), any(DashboardUser.class)))
+        .thenReturn(Optional.of(instance));
 
     ReporterLinkSubmitRequest request = new ReporterLinkSubmitRequest(
         List.of(), LocalDate.now(), List.of());
@@ -221,7 +222,9 @@ class ReporterLinkPublicControllerTest {
   void submit_tokenAlreadyClaimed_returns409() throws Exception {
     when(reporterLinkService.findByToken(TOKEN)).thenReturn(
         Optional.of(buildLink(TOKEN, 5L, "Trinity")));
-    when(reporterLinkService.claimToken(TOKEN)).thenReturn(false);
+    when(submissionService.claimAndSubmit(any(ReporterLink.class), eq(TOKEN),
+        any(ServiceInstanceRequest.class), any(DashboardUser.class)))
+        .thenReturn(Optional.empty());
 
     ReporterLinkSubmitRequest request = new ReporterLinkSubmitRequest(
         List.of(), LocalDate.of(2024, 1, 14), List.of());

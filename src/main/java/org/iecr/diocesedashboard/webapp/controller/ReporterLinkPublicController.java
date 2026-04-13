@@ -3,10 +3,9 @@ package org.iecr.diocesedashboard.webapp.controller;
 import jakarta.validation.Valid;
 import org.iecr.diocesedashboard.domain.objects.DashboardUser;
 import org.iecr.diocesedashboard.domain.objects.ReporterLink;
-import org.iecr.diocesedashboard.domain.objects.ServiceInstance;
 import org.iecr.diocesedashboard.service.CelebrantService;
+import org.iecr.diocesedashboard.service.ReporterLinkPublicSubmissionService;
 import org.iecr.diocesedashboard.service.ReporterLinkService;
-import org.iecr.diocesedashboard.service.ServiceSubmissionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -31,14 +30,15 @@ public class ReporterLinkPublicController {
 
   private final ReporterLinkService reporterLinkService;
   private final CelebrantService celebrantService;
-  private final ServiceSubmissionService serviceSubmissionService;
+  private final ReporterLinkPublicSubmissionService submissionService;
 
   @Autowired
   public ReporterLinkPublicController(ReporterLinkService reporterLinkService,
-      CelebrantService celebrantService, ServiceSubmissionService serviceSubmissionService) {
+      CelebrantService celebrantService,
+      ReporterLinkPublicSubmissionService submissionService) {
     this.reporterLinkService = reporterLinkService;
     this.celebrantService = celebrantService;
-    this.serviceSubmissionService = serviceSubmissionService;
+    this.submissionService = submissionService;
   }
 
   /**
@@ -98,12 +98,9 @@ public class ReporterLinkPublicController {
         request.celebrantIds(),
         request.serviceDate(),
         request.responses());
-    if (!reporterLinkService.claimToken(token)) {
-      throw new ResponseStatusException(HttpStatus.CONFLICT,
-          "This reporter link has already been used");
-    }
-    ServiceInstance created = serviceSubmissionService.submit(
-        link.getServiceTemplate().getId(), instanceRequest, reporter);
+    var created = submissionService.claimAndSubmit(link, token, instanceRequest, reporter)
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT,
+            "This reporter link has already been used"));
     return ResponseEntity.status(HttpStatus.CREATED)
         .body(ReporterLinkSubmissionResponse.from(created));
   }
