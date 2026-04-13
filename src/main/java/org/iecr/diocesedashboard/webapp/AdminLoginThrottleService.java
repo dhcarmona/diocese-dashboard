@@ -2,11 +2,11 @@ package org.iecr.diocesedashboard.webapp;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.Ticker;
 
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.concurrent.TimeUnit;
 
 /** Tracks failed admin login attempts and enforces throttling plus temporary lockouts. */
 class AdminLoginThrottleService {
@@ -21,11 +21,15 @@ class AdminLoginThrottleService {
   private final Cache<String, LoginAttemptState> attemptStore;
 
   AdminLoginThrottleService(Clock clock) {
+    this(clock, Ticker.systemTicker());
+  }
+
+  AdminLoginThrottleService(Clock clock, Ticker ticker) {
     this.clock = clock;
     this.attemptStore = Caffeine.newBuilder()
         .maximumSize(MAX_TRACKED_USERNAMES)
         .expireAfterWrite(Duration.ofSeconds(LOGIN_LOCKOUT_SECONDS))
-        .ticker(() -> TimeUnit.MILLISECONDS.toNanos(clock.millis()))
+        .ticker(ticker)
         .build();
   }
 

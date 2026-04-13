@@ -209,6 +209,25 @@ describe('LoginPage', () => {
       ).toBeInTheDocument();
     });
 
+    it('shows short lockout times in seconds when login returns a short retry-after', async () => {
+      const user = userEvent.setup();
+      mockedSignIn.mockRejectedValueOnce({
+        response: { status: 429, headers: { 'retry-after': '5' } },
+        isAxiosError: true,
+      });
+
+      renderLoginPage({ signIn: mockedSignIn });
+
+      await user.click(screen.getByRole('button', { name: /admin\? sign in with password/i }));
+      await user.type(screen.getByLabelText(/username/i), 'demo');
+      await user.type(screen.getByLabelText(/password/i), 'secret');
+      await user.click(screen.getByRole('button', { name: /^sign in$/i }));
+
+      expect(
+        await screen.findByText('Too many attempts. Please wait 5 seconds before trying again.'),
+      ).toBeInTheDocument();
+    });
+
     it('shows reporter OTP lockout time when verification returns 429', async () => {
       const user = userEvent.setup();
       const mockedReporterSignIn = vi.fn().mockRejectedValueOnce({

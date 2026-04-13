@@ -84,7 +84,7 @@ export function isTooManyRequestsError(error: unknown): boolean {
   return axios.isAxiosError(error) && error.response?.status === 429;
 }
 
-export function getRetryAfterMinutes(error: unknown): number | null {
+export function getRetryAfterSeconds(error: unknown): number | null {
   if (!axios.isAxiosError(error)) {
     return null;
   }
@@ -92,7 +92,7 @@ export function getRetryAfterMinutes(error: unknown): number | null {
   if (typeof retryAfterHeader === 'string') {
     const retryAfterSeconds = Number.parseInt(retryAfterHeader, 10);
     if (!Number.isNaN(retryAfterSeconds) && retryAfterSeconds > 0) {
-      return Math.max(1, Math.ceil(retryAfterSeconds / 60));
+      return retryAfterSeconds;
     }
   }
   return null;

@@ -11,6 +11,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.github.benmanes.caffeine.cache.Ticker;
 import org.iecr.diocesedashboard.domain.objects.DashboardUser;
 import org.iecr.diocesedashboard.domain.objects.UserRole;
 import org.junit.jupiter.api.BeforeEach;
@@ -25,6 +26,7 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 @ExtendWith(MockitoExtension.class)
 class ReporterOtpServiceTest {
@@ -36,6 +38,7 @@ class ReporterOtpServiceTest {
   private UserService userService;
 
   private AdjustableClock clock;
+  private AdjustableTicker ticker;
   private ReporterOtpService reporterOtpService;
 
   private DashboardUser buildReporter(String username) {
@@ -55,8 +58,9 @@ class ReporterOtpServiceTest {
     messageSource.setBasename("messages");
     messageSource.setDefaultEncoding("UTF-8");
     clock = new AdjustableClock(Instant.parse("2026-04-13T12:00:00Z"), ZoneId.of("UTC"));
+    ticker = new AdjustableTicker();
     reporterOtpService =
-        new ReporterOtpService(whatsAppService, userService, messageSource, clock);
+        new ReporterOtpService(whatsAppService, userService, messageSource, clock, ticker);
   }
 
   @Test
@@ -236,7 +240,7 @@ class ReporterOtpServiceTest {
     for (int ii = 0; ii < ReporterOtpService.MAX_FAILED_VERIFY_ATTEMPTS; ii++) {
       result = reporterOtpService.verifyAndConsumeOtp("rep1", "999999");
       if (ii < ReporterOtpService.MAX_FAILED_VERIFY_ATTEMPTS - 1) {
-        clock.advanceSeconds(ReporterOtpService.VERIFY_THROTTLE_SECONDS);
+        advanceSeconds(ReporterOtpService.VERIFY_THROTTLE_SECONDS);
       }
     }
 
@@ -244,6 +248,11 @@ class ReporterOtpServiceTest {
     assertThat(result.retryAfterSeconds()).isEqualTo(ReporterOtpService.VERIFY_LOCKOUT_SECONDS);
     assertThat(reporterOtpService.verifyAndConsumeOtp("rep1", "999999").isAttemptLimitExceeded())
         .isTrue();
+  }
+
+  private void advanceSeconds(long seconds) {
+    clock.advanceSeconds(seconds);
+    ticker.advanceSeconds(seconds);
   }
 
   private static final class AdjustableClock extends Clock {
@@ -273,6 +282,20 @@ class ReporterOtpServiceTest {
 
     private void advanceSeconds(long seconds) {
       currentInstant = currentInstant.plusSeconds(seconds);
+    }
+  }
+
+  private static final class AdjustableTicker implements Ticker {
+
+    private long nanos;
+
+    @Override
+    public long read() {
+      return nanos;
+    }
+
+    private void advanceSeconds(long seconds) {
+      nanos += TimeUnit.SECONDS.toNanos(seconds);
     }
   }
 }

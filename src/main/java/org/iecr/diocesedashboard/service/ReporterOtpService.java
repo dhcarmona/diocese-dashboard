@@ -2,6 +2,7 @@ package org.iecr.diocesedashboard.service;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.Ticker;
 import org.iecr.diocesedashboard.domain.objects.DashboardUser;
 import org.iecr.diocesedashboard.domain.objects.UserRole;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,7 +14,6 @@ import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Locale;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Manages one-time passcodes (OTPs) for reporter user authentication.
@@ -43,6 +43,7 @@ public class ReporterOtpService {
   private final UserService userService;
   private final MessageSource messageSource;
   private final Clock clock;
+  private final Ticker ticker;
   private final SecureRandom secureRandom = new SecureRandom();
   private final Cache<String, OtpEntry> otpStore;
   private final Cache<String, RequestAttemptState> requestAttemptStore;
@@ -51,7 +52,12 @@ public class ReporterOtpService {
   @Autowired
   public ReporterOtpService(
       WhatsAppService whatsAppService, UserService userService, MessageSource messageSource) {
-    this(whatsAppService, userService, messageSource, Clock.systemUTC());
+    this(
+        whatsAppService,
+        userService,
+        messageSource,
+        Clock.systemUTC(),
+        Ticker.systemTicker());
   }
 
   ReporterOtpService(
@@ -59,10 +65,20 @@ public class ReporterOtpService {
       UserService userService,
       MessageSource messageSource,
       Clock clock) {
+    this(whatsAppService, userService, messageSource, clock, Ticker.systemTicker());
+  }
+
+  ReporterOtpService(
+      WhatsAppService whatsAppService,
+      UserService userService,
+      MessageSource messageSource,
+      Clock clock,
+      Ticker ticker) {
     this.whatsAppService = whatsAppService;
     this.userService = userService;
     this.messageSource = messageSource;
     this.clock = clock;
+    this.ticker = ticker;
     this.otpStore = buildCache(Duration.ofSeconds(OTP_TTL_SECONDS));
     this.requestAttemptStore = buildCache(Duration.ofSeconds(REQUEST_LOCKOUT_SECONDS));
     this.verifyAttemptStore = buildCache(Duration.ofSeconds(VERIFY_LOCKOUT_SECONDS));
@@ -228,7 +244,7 @@ public class ReporterOtpService {
     return Caffeine.newBuilder()
         .maximumSize(MAX_TRACKED_USERNAMES)
         .expireAfterWrite(expiryDuration)
-        .ticker(() -> TimeUnit.MILLISECONDS.toNanos(clock.millis()))
+        .ticker(ticker)
         .build();
   }
 
