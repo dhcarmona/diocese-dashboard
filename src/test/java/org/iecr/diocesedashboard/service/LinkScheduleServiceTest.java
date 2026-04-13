@@ -3,6 +3,7 @@ package org.iecr.diocesedashboard.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyIterable;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -160,8 +161,7 @@ class LinkScheduleServiceTest {
     schedule.setSendHour(8);
     schedule.setDaysOfWeek(Set.of(DayOfWeek.SUNDAY));
 
-    when(churchService.findById("Church A")).thenReturn(Optional.of(churchA));
-    when(churchService.findById("Church B")).thenReturn(Optional.of(churchB));
+    when(churchService.findAllById(anyIterable())).thenReturn(List.of(churchA, churchB));
     when(reporterLinkService.createLinksForChurches(any(), any(), any(), any()))
         .thenReturn(new ReporterLinkService.BulkCreateResult(List.of(), List.of()));
     when(repository.save(any())).thenAnswer(inv -> inv.getArgument(0));
@@ -182,7 +182,7 @@ class LinkScheduleServiceTest {
     schedule.setChurchNames(Set.of("Ghost Church"));
     schedule.setDaysOfWeek(Set.of(DayOfWeek.MONDAY));
 
-    when(churchService.findById("Ghost Church")).thenReturn(Optional.empty());
+    when(churchService.findAllById(anyIterable())).thenReturn(List.of());
 
     linkScheduleService.executeSchedule(schedule, "https://example.com", LocalDate.of(2024, 4, 15));
 
