@@ -152,7 +152,7 @@ class ReporterLinkPublicControllerTest {
         Optional.of(buildLink(TOKEN, 5L, "Trinity")));
     ServiceInstance instance = new ServiceInstance();
     instance.setId(42L);
-    when(submissionService.claimAndSubmit(any(ReporterLink.class), eq(TOKEN),
+    when(submissionService.claimAndSubmit(any(ReporterLink.class),
         any(ServiceInstanceRequest.class), any(DashboardUser.class)))
         .thenReturn(Optional.of(instance));
 
@@ -166,7 +166,7 @@ class ReporterLinkPublicControllerTest {
         .andExpect(status().isCreated())
         .andExpect(jsonPath("$.serviceInstanceId").value(42));
 
-    verify(submissionService).claimAndSubmit(any(ReporterLink.class), eq(TOKEN),
+    verify(submissionService).claimAndSubmit(any(ReporterLink.class),
         any(ServiceInstanceRequest.class), any(DashboardUser.class));
   }
 
@@ -204,7 +204,7 @@ class ReporterLinkPublicControllerTest {
         Optional.of(buildLink(TOKEN, 5L, "Trinity")));
     ServiceInstance instance = new ServiceInstance();
     instance.setId(7L);
-    when(submissionService.claimAndSubmit(any(ReporterLink.class), eq(TOKEN),
+    when(submissionService.claimAndSubmit(any(ReporterLink.class),
         any(ServiceInstanceRequest.class), any(DashboardUser.class)))
         .thenReturn(Optional.of(instance));
 
@@ -222,7 +222,7 @@ class ReporterLinkPublicControllerTest {
   void submit_tokenAlreadyClaimed_returns409() throws Exception {
     when(reporterLinkService.findByToken(TOKEN)).thenReturn(
         Optional.of(buildLink(TOKEN, 5L, "Trinity")));
-    when(submissionService.claimAndSubmit(any(ReporterLink.class), eq(TOKEN),
+    when(submissionService.claimAndSubmit(any(ReporterLink.class),
         any(ServiceInstanceRequest.class), any(DashboardUser.class)))
         .thenReturn(Optional.empty());
 

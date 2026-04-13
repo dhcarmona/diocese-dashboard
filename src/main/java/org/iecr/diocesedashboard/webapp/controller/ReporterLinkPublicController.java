@@ -98,7 +98,7 @@ public class ReporterLinkPublicController {
         request.celebrantIds(),
         request.serviceDate(),
         request.responses());
-    var created = submissionService.claimAndSubmit(link, token, instanceRequest, reporter)
+    var created = submissionService.claimAndSubmit(link, instanceRequest, reporter)
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT,
             "This reporter link has already been used"));
     return ResponseEntity.status(HttpStatus.CREATED)
