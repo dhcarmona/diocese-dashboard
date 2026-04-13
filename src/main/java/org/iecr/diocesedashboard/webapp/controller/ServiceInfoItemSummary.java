@@ -8,12 +8,12 @@ import org.iecr.diocesedashboard.domain.objects.ServiceInfoItemType;
  * Contains only the fields the report submission form needs.
  */
 public record ServiceInfoItemSummary(
-    Long id,
-    String title,
-    String description,
-    boolean required,
-    ServiceInfoItemType serviceInfoItemType,
-    Integer sortOrder) {
+Long id,
+String title,
+String description,
+boolean required,
+ServiceInfoItemType serviceInfoItemType,
+Integer sortOrder) {
 
   /**
    * Creates a summary DTO from a {@link ServiceInfoItem} entity.

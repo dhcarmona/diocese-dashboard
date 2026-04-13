@@ -1,21 +1,29 @@
 package org.iecr.diocesedashboard.webapp;
 
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.AuthenticationServiceException;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 import org.springframework.security.web.csrf.HttpSessionCsrfTokenRepository;
+
+import java.io.IOException;
+import java.time.Clock;
 
 /**
  * Spring Security configuration: form-based login with session cookies
@@ -44,12 +52,15 @@ public class SecurityConfig {
    * Configures the security filter chain with session-based form login,
    * session-backed CSRF protection for the React SPA, and role-based authorization.
    *
-   * @param http the {@link HttpSecurity} to configure
+    * @param http the {@link HttpSecurity} to configure
+   * @param adminLoginThrottleService tracks failed password attempts for admin login
    * @return the configured {@link SecurityFilterChain}
    * @throws Exception if configuration fails
    */
   @Bean
-  public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+  public SecurityFilterChain filterChain(
+      HttpSecurity http,
+      AdminLoginThrottleService adminLoginThrottleService) throws Exception {
     HttpSessionCsrfTokenRepository csrfTokenRepository = new HttpSessionCsrfTokenRepository();
     csrfTokenRepository.setHeaderName("X-CSRF-TOKEN");
     http
@@ -115,8 +126,12 @@ public class SecurityConfig {
         )
         .formLogin(form -> form
                 .loginProcessingUrl("/api/auth/login")
-                .successHandler((req, res, auth) -> res.setStatus(HttpStatus.OK.value()))
-                .failureHandler((req, res, ex) -> res.setStatus(HttpStatus.UNAUTHORIZED.value()))
+                .successHandler((req, res, auth) -> {
+                  adminLoginThrottleService.clearFailedAttempts(req.getParameter("username"));
+                  res.setStatus(HttpStatus.OK.value());
+                })
+                .failureHandler((req, res, ex) ->
+                    writeAuthenticationFailureResponse(res, ex))
                 .permitAll()
         )
         .logout(logout -> logout
@@ -125,9 +140,18 @@ public class SecurityConfig {
         )
         .exceptionHandling(ex -> ex
                 .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))
-        )
-        .authenticationProvider(authenticationProvider());
+        );
     return http.build();
+  }
+
+  @Bean
+  Clock adminLoginClock() {
+    return Clock.systemUTC();
+  }
+
+  @Bean
+  AdminLoginThrottleService adminLoginThrottleService(Clock adminLoginClock) {
+    return new AdminLoginThrottleService(adminLoginClock);
   }
 
   /**
@@ -137,8 +161,10 @@ public class SecurityConfig {
    * @return configured authentication provider
    */
   @Bean
-  public DaoAuthenticationProvider authenticationProvider() {
-    DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
+  public DaoAuthenticationProvider authenticationProvider(
+      AdminLoginThrottleService adminLoginThrottleService) {
+    DaoAuthenticationProvider provider =
+        new RateLimitedDaoAuthenticationProvider(adminLoginThrottleService);
     provider.setUserDetailsService(userDetailsService);
     provider.setPasswordEncoder(passwordEncoder);
     return provider;
@@ -155,6 +181,77 @@ public class SecurityConfig {
   public AuthenticationManager authenticationManager(AuthenticationConfiguration config)
       throws Exception {
     return config.getAuthenticationManager();
+  }
+
+  private void writeAuthenticationFailureResponse(
+      HttpServletResponse response, AuthenticationException ex)
+      throws IOException {
+    if (ex instanceof AdminLoginRateLimitException rateLimitEx) {
+      response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
+      response.setHeader("Retry-After", String.valueOf(rateLimitEx.getRetryAfterSeconds()));
+      response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+      response.getWriter().write("{\"status\":429,\"message\":\""
+          + rateLimitEx.getMessage() + "\"}");
+      return;
+    }
+    response.setStatus(HttpStatus.UNAUTHORIZED.value());
+  }
+
+  private static final class RateLimitedDaoAuthenticationProvider extends DaoAuthenticationProvider {
+
+    private final AdminLoginThrottleService adminLoginThrottleService;
+
+    private RateLimitedDaoAuthenticationProvider(AdminLoginThrottleService adminLoginThrottleService) {
+      this.adminLoginThrottleService = adminLoginThrottleService;
+    }
+
+    @Override
+    public Authentication authenticate(Authentication authentication)
+        throws AuthenticationException {
+      String username = authentication.getName();
+      AdminLoginThrottleService.LoginAttemptResult preCheck =
+          adminLoginThrottleService.checkAttemptAllowed(username);
+      if (!preCheck.isAllowed()) {
+        throw buildRateLimitException(preCheck);
+      }
+
+      try {
+        Authentication result = super.authenticate(authentication);
+        adminLoginThrottleService.clearFailedAttempts(username);
+        return result;
+      } catch (AuthenticationException ex) {
+        AdminLoginThrottleService.LoginAttemptResult failureResult =
+            adminLoginThrottleService.recordFailedAttempt(username);
+        if (failureResult.isAttemptLimitExceeded()) {
+          throw buildRateLimitException(failureResult);
+        }
+        throw ex;
+      }
+    }
+
+    private AdminLoginRateLimitException buildRateLimitException(
+        AdminLoginThrottleService.LoginAttemptResult result) {
+      if (result.isAttemptLimitExceeded()) {
+        return new AdminLoginRateLimitException(
+            "Too many login attempts. Try again later.", result.retryAfterSeconds());
+      }
+      return new AdminLoginRateLimitException(
+          "Please wait before trying to sign in again.", result.retryAfterSeconds());
+    }
+  }
+
+  private static final class AdminLoginRateLimitException extends AuthenticationServiceException {
+
+    private final long retryAfterSeconds;
+
+    private AdminLoginRateLimitException(String message, long retryAfterSeconds) {
+      super(message);
+      this.retryAfterSeconds = retryAfterSeconds;
+    }
+
+    private long getRetryAfterSeconds() {
+      return retryAfterSeconds;
+    }
   }
 
 }

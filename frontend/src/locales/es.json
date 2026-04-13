@@ -34,6 +34,8 @@
     "codeSent": "Si {{username}} es una cuenta de reportero registrada, se envió un código a su WhatsApp.",
     "tryDifferentUsername": "Intentar con otro usuario",
     "invalidCode": "El código es incorrecto o ha expirado.",
+    "lockedOut_one": "Demasiados intentos. Espere {{count}} minuto antes de volver a intentarlo.",
+    "lockedOut_other": "Demasiados intentos. Espere {{count}} minutos antes de volver a intentarlo.",
     "otpGenericError": "No se pudo enviar el código en este momento. Inténtelo de nuevo."
   },
   "navigation": {

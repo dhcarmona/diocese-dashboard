@@ -189,6 +189,78 @@ describe('LoginPage', () => {
         ),
       ).toBeInTheDocument();
     });
+
+    it('shows admin lockout time when login returns 429', async () => {
+      const user = userEvent.setup();
+      mockedSignIn.mockRejectedValueOnce({
+        response: { status: 429, headers: { 'retry-after': '600' } },
+        isAxiosError: true,
+      });
+
+      renderLoginPage({ signIn: mockedSignIn });
+
+      await user.click(screen.getByRole('button', { name: /admin\? sign in with password/i }));
+      await user.type(screen.getByLabelText(/username/i), 'demo');
+      await user.type(screen.getByLabelText(/password/i), 'secret');
+      await user.click(screen.getByRole('button', { name: /^sign in$/i }));
+
+      expect(
+        await screen.findByText('Too many attempts. Please wait 10 minutes before trying again.'),
+      ).toBeInTheDocument();
+    });
+
+    it('shows reporter OTP lockout time when verification returns 429', async () => {
+      const user = userEvent.setup();
+      const mockedReporterSignIn = vi.fn().mockRejectedValueOnce({
+        response: { status: 429, headers: { 'retry-after': '600' } },
+        isAxiosError: true,
+      });
+
+      renderLoginPage({ reporterSignIn: mockedReporterSignIn });
+
+      await user.type(screen.getByLabelText(/username/i), 'reporter1');
+      await user.click(screen.getByRole('button', { name: /^send code$/i }));
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: /verify code/i })).toBeInTheDocument();
+      });
+      await user.type(screen.getByLabelText(/verification code/i), '123456');
+      await user.click(screen.getByRole('button', { name: /verify code/i }));
+
+      expect(
+        await screen.findByText('Too many attempts. Please wait 10 minutes before trying again.'),
+      ).toBeInTheDocument();
+    });
+
+    it('updates the lockout message when the language changes', async () => {
+      const user = userEvent.setup();
+      mockedSignIn.mockRejectedValueOnce({
+        response: { status: 429, headers: { 'retry-after': '600' } },
+        isAxiosError: true,
+      });
+
+      renderLoginPage({ signIn: mockedSignIn });
+
+      await user.click(screen.getByRole('button', { name: /admin\? sign in with password/i }));
+      await user.type(screen.getByLabelText(/username/i), 'demo');
+      await user.type(screen.getByLabelText(/password/i), 'secret');
+      await user.click(screen.getByRole('button', { name: /^sign in$/i }));
+
+      expect(
+        await screen.findByText('Too many attempts. Please wait 10 minutes before trying again.'),
+      ).toBeInTheDocument();
+
+      await act(async () => {
+        await i18n.changeLanguage('es');
+      });
+
+      await waitFor(() => {
+        expect(
+          screen.getByText(
+            'Demasiados intentos. Espere 10 minutos antes de volver a intentarlo.',
+          ),
+        ).toBeInTheDocument();
+      });
+    });
   });
 
   describe('Spanish', () => {
@@ -227,4 +299,3 @@ describe('LoginPage', () => {
     });
   });
 });
-

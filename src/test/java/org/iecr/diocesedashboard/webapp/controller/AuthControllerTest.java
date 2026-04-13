@@ -5,6 +5,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -114,8 +115,9 @@ class AuthControllerTest {
   @Test
   void verifyReporterOtp_validCode_returns200() throws Exception {
     DashboardUser reporter = buildReporter("rep1");
+    when(reporterOtpService.verifyAndConsumeOtp("rep1", "123456"))
+        .thenReturn(ReporterOtpService.OtpVerificationResult.success());
     when(userService.findByUsername("rep1")).thenReturn(Optional.of(reporter));
-    when(reporterOtpService.verifyAndConsumeOtp("rep1", "123456")).thenReturn(true);
 
     mockMvc.perform(post("/api/auth/reporter/verify-otp")
         .contentType(MediaType.APPLICATION_JSON)
@@ -125,9 +127,8 @@ class AuthControllerTest {
 
   @Test
   void verifyReporterOtp_wrongCode_returns401() throws Exception {
-    DashboardUser reporter = buildReporter("rep1");
-    when(userService.findByUsername("rep1")).thenReturn(Optional.of(reporter));
-    when(reporterOtpService.verifyAndConsumeOtp("rep1", "000000")).thenReturn(false);
+    when(reporterOtpService.verifyAndConsumeOtp("rep1", "000000"))
+        .thenReturn(ReporterOtpService.OtpVerificationResult.invalid());
 
     mockMvc.perform(post("/api/auth/reporter/verify-otp")
         .contentType(MediaType.APPLICATION_JSON)
@@ -137,12 +138,44 @@ class AuthControllerTest {
 
   @Test
   void verifyReporterOtp_unknownUser_returns401() throws Exception {
+    when(reporterOtpService.verifyAndConsumeOtp("ghost", "123456"))
+        .thenReturn(ReporterOtpService.OtpVerificationResult.success());
     when(userService.findByUsername("ghost")).thenReturn(Optional.empty());
 
     mockMvc.perform(post("/api/auth/reporter/verify-otp")
         .contentType(MediaType.APPLICATION_JSON)
         .content("{\"username\":\"ghost\",\"code\":\"123456\"}"))
         .andExpect(status().isUnauthorized());
+  }
+
+  @Test
+  void verifyReporterOtp_throttled_returns429() throws Exception {
+    when(reporterOtpService.verifyAndConsumeOtp("rep1", "123456"))
+        .thenReturn(ReporterOtpService.OtpVerificationResult.throttled(5));
+
+    mockMvc.perform(post("/api/auth/reporter/verify-otp")
+        .contentType(MediaType.APPLICATION_JSON)
+        .content("{\"username\":\"rep1\",\"code\":\"123456\"}"))
+        .andExpect(status().isTooManyRequests())
+        .andExpect(header().string("Retry-After", "5"))
+        .andExpect(jsonPath("$.message")
+            .value("Please wait before trying another login code."))
+        .andExpect(jsonPath("$.status").value(429));
+  }
+
+  @Test
+  void verifyReporterOtp_attemptLimitExceeded_returns429WithRetryAfter() throws Exception {
+    when(reporterOtpService.verifyAndConsumeOtp("rep1", "123456"))
+        .thenReturn(ReporterOtpService.OtpVerificationResult.attemptLimitExceeded(600));
+
+    mockMvc.perform(post("/api/auth/reporter/verify-otp")
+        .contentType(MediaType.APPLICATION_JSON)
+        .content("{\"username\":\"rep1\",\"code\":\"123456\"}"))
+        .andExpect(status().isTooManyRequests())
+        .andExpect(header().string("Retry-After", "600"))
+        .andExpect(jsonPath("$.message")
+            .value("Too many login code attempts. Request a new code and try again later."))
+        .andExpect(jsonPath("$.status").value(429));
   }
 
   private DashboardUser buildReporter(String username) {
