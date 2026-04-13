@@ -32,6 +32,3 @@ create table link_schedule_church (
     constraint fk_link_schedule_church_name
         foreign key (church_name) references church (name)
 );
-
-create index idx_link_schedule_church_schedule_id
-    on link_schedule_church (schedule_id);

@@ -30,6 +30,18 @@ public class ChurchService {
     return churchRepository.findById(name).map(this::attachPortrait);
   }
 
+  /**
+   * Fetches all churches whose names are in the given collection, in a single query.
+   *
+   * @param names the church names to look up
+   * @return a list of matching churches with portrait URLs attached
+   */
+  public List<Church> findAllById(Iterable<String> names) {
+    return churchRepository.findAllById(names).stream()
+        .map(this::attachPortrait)
+        .toList();
+  }
+
   public Church save(Church church) {
     return attachPortrait(churchRepository.save(church));
   }

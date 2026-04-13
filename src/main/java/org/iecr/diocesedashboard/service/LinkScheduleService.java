@@ -17,7 +17,6 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 
 /** Service for managing {@link LinkSchedule} entities and executing them. */
@@ -114,10 +113,7 @@ public class LinkScheduleService {
    */
   @Transactional
   public void executeSchedule(LinkSchedule schedule, String baseUrl, LocalDate today) {
-    List<Church> churches = schedule.getChurchNames().stream()
-        .map(name -> churchService.findById(name).orElse(null))
-        .filter(Objects::nonNull)
-        .toList();
+    List<Church> churches = churchService.findAllById(schedule.getChurchNames());
 
     if (churches.isEmpty()) {
       logger.warn("Schedule {} has no resolvable churches, skipping.", schedule.getId());
