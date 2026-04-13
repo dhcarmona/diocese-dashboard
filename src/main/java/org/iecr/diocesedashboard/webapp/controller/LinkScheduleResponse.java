@@ -5,6 +5,7 @@ import org.iecr.diocesedashboard.domain.objects.LinkSchedule;
 import java.time.DayOfWeek;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -40,8 +41,10 @@ Instant createdAt) {
         schedule.getId(),
         schedule.getServiceTemplate().getId(),
         schedule.getServiceTemplate().getServiceTemplateName(),
-        List.copyOf(schedule.getChurchNames()),
-        List.copyOf(schedule.getDaysOfWeek()),
+        schedule.getChurchNames().stream().sorted().toList(),
+        schedule.getDaysOfWeek().stream()
+            .sorted(Comparator.comparingInt(DayOfWeek::getValue))
+            .toList(),
         schedule.getSendHour(),
         schedule.getLastTriggeredDate(),
         schedule.getCreatedAt());
