@@ -1,8 +1,6 @@
 package org.iecr.diocesedashboard.webapp.controller;
 
-import org.iecr.diocesedashboard.domain.objects.Celebrant;
 import org.iecr.diocesedashboard.domain.objects.ReporterLink;
-import org.iecr.diocesedashboard.domain.objects.ServiceInfoItem;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -19,21 +17,21 @@ String churchName,
 Long serviceTemplateId,
 String serviceTemplateName,
 LocalDate activeDate,
-List<ServiceInfoItem> serviceInfoItems,
-List<Celebrant> celebrants) {
+List<ServiceInfoItemSummary> serviceInfoItems,
+List<CelebrantSummary> celebrants) {
 
   /**
    * Creates a public response DTO from a {@link ReporterLink} and associated form data.
    *
    * @param link        the persisted reporter link
-   * @param infoItems   the ordered service info items for the link's template
-   * @param celebrants  all available celebrants
+   * @param infoItems   the ordered service info item summaries for the link's template
+   * @param celebrants  all available celebrant summaries
    * @return the public response payload
    */
   public static ReporterLinkPublicResponse from(
       ReporterLink link,
-      List<ServiceInfoItem> infoItems,
-      List<Celebrant> celebrants) {
+      List<ServiceInfoItemSummary> infoItems,
+      List<CelebrantSummary> celebrants) {
     return new ReporterLinkPublicResponse(
         link.getId(),
         link.getToken(),
