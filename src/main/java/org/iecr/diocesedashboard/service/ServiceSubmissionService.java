@@ -135,12 +135,12 @@ public class ServiceSubmissionService {
     }
     String phone = submittedBy.getPhoneNumber();
     String username = submittedBy.getUsername();
-    String body = messageSource.getMessage(
-        "whatsapp.report.submitted",
-        new Object[]{templateName, churchName, serviceDate},
-        WHATSAPP_LOCALE);
     Runnable notify = () -> {
       try {
+        String body = messageSource.getMessage(
+            "whatsapp.report.submitted",
+            new Object[]{templateName, churchName, serviceDate},
+            WHATSAPP_LOCALE);
         whatsAppService.sendMessageAndLog(phone, body, username);
       } catch (Exception ex) {
         logger.warn("WhatsApp submission notification failed for reporter {} ({}): {}",

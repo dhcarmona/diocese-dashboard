@@ -24,6 +24,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.MessageSource;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
@@ -232,5 +234,35 @@ class ServiceSubmissionServiceTest {
     serviceSubmissionService.submit(1L, request, reporter);
 
     verify(whatsAppService, never()).sendMessageAndLog(any(), any(), any(String.class));
+  }
+
+  @Test
+  void submit_withinTransaction_sendsNotificationOnlyAfterCommit() {
+    when(serviceTemplateService.findById(1L)).thenReturn(Optional.of(buildTemplate()));
+    when(churchService.findById("Trinity")).thenReturn(Optional.of(buildChurch()));
+    ServiceInstance saved = new ServiceInstance();
+    saved.setId(1L);
+    when(serviceInstanceService.save(any())).thenReturn(saved);
+    when(messageSource.getMessage(eq("whatsapp.report.submitted"), any(), any(Locale.class)))
+        .thenReturn("Confirmation message");
+
+    DashboardUser reporter = buildReporter("+50688887777");
+    ServiceInstanceRequest request = new ServiceInstanceRequest(
+        "Trinity", List.of(), LocalDate.of(2024, 3, 10), List.of());
+
+    TransactionSynchronizationManager.initSynchronization();
+    try {
+      serviceSubmissionService.submit(1L, request, reporter);
+
+      verify(whatsAppService, never()).sendMessageAndLog(any(), any(), any(String.class));
+
+      TransactionSynchronizationManager.getSynchronizations()
+          .forEach(TransactionSynchronization::afterCommit);
+
+      verify(whatsAppService).sendMessageAndLog(
+          eq("+50688887777"), eq("Confirmation message"), eq("reporter1"));
+    } finally {
+      TransactionSynchronizationManager.clearSynchronization();
+    }
   }
 }
