@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import java.time.Clock;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -30,12 +31,19 @@ public class ScheduledLinkRunner {
 
   private final LinkScheduleService linkScheduleService;
   private final String baseUrl;
+  private final Clock clock;
 
   @Autowired
   public ScheduledLinkRunner(LinkScheduleService linkScheduleService,
       @Value("${app.base-url}") String baseUrl) {
+    this(linkScheduleService, baseUrl, Clock.systemUTC());
+  }
+
+  /** Package-visible constructor for tests, allowing a fixed {@link Clock} to be injected. */
+  ScheduledLinkRunner(LinkScheduleService linkScheduleService, String baseUrl, Clock clock) {
     this.linkScheduleService = linkScheduleService;
     this.baseUrl = baseUrl;
+    this.clock = clock;
   }
 
   /**
@@ -43,9 +51,9 @@ public class ScheduledLinkRunner {
    * then fires any schedules that match the current day-of-week and hour and have not yet
    * been triggered today (in Costa Rica local date).
    */
-  @Scheduled(cron = "0 0 * * * *")
+  @Scheduled(cron = "0 0 * * * *", zone = "UTC")
   public void runSchedules() {
-    ZonedDateTime nowCr = ZonedDateTime.now(COSTA_RICA_ZONE);
+    ZonedDateTime nowCr = ZonedDateTime.now(clock).withZoneSameInstant(COSTA_RICA_ZONE);
     int currentHour = nowCr.getHour();
     DayOfWeek currentDay = nowCr.getDayOfWeek();
     LocalDate today = nowCr.toLocalDate();
@@ -66,7 +74,7 @@ public class ScheduledLinkRunner {
         continue;
       }
       try {
-        linkScheduleService.executeSchedule(schedule, baseUrl);
+        linkScheduleService.executeSchedule(schedule, baseUrl, today);
       } catch (Exception ex) {
         logger.error("Failed to execute schedule {}: {}", schedule.getId(), ex.getMessage(), ex);
       }

@@ -16,6 +16,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.Clock;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.ZonedDateTime;
@@ -25,6 +26,12 @@ import java.util.Set;
 @ExtendWith(MockitoExtension.class)
 class ScheduledLinkRunnerTest {
 
+  /** Fixed Costa Rica instant used across all tests to avoid real-clock flakiness. */
+  private static final ZonedDateTime FIXED_CR =
+      ZonedDateTime.of(2024, 4, 15, 8, 0, 0, 0, ScheduledLinkRunner.COSTA_RICA_ZONE);
+  private static final Clock FIXED_CLOCK =
+      Clock.fixed(FIXED_CR.toInstant(), ScheduledLinkRunner.COSTA_RICA_ZONE);
+
   @Mock
   private LinkScheduleService linkScheduleService;
 
@@ -32,7 +39,7 @@ class ScheduledLinkRunnerTest {
 
   @BeforeEach
   void setUp() {
-    runner = new ScheduledLinkRunner(linkScheduleService, "https://example.com");
+    runner = new ScheduledLinkRunner(linkScheduleService, "https://example.com", FIXED_CLOCK);
   }
 
   private LinkSchedule scheduleFor(int sendHour, DayOfWeek... days) {
@@ -46,52 +53,49 @@ class ScheduledLinkRunnerTest {
 
   @Test
   void runSchedules_executesMatchingSchedule() {
-    ZonedDateTime nowCr = ZonedDateTime.now(ScheduledLinkRunner.COSTA_RICA_ZONE);
-    int hour = nowCr.getHour();
-    DayOfWeek day = nowCr.getDayOfWeek();
+    int hour = FIXED_CR.getHour();
+    DayOfWeek day = FIXED_CR.getDayOfWeek();
 
     LinkSchedule schedule = scheduleFor(hour, day);
     when(linkScheduleService.findAll()).thenReturn(List.of(schedule));
 
     runner.runSchedules();
 
-    verify(linkScheduleService).executeSchedule(schedule, "https://example.com");
+    verify(linkScheduleService).executeSchedule(schedule, "https://example.com",
+        FIXED_CR.toLocalDate());
   }
 
   @Test
   void runSchedules_skips_whenHourDoesNotMatch() {
-    ZonedDateTime nowCr = ZonedDateTime.now(ScheduledLinkRunner.COSTA_RICA_ZONE);
-    int wrongHour = (nowCr.getHour() + 1) % 24;
-    DayOfWeek day = nowCr.getDayOfWeek();
+    int wrongHour = (FIXED_CR.getHour() + 1) % 24;
+    DayOfWeek day = FIXED_CR.getDayOfWeek();
 
     LinkSchedule schedule = scheduleFor(wrongHour, day);
     when(linkScheduleService.findAll()).thenReturn(List.of(schedule));
 
     runner.runSchedules();
 
-    verify(linkScheduleService, never()).executeSchedule(any(), any());
+    verify(linkScheduleService, never()).executeSchedule(any(), any(), any());
   }
 
   @Test
   void runSchedules_skips_whenDayOfWeekDoesNotMatch() {
-    ZonedDateTime nowCr = ZonedDateTime.now(ScheduledLinkRunner.COSTA_RICA_ZONE);
-    int hour = nowCr.getHour();
-    DayOfWeek wrongDay = nowCr.getDayOfWeek().plus(1);
+    int hour = FIXED_CR.getHour();
+    DayOfWeek wrongDay = FIXED_CR.getDayOfWeek().plus(1);
 
     LinkSchedule schedule = scheduleFor(hour, wrongDay);
     when(linkScheduleService.findAll()).thenReturn(List.of(schedule));
 
     runner.runSchedules();
 
-    verify(linkScheduleService, never()).executeSchedule(any(), any());
+    verify(linkScheduleService, never()).executeSchedule(any(), any(), any());
   }
 
   @Test
   void runSchedules_skips_whenAlreadyTriggeredToday() {
-    ZonedDateTime nowCr = ZonedDateTime.now(ScheduledLinkRunner.COSTA_RICA_ZONE);
-    int hour = nowCr.getHour();
-    DayOfWeek day = nowCr.getDayOfWeek();
-    LocalDate today = nowCr.toLocalDate();
+    int hour = FIXED_CR.getHour();
+    DayOfWeek day = FIXED_CR.getDayOfWeek();
+    LocalDate today = FIXED_CR.toLocalDate();
 
     LinkSchedule schedule = scheduleFor(hour, day);
     schedule.setLastTriggeredDate(today);
@@ -99,28 +103,28 @@ class ScheduledLinkRunnerTest {
 
     runner.runSchedules();
 
-    verify(linkScheduleService, never()).executeSchedule(any(), any());
+    verify(linkScheduleService, never()).executeSchedule(any(), any(), any());
   }
 
   @Test
   void runSchedules_continuesOnError_whenOneScheduleFails() {
-    ZonedDateTime nowCr = ZonedDateTime.now(ScheduledLinkRunner.COSTA_RICA_ZONE);
-    int hour = nowCr.getHour();
-    DayOfWeek day = nowCr.getDayOfWeek();
+    int hour = FIXED_CR.getHour();
+    DayOfWeek day = FIXED_CR.getDayOfWeek();
 
     LinkSchedule schedule1 = scheduleFor(hour, day);
     schedule1.setId(1L);
     LinkSchedule schedule2 = scheduleFor(hour, day);
     schedule2.setId(2L);
     when(linkScheduleService.findAll()).thenReturn(List.of(schedule1, schedule2));
-    when(linkScheduleService.findAll()).thenReturn(List.of(schedule1, schedule2));
 
     Mockito.doThrow(new RuntimeException("Twilio down"))
-        .when(linkScheduleService).executeSchedule(eq(schedule1), any());
+        .when(linkScheduleService).executeSchedule(eq(schedule1), any(), any());
 
     runner.runSchedules();
 
-    verify(linkScheduleService, times(1)).executeSchedule(schedule1, "https://example.com");
-    verify(linkScheduleService, times(1)).executeSchedule(schedule2, "https://example.com");
+    verify(linkScheduleService, times(1)).executeSchedule(eq(schedule1),
+        eq("https://example.com"), eq(FIXED_CR.toLocalDate()));
+    verify(linkScheduleService, times(1)).executeSchedule(eq(schedule2),
+        eq("https://example.com"), eq(FIXED_CR.toLocalDate()));
   }
 }

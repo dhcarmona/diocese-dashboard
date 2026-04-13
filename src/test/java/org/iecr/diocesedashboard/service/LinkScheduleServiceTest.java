@@ -166,11 +166,12 @@ class LinkScheduleServiceTest {
         .thenReturn(new ReporterLinkService.BulkCreateResult(List.of(), List.of()));
     when(repository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
-    linkScheduleService.executeSchedule(schedule, "https://example.com");
+    LocalDate today = LocalDate.of(2024, 4, 15);
+    linkScheduleService.executeSchedule(schedule, "https://example.com", today);
 
     verify(reporterLinkService).createLinksForChurches(
-        any(), eq(template), any(LocalDate.class), eq("https://example.com"));
-    assertThat(schedule.getLastTriggeredDate()).isEqualTo(LocalDate.now());
+        any(), eq(template), eq(today), eq("https://example.com"));
+    assertThat(schedule.getLastTriggeredDate()).isEqualTo(today);
     verify(repository).save(schedule);
   }
 
@@ -183,7 +184,7 @@ class LinkScheduleServiceTest {
 
     when(churchService.findById("Ghost Church")).thenReturn(Optional.empty());
 
-    linkScheduleService.executeSchedule(schedule, "https://example.com");
+    linkScheduleService.executeSchedule(schedule, "https://example.com", LocalDate.of(2024, 4, 15));
 
     verify(reporterLinkService, never()).createLinksForChurches(any(), any(), any(), any());
     verify(repository, never()).save(any());

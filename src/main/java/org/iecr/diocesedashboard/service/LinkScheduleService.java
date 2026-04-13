@@ -105,13 +105,15 @@ public class LinkScheduleService {
 
   /**
    * Executes a link schedule: resolves its churches, calls bulk link creation (including
-   * WhatsApp notifications), then records today as the last triggered date.
+   * WhatsApp notifications), then records the given date as the last triggered date.
    *
    * @param schedule the schedule to execute
    * @param baseUrl  the server base URL used to build the link URLs sent to reporters
+   * @param today    the current local date in Costa Rica time, used as the report date and
+   *                 to mark {@code lastTriggeredDate} so the schedule is not re-fired
    */
   @Transactional
-  public void executeSchedule(LinkSchedule schedule, String baseUrl) {
+  public void executeSchedule(LinkSchedule schedule, String baseUrl, LocalDate today) {
     List<Church> churches = schedule.getChurchNames().stream()
         .map(name -> churchService.findById(name).orElse(null))
         .filter(Objects::nonNull)
@@ -122,7 +124,6 @@ public class LinkScheduleService {
       return;
     }
 
-    LocalDate today = LocalDate.now();
     logger.info("Executing schedule {} for {} church(es) on {}",
         schedule.getId(), churches.size(), today);
 

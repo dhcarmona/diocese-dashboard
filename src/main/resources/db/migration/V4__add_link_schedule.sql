@@ -17,6 +17,7 @@ create table link_schedule (
 create table link_schedule_day (
     schedule_id bigint       not null,
     day_of_week varchar(20)  not null,
+    primary key (schedule_id, day_of_week),
     constraint fk_link_schedule_day_schedule
         foreign key (schedule_id) references link_schedule (id)
 );
@@ -25,8 +26,12 @@ create table link_schedule_day (
 create table link_schedule_church (
     schedule_id bigint       not null,
     church_name varchar(255) not null,
+    primary key (schedule_id, church_name),
     constraint fk_link_schedule_church_schedule
         foreign key (schedule_id) references link_schedule (id),
     constraint fk_link_schedule_church_name
         foreign key (church_name) references church (name)
 );
+
+create index idx_link_schedule_church_schedule_id
+    on link_schedule_church (schedule_id);

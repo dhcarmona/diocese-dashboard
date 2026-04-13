@@ -560,7 +560,7 @@
     "titleCreate": "Programar creación de enlaces",
     "titleEdit": "Editar programación",
     "daysLabel": "Días de la semana",
-    "hourLabel": "Hora del día (Costa Rica, UTC-6)",
+    "hourLabel": "Hora del día (Costa Rica, UTC-6, 24h)",
     "confirm": "Guardar programación",
     "cancel": "Cancelar",
     "daysRequired": "Seleccione al menos un día.",

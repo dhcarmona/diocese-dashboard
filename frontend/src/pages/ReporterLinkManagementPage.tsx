@@ -68,6 +68,7 @@ export default function ReporterLinkManagementPage() {
   // Schedule dialog state
   const [scheduleDialogOpen, setScheduleDialogOpen] = useState(false);
   const [editingSchedule, setEditingSchedule] = useState<LinkSchedule | null>(null);
+  const [createDialogKey, setCreateDialogKey] = useState(0);
 
   useEffect(() => {
     let active = true;
@@ -183,6 +184,7 @@ export default function ReporterLinkManagementPage() {
 
   function openCreateScheduleDialog() {
     setEditingSchedule(null);
+    setCreateDialogKey((kk) => kk + 1);
     setScheduleDialogOpen(true);
   }
 
@@ -577,7 +579,7 @@ export default function ReporterLinkManagementPage() {
       </Box>
 
       <ScheduleDialog
-        key={editingSchedule ? `edit-${editingSchedule.id}` : 'create'}
+        key={editingSchedule ? `edit-${editingSchedule.id}` : `create-${createDialogKey}`}
         open={scheduleDialogOpen}
         initialValues={
           editingSchedule

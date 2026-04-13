@@ -560,7 +560,7 @@
     "titleCreate": "Schedule Link Creation",
     "titleEdit": "Edit Schedule",
     "daysLabel": "Days of the week",
-    "hourLabel": "Time of day (Costa Rica, UTC-6)",
+    "hourLabel": "Time of day (Costa Rica, UTC-6, 24h)",
     "confirm": "Save Schedule",
     "cancel": "Cancel",
     "daysRequired": "Select at least one day.",
