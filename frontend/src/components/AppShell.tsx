@@ -9,6 +9,7 @@ import Typography from '@mui/material/Typography';
 import { useTranslation } from 'react-i18next';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/auth-context';
+import AppFooter from './AppFooter';
 import LanguageSwitcher from './LanguageSwitcher';
 
 export default function AppShell({ children }: Readonly<{ children: ReactNode }>) {
@@ -22,7 +23,7 @@ export default function AppShell({ children }: Readonly<{ children: ReactNode }>
   }
 
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
+    <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', display: 'flex', flexDirection: 'column' }}>
       <AppBar position="sticky" color="primary" elevation={0}>
         <Toolbar
           sx={{
@@ -75,9 +76,10 @@ export default function AppShell({ children }: Readonly<{ children: ReactNode }>
           </Button>
         </Toolbar>
       </AppBar>
-      <Box component="main" sx={{ maxWidth: 1200, mx: 'auto', px: { xs: 2, md: 4 }, py: 4 }}>
+      <Box component="main" sx={{ flex: 1, maxWidth: 1200, mx: 'auto', px: { xs: 2, md: 4 }, py: 4 }}>
         {children}
       </Box>
+      <AppFooter showBuildInfo={user !== null} />
     </Box>
   );
 }

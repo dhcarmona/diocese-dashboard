@@ -15,6 +15,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { isBackendUnavailableError, isUnauthorizedError, requestReporterOtp } from '../api/auth';
 import { useAuth } from '../auth/auth-context';
 import LanguageSwitcher from '../components/LanguageSwitcher';
+import AppFooter from '../components/AppFooter';
 
 type LoginMode = 'admin' | 'reporterRequest' | 'reporterVerify';
 
@@ -114,7 +115,8 @@ export default function LoginPage() {
   const modeIcon = loginMode === 'admin' ? <LockOutlinedIcon /> : <SendOutlinedIcon />;
 
   return (
-    <Box sx={{ display: 'flex', minHeight: '100vh' }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+      <Box sx={{ display: 'flex', flex: 1 }}>
 
       {/* ── Left branding panel ── */}
       <Box
@@ -354,6 +356,8 @@ export default function LoginPage() {
           </CardContent>
         </Card>
       </Box>
+      </Box>
+      <AppFooter showBuildInfo={false} />
     </Box>
   );
 }
