@@ -214,4 +214,37 @@ class ReporterLinkPublicControllerTest {
         .content(objectMapper.writeValueAsString(request)))
         .andExpect(status().isCreated());
   }
+
+  @Test
+  void submit_reporterNotAssignedToChurch_returns403() throws Exception {
+    ReporterLink link = buildLink(TOKEN, 5L, "Trinity");
+    DashboardUser wrongReporter = buildReporter(5L, "OtherChurch");
+    link.setReporter(wrongReporter);
+    when(reporterLinkService.findByToken(TOKEN)).thenReturn(Optional.of(link));
+
+    ReporterLinkSubmitRequest request = new ReporterLinkSubmitRequest(
+        List.of(), LocalDate.of(2024, 1, 14), List.of());
+
+    mockMvc.perform(post("/api/reporter-links/public/" + TOKEN + "/submit")
+        .contentType(MediaType.APPLICATION_JSON)
+        .content(objectMapper.writeValueAsString(request)))
+        .andExpect(status().isForbidden());
+  }
+
+  @Test
+  void submit_reporterAccountDisabled_returns403() throws Exception {
+    ReporterLink link = buildLink(TOKEN, 5L, "Trinity");
+    DashboardUser disabledReporter = buildReporter(5L, "Trinity");
+    disabledReporter.setEnabled(false);
+    link.setReporter(disabledReporter);
+    when(reporterLinkService.findByToken(TOKEN)).thenReturn(Optional.of(link));
+
+    ReporterLinkSubmitRequest request = new ReporterLinkSubmitRequest(
+        List.of(), LocalDate.of(2024, 1, 14), List.of());
+
+    mockMvc.perform(post("/api/reporter-links/public/" + TOKEN + "/submit")
+        .contentType(MediaType.APPLICATION_JSON)
+        .content(objectMapper.writeValueAsString(request)))
+        .andExpect(status().isForbidden());
+  }
 }

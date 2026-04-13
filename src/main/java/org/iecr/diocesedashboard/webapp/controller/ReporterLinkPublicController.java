@@ -1,9 +1,8 @@
 package org.iecr.diocesedashboard.webapp.controller;
 
 import jakarta.validation.Valid;
-import org.iecr.diocesedashboard.domain.objects.Celebrant;
+import org.iecr.diocesedashboard.domain.objects.DashboardUser;
 import org.iecr.diocesedashboard.domain.objects.ReporterLink;
-import org.iecr.diocesedashboard.domain.objects.ServiceInfoItem;
 import org.iecr.diocesedashboard.domain.objects.ServiceInstance;
 import org.iecr.diocesedashboard.service.CelebrantService;
 import org.iecr.diocesedashboard.service.ReporterLinkService;
@@ -54,8 +53,10 @@ public class ReporterLinkPublicController {
     ReporterLink link = reporterLinkService.findByToken(token)
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
             "Reporter link not found"));
-    List<ServiceInfoItem> infoItems = link.getServiceTemplate().getServiceInfoItems();
-    List<Celebrant> celebrants = celebrantService.findAll();
+    List<ServiceInfoItemSummary> infoItems = link.getServiceTemplate().getServiceInfoItems()
+        .stream().map(ServiceInfoItemSummary::from).toList();
+    List<CelebrantSummary> celebrants = celebrantService.findAll()
+        .stream().map(CelebrantSummary::from).toList();
     return ResponseEntity.ok(ReporterLinkPublicResponse.from(link, infoItems, celebrants));
   }
 
@@ -76,6 +77,15 @@ public class ReporterLinkPublicController {
     ReporterLink link = reporterLinkService.findByToken(token)
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
             "Reporter link not found"));
+    DashboardUser reporter = link.getReporter();
+    if (!reporter.isEnabled()) {
+      throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+          "Reporter account is disabled");
+    }
+    if (!reporter.isAssignedToChurch(link.getChurch())) {
+      throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+          "Reporter is not assigned to this church");
+    }
     if (link.getActiveDate().isAfter(LocalDate.now())) {
       throw new ResponseStatusException(HttpStatus.CONFLICT,
           "This reporter link is not yet active until " + link.getActiveDate());
