@@ -9,6 +9,7 @@ import org.iecr.diocesedashboard.service.ReporterOtpService;
 import org.iecr.diocesedashboard.service.UserService;
 import org.iecr.diocesedashboard.webapp.DashboardUserDetails;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -23,6 +24,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
+
+import java.util.Map;
 
 /** REST controller for authenticated-session helper endpoints used by the SPA. */
 @RestController
@@ -89,19 +92,31 @@ public class AuthController {
    *
    * @param request     contains the reporter's username and OTP code
    * @param httpRequest the current HTTP request used to bind the new session
-   * @return 200 on success, 401 if the code is invalid or expired
+   * @return 200 on success, 401 if the code is invalid or expired, 429 if throttled
    */
   @PostMapping("/reporter/verify-otp")
-  public ResponseEntity<Void> verifyReporterOtp(
+  public ResponseEntity<?> verifyReporterOtp(
       @RequestBody @Valid ReporterOtpVerifyRequest request,
       HttpServletRequest httpRequest) {
+    ReporterOtpService.OtpVerificationResult verificationResult =
+        reporterOtpService.verifyAndConsumeOtp(request.username(), request.code());
+    if (verificationResult.isThrottled()) {
+      return buildTooManyRequestsResponse(
+          "Please wait before trying another login code.",
+          verificationResult.retryAfterSeconds());
+    }
+    if (verificationResult.isAttemptLimitExceeded()) {
+      return buildTooManyRequestsResponse(
+          "Too many login code attempts. Request a new code and try again later.",
+          verificationResult.retryAfterSeconds());
+    }
+    if (!verificationResult.isSuccess()) {
+      throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
+    }
+
     DashboardUser user = userService.findByUsername(request.username())
         .filter(uu -> uu.getRole() == UserRole.REPORTER && uu.isEnabled())
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED));
-
-    if (!reporterOtpService.verifyAndConsumeOtp(request.username(), request.code())) {
-      throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
-    }
 
     DashboardUserDetails userDetails = new DashboardUserDetails(user);
     UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
@@ -122,5 +137,12 @@ public class AuthController {
         HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY, context);
 
     return ResponseEntity.ok().build();
+  }
+
+  private ResponseEntity<Map<String, Object>> buildTooManyRequestsResponse(
+      String message, long retryAfterSeconds) {
+    return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+        .header(HttpHeaders.RETRY_AFTER, String.valueOf(retryAfterSeconds))
+        .body(Map.of("status", HttpStatus.TOO_MANY_REQUESTS.value(), "message", message));
   }
 }

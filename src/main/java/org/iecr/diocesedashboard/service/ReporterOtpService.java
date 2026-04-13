@@ -7,6 +7,8 @@ import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Service;
 
 import java.security.SecureRandom;
+import java.time.Clock;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.Locale;
 import java.util.concurrent.ConcurrentHashMap;
@@ -21,6 +23,14 @@ import java.util.concurrent.ConcurrentHashMap;
 public class ReporterOtpService {
 
   static final long OTP_TTL_SECONDS = 600;
+  static final long REQUEST_THROTTLE_SECONDS = 60;
+  static final int MAX_OTP_REQUEST_ATTEMPTS = 3;
+  static final long REQUEST_ATTEMPT_WINDOW_SECONDS = OTP_TTL_SECONDS;
+  static final long REQUEST_LOCKOUT_SECONDS = OTP_TTL_SECONDS;
+  static final long VERIFY_THROTTLE_SECONDS = 5;
+  static final int MAX_FAILED_VERIFY_ATTEMPTS = 5;
+  static final long VERIFY_ATTEMPT_WINDOW_SECONDS = OTP_TTL_SECONDS;
+  static final long VERIFY_LOCKOUT_SECONDS = OTP_TTL_SECONDS;
   private static final int OTP_DIGITS = 6;
   private static final int OTP_MODULUS = 1_000_000;
 
@@ -29,15 +39,29 @@ public class ReporterOtpService {
   private final WhatsAppService whatsAppService;
   private final UserService userService;
   private final MessageSource messageSource;
+  private final Clock clock;
   private final SecureRandom secureRandom = new SecureRandom();
   private final ConcurrentHashMap<String, OtpEntry> otpStore = new ConcurrentHashMap<>();
+  private final ConcurrentHashMap<String, RequestAttemptState> requestAttemptStore =
+      new ConcurrentHashMap<>();
+  private final ConcurrentHashMap<String, VerifyAttemptState> verifyAttemptStore =
+      new ConcurrentHashMap<>();
 
   @Autowired
   public ReporterOtpService(
       WhatsAppService whatsAppService, UserService userService, MessageSource messageSource) {
+    this(whatsAppService, userService, messageSource, Clock.systemUTC());
+  }
+
+  ReporterOtpService(
+      WhatsAppService whatsAppService,
+      UserService userService,
+      MessageSource messageSource,
+      Clock clock) {
     this.whatsAppService = whatsAppService;
     this.userService = userService;
     this.messageSource = messageSource;
+    this.clock = clock;
   }
 
   /**
@@ -50,6 +74,22 @@ public class ReporterOtpService {
    *                                  or if the reporter has no phone number registered
    */
   public void generateAndSendOtp(String username) {
+    evictExpiredEntries();
+    evictExpiredRequestAttempts();
+    Instant now = Instant.now(clock);
+    RequestAttemptState existingRequestState = requestAttemptStore.get(username);
+    if (existingRequestState != null && now.isBefore(existingRequestState.blockedUntil())) {
+      return;
+    }
+    if (existingRequestState != null
+        && now.isBefore(existingRequestState.nextAllowedAttemptAt())) {
+      return;
+    }
+    RequestAttemptState updatedRequestState = recordOtpRequestAttempt(username, now);
+    if (updatedRequestState.requestAttempts() > MAX_OTP_REQUEST_ATTEMPTS) {
+      return;
+    }
+
     DashboardUser user = userService.findByUsername(username)
         .filter(DashboardUser::isEnabled)
         .filter(uu -> uu.getRole() == UserRole.REPORTER)
@@ -62,10 +102,8 @@ public class ReporterOtpService {
           "Reporter does not have a valid phone number for username: " + username);
     }
 
-    evictExpiredEntries();
-
     String code = generateCode();
-    otpStore.put(username, new OtpEntry(code, Instant.now().plusSeconds(OTP_TTL_SECONDS)));
+    otpStore.put(username, new OtpEntry(code, Instant.now(clock).plusSeconds(OTP_TTL_SECONDS)));
     whatsAppService.sendOtpAndLog(phoneNumber,
         messageSource.getMessage(
             "otp.whatsapp.message",
@@ -80,27 +118,109 @@ public class ReporterOtpService {
    *
    * @param username the reporter's username
    * @param code     the OTP provided by the user
-   * @return {@code true} if the code is correct and not expired; {@code false} otherwise
+   * @return the verification result, including rate-limit information when applicable
    */
-  public boolean verifyAndConsumeOtp(String username, String code) {
+  public OtpVerificationResult verifyAndConsumeOtp(String username, String code) {
+    evictExpiredVerifyAttempts();
+    Instant now = Instant.now(clock);
+    VerifyAttemptState attemptState = verifyAttemptStore.get(username);
+    if (attemptState != null && now.isBefore(attemptState.blockedUntil())) {
+      return OtpVerificationResult.attemptLimitExceeded(
+          secondsUntil(now, attemptState.blockedUntil()));
+    }
+    if (attemptState != null && now.isBefore(attemptState.nextAllowedAttemptAt())) {
+      return OtpVerificationResult.throttled(
+          secondsUntil(now, attemptState.nextAllowedAttemptAt()));
+    }
+
     OtpEntry entry = otpStore.get(username);
     if (entry == null) {
-      return false;
+      return recordFailedVerifyAttempt(username, now);
     }
-    if (Instant.now().isAfter(entry.expiry())) {
+    if (now.isAfter(entry.expiry())) {
       otpStore.remove(username);
-      return false;
+      return recordFailedVerifyAttempt(username, now);
     }
     if (!entry.code().equals(code)) {
-      return false;
+      return recordFailedVerifyAttempt(username, now);
     }
     otpStore.remove(username);
-    return true;
+    verifyAttemptStore.remove(username);
+    return OtpVerificationResult.success();
   }
 
   private void evictExpiredEntries() {
-    Instant now = Instant.now();
+    Instant now = Instant.now(clock);
     otpStore.entrySet().removeIf(entry -> now.isAfter(entry.getValue().expiry()));
+  }
+
+  private void evictExpiredVerifyAttempts() {
+    Instant now = Instant.now(clock);
+    verifyAttemptStore.entrySet().removeIf(entry -> isExpired(entry.getValue(), now));
+  }
+
+  private void evictExpiredRequestAttempts() {
+    Instant now = Instant.now(clock);
+    requestAttemptStore.entrySet().removeIf(entry -> isExpired(entry.getValue(), now));
+  }
+
+  private RequestAttemptState recordOtpRequestAttempt(String username, Instant now) {
+    return requestAttemptStore.compute(
+        username,
+        (ignored, existing) -> {
+          RequestAttemptState currentState = existing;
+          if (currentState != null && isExpired(currentState, now)) {
+            currentState = null;
+          }
+
+          int requestAttempts = currentState == null ? 1 : currentState.requestAttempts() + 1;
+          Instant blockedUntil = requestAttempts > MAX_OTP_REQUEST_ATTEMPTS
+              ? now.plusSeconds(REQUEST_LOCKOUT_SECONDS) : now;
+          return new RequestAttemptState(
+              requestAttempts,
+              now.plusSeconds(REQUEST_THROTTLE_SECONDS),
+              blockedUntil,
+              now.plusSeconds(REQUEST_ATTEMPT_WINDOW_SECONDS));
+        });
+  }
+
+  private OtpVerificationResult recordFailedVerifyAttempt(String username, Instant now) {
+    VerifyAttemptState updatedState = verifyAttemptStore.compute(
+        username,
+        (ignored, existing) -> {
+          VerifyAttemptState currentState = existing;
+          if (currentState != null && isExpired(currentState, now)) {
+            currentState = null;
+          }
+
+          int failedAttempts = currentState == null ? 1 : currentState.failedAttempts() + 1;
+          Instant blockedUntil = failedAttempts >= MAX_FAILED_VERIFY_ATTEMPTS
+              ? now.plusSeconds(VERIFY_LOCKOUT_SECONDS) : now;
+          return new VerifyAttemptState(
+              failedAttempts,
+              now.plusSeconds(VERIFY_THROTTLE_SECONDS),
+              blockedUntil,
+              now.plusSeconds(VERIFY_ATTEMPT_WINDOW_SECONDS));
+        });
+
+    if (updatedState.failedAttempts() >= MAX_FAILED_VERIFY_ATTEMPTS) {
+      otpStore.remove(username);
+      return OtpVerificationResult.attemptLimitExceeded(
+          secondsUntil(now, updatedState.blockedUntil()));
+    }
+    return OtpVerificationResult.invalid();
+  }
+
+  private boolean isExpired(VerifyAttemptState state, Instant now) {
+    return !now.isBefore(state.attemptWindowEndsAt()) && !now.isBefore(state.blockedUntil());
+  }
+
+  private boolean isExpired(RequestAttemptState state, Instant now) {
+    return !now.isBefore(state.attemptWindowEndsAt()) && !now.isBefore(state.blockedUntil());
+  }
+
+  private long secondsUntil(Instant now, Instant target) {
+    return Math.max(1L, Duration.between(now, target).toSeconds());
   }
 
   private String generateCode() {
@@ -108,7 +228,64 @@ public class ReporterOtpService {
     return String.format("%0" + OTP_DIGITS + "d", code);
   }
 
+  /** Result of an OTP verification attempt. */
+  public record OtpVerificationResult(OtpVerificationOutcome outcome, long retryAfterSeconds) {
+
+    public boolean isSuccess() {
+      return outcome == OtpVerificationOutcome.SUCCESS;
+    }
+
+    public boolean isThrottled() {
+      return outcome == OtpVerificationOutcome.THROTTLED;
+    }
+
+    public boolean isAttemptLimitExceeded() {
+      return outcome == OtpVerificationOutcome.ATTEMPT_LIMIT_EXCEEDED;
+    }
+
+    public static OtpVerificationResult success() {
+      return new OtpVerificationResult(OtpVerificationOutcome.SUCCESS, 0);
+    }
+
+    public static OtpVerificationResult invalid() {
+      return new OtpVerificationResult(OtpVerificationOutcome.INVALID, 0);
+    }
+
+    public static OtpVerificationResult throttled(long retryAfterSeconds) {
+      return new OtpVerificationResult(OtpVerificationOutcome.THROTTLED, retryAfterSeconds);
+    }
+
+    public static OtpVerificationResult attemptLimitExceeded(long retryAfterSeconds) {
+      return new OtpVerificationResult(
+          OtpVerificationOutcome.ATTEMPT_LIMIT_EXCEEDED, retryAfterSeconds);
+    }
+  }
+
+  /** Supported OTP verification outcomes. */
+  public enum OtpVerificationOutcome {
+    SUCCESS,
+    INVALID,
+    THROTTLED,
+    ATTEMPT_LIMIT_EXCEEDED
+  }
+
   /** Immutable OTP entry holding the code and its expiry instant. */
   record OtpEntry(String code, Instant expiry) {
+  }
+
+  /** Tracks failed verification attempts and retry timing for a username. */
+  record VerifyAttemptState(
+  int failedAttempts,
+  Instant nextAllowedAttemptAt,
+  Instant blockedUntil,
+  Instant attemptWindowEndsAt) {
+  }
+
+  /** Tracks OTP request timing for a username. */
+  record RequestAttemptState(
+  int requestAttempts,
+  Instant nextAllowedAttemptAt,
+  Instant blockedUntil,
+  Instant attemptWindowEndsAt) {
   }
 }
