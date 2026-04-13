@@ -13,7 +13,7 @@ import { useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
-  getRetryAfterMinutes,
+  getRetryAfterSeconds,
   isBackendUnavailableError,
   isTooManyRequestsError,
   isUnauthorizedError,
@@ -29,7 +29,8 @@ type LoginErrorKey =
   | 'login.invalidCredentials'
   | 'login.genericError'
   | 'login.invalidCode'
-  | 'login.lockedOut'
+  | 'login.lockedOutMinutes'
+  | 'login.lockedOutSeconds'
   | 'login.otpGenericError'
   | 'auth.backendUnavailable';
 
@@ -45,35 +46,45 @@ export default function LoginPage() {
   const [otpCode, setOtpCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [errorKey, setErrorKey] = useState<LoginErrorKey | null>(null);
-  const [retryAfterMinutes, setRetryAfterMinutes] = useState<number | null>(null);
+  const [retryAfterValue, setRetryAfterValue] = useState<number | null>(null);
+
+  function setLockoutError(error: unknown) {
+    const retryAfterSeconds = getRetryAfterSeconds(error) ?? 60;
+    if (retryAfterSeconds < 60) {
+      setErrorKey('login.lockedOutSeconds');
+      setRetryAfterValue(retryAfterSeconds);
+      return;
+    }
+    setErrorKey('login.lockedOutMinutes');
+    setRetryAfterValue(Math.max(1, Math.ceil(retryAfterSeconds / 60)));
+  }
 
   function switchToReporter() {
     setLoginMode('reporterRequest');
     setPassword('');
     setOtpCode('');
     setErrorKey(null);
-    setRetryAfterMinutes(null);
+    setRetryAfterValue(null);
   }
 
   function switchToAdmin() {
     setLoginMode('admin');
     setOtpCode('');
     setErrorKey(null);
-    setRetryAfterMinutes(null);
+    setRetryAfterValue(null);
   }
 
   async function handleAdminSubmit(e: FormEvent) {
     e.preventDefault();
     setErrorKey(null);
-    setRetryAfterMinutes(null);
+    setRetryAfterValue(null);
     setLoading(true);
     try {
       await signIn(username, password);
       navigate(redirectTo ?? '/');
     } catch (error) {
       if (isTooManyRequestsError(error)) {
-        setErrorKey('login.lockedOut');
-        setRetryAfterMinutes(getRetryAfterMinutes(error) ?? 1);
+        setLockoutError(error);
       } else if (isUnauthorizedError(error)) {
         setErrorKey('login.invalidCredentials');
       } else if (isBackendUnavailableError(error)) {
@@ -89,7 +100,7 @@ export default function LoginPage() {
   async function handleRequestOtp(e: FormEvent) {
     e.preventDefault();
     setErrorKey(null);
-    setRetryAfterMinutes(null);
+    setRetryAfterValue(null);
     setLoading(true);
     try {
       await requestReporterOtp(username);
@@ -110,15 +121,14 @@ export default function LoginPage() {
   async function handleVerifyOtp(e: FormEvent) {
     e.preventDefault();
     setErrorKey(null);
-    setRetryAfterMinutes(null);
+    setRetryAfterValue(null);
     setLoading(true);
     try {
       await reporterSignIn(username, otpCode);
       navigate(redirectTo ?? '/');
     } catch (error) {
       if (isTooManyRequestsError(error)) {
-        setErrorKey('login.lockedOut');
-        setRetryAfterMinutes(getRetryAfterMinutes(error) ?? 1);
+        setLockoutError(error);
       } else if (isUnauthorizedError(error)) {
         setErrorKey('login.invalidCode');
       } else if (isBackendUnavailableError(error)) {
@@ -245,8 +255,10 @@ export default function LoginPage() {
 
             {errorKey && (
               <Alert severity="error" sx={{ mb: 2 }}>
-                {errorKey === 'login.lockedOut'
-                  ? t(errorKey, { count: retryAfterMinutes ?? 1, minutes: retryAfterMinutes ?? 1 })
+                {errorKey === 'login.lockedOutMinutes'
+                  ? t(errorKey, { count: retryAfterValue ?? 1 })
+                  : errorKey === 'login.lockedOutSeconds'
+                  ? t(errorKey, { count: retryAfterValue ?? 1 })
                   : t(errorKey)}
               </Alert>
             )}
@@ -367,7 +379,7 @@ export default function LoginPage() {
                       setLoginMode('reporterRequest');
                       setOtpCode('');
                       setErrorKey(null);
-                      setRetryAfterMinutes(null);
+                      setRetryAfterValue(null);
                     }}
                   >
                     {t('login.tryDifferentUsername')}
@@ -383,4 +395,3 @@ export default function LoginPage() {
     </Box>
   );
 }
-

@@ -34,8 +34,10 @@
     "codeSent": "If {{username}} is a registered reporter account, a code was sent to their WhatsApp.",
     "tryDifferentUsername": "Try a different username",
     "invalidCode": "The code is incorrect or has expired.",
-    "lockedOut_one": "Too many attempts. Please wait {{count}} minute before trying again.",
-    "lockedOut_other": "Too many attempts. Please wait {{count}} minutes before trying again.",
+    "lockedOutMinutes_one": "Too many attempts. Please wait {{count}} minute before trying again.",
+    "lockedOutMinutes_other": "Too many attempts. Please wait {{count}} minutes before trying again.",
+    "lockedOutSeconds_one": "Too many attempts. Please wait {{count}} second before trying again.",
+    "lockedOutSeconds_other": "Too many attempts. Please wait {{count}} seconds before trying again.",
     "otpGenericError": "We could not send the code right now. Please try again."
   },
   "navigation": {

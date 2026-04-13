@@ -1,9 +1,11 @@
 package org.iecr.diocesedashboard.webapp;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -24,6 +26,7 @@ import org.springframework.security.web.csrf.HttpSessionCsrfTokenRepository;
 
 import java.io.IOException;
 import java.time.Clock;
+import java.util.Map;
 
 /**
  * Spring Security configuration: form-based login with session cookies
@@ -36,16 +39,22 @@ public class SecurityConfig {
 
   private final UserDetailsService userDetailsService;
   private final PasswordEncoder passwordEncoder;
+  private final ObjectMapper objectMapper;
 
   /**
    * Constructs SecurityConfig with the application's {@link UserDetailsService}.
    *
    * @param userDetailsService the service used to load users during authentication
    * @param passwordEncoder the password encoder used for authentication
+   * @param objectMapper serializes structured JSON error responses
    */
-  public SecurityConfig(UserDetailsService userDetailsService, PasswordEncoder passwordEncoder) {
+  public SecurityConfig(
+      UserDetailsService userDetailsService,
+      PasswordEncoder passwordEncoder,
+      ObjectMapper objectMapper) {
     this.userDetailsService = userDetailsService;
     this.passwordEncoder = passwordEncoder;
+    this.objectMapper = objectMapper;
   }
 
   /**
@@ -188,10 +197,13 @@ public class SecurityConfig {
       throws IOException {
     if (ex instanceof AdminLoginRateLimitException rateLimitEx) {
       response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
-      response.setHeader("Retry-After", String.valueOf(rateLimitEx.getRetryAfterSeconds()));
+      response.setHeader(HttpHeaders.RETRY_AFTER, String.valueOf(rateLimitEx.getRetryAfterSeconds()));
       response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-      response.getWriter().write("{\"status\":429,\"message\":\""
-          + rateLimitEx.getMessage() + "\"}");
+      objectMapper.writeValue(
+          response.getWriter(),
+          Map.of(
+              "status", HttpStatus.TOO_MANY_REQUESTS.value(),
+              "message", rateLimitEx.getMessage()));
       return;
     }
     response.setStatus(HttpStatus.UNAUTHORIZED.value());
