@@ -58,10 +58,13 @@ public class SecurityConfig {
                 .csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler())
                 // Login and reporter OTP endpoints are exempt: the SPA fetches its CSRF token
                 // from /api/auth/csrf after the initial page load and uses it for protected writes.
+                // The public reporter-link submit endpoint is also exempt because it requires no
+                // session cookie, so there is no CSRF attack surface.
                 .ignoringRequestMatchers(
                     "/api/auth/login",
                     "/api/auth/reporter/request-otp",
-                    "/api/auth/reporter/verify-otp")
+                    "/api/auth/reporter/verify-otp",
+                    "/api/reporter-links/public/*/submit")
         )
         .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/portraits/**").denyAll()
@@ -85,6 +88,9 @@ public class SecurityConfig {
                     "/statistics",
                     "/statistics/*",
                     "/statistics/*/*").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/reporter-links/public/*").permitAll()
+                .requestMatchers(HttpMethod.POST,
+                    "/api/reporter-links/public/*/submit").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/statistics").hasAnyRole("ADMIN", "REPORTER")
                 .requestMatchers(HttpMethod.GET, "/api/auth/csrf").permitAll()
                 .requestMatchers("/api/auth/login", "/api/auth/logout").permitAll()

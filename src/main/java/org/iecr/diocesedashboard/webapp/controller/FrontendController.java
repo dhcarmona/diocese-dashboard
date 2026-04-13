@@ -17,6 +17,7 @@ public class FrontendController {
    */
   @GetMapping(value = {
       "/login",
+      "/r/{token}",
       "/reports/new",
       "/submit/service-templates/{templateId}",
       "/service-templates/manage",
