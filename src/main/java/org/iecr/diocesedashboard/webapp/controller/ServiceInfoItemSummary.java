@@ -11,7 +11,7 @@ public record ServiceInfoItemSummary(
     Long id,
     String title,
     String description,
-    Boolean required,
+    boolean required,
     ServiceInfoItemType serviceInfoItemType,
     Integer sortOrder) {
 
@@ -26,7 +26,7 @@ public record ServiceInfoItemSummary(
         item.getId(),
         item.getTitle(),
         item.getDescription(),
-        item.getRequired(),
+        Boolean.TRUE.equals(item.getRequired()),
         item.getServiceInfoItemType(),
         item.getSortOrder());
   }

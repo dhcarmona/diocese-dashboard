@@ -36,16 +36,15 @@ public class ReporterLinkPublicSubmissionService {
    * an empty {@link Optional} is returned. A submission failure rolls back the token
    * deletion, allowing the reporter to retry.
    *
-   * @param link            the reporter link to submit against
-   * @param token           the reporter link token used for the atomic delete
+   * @param link            the reporter link to claim and submit against
    * @param instanceRequest the submission data (celebrants, date, responses)
    * @param reporter        the reporter user performing the submission
    * @return the created {@link ServiceInstance}, or empty if the token was already claimed
    */
   @Transactional
-  public Optional<ServiceInstance> claimAndSubmit(ReporterLink link, String token,
+  public Optional<ServiceInstance> claimAndSubmit(ReporterLink link,
       ServiceInstanceRequest instanceRequest, DashboardUser reporter) {
-    if (reporterLinkRepository.deleteByTokenReturningCount(token) == 0) {
+    if (reporterLinkRepository.deleteByTokenReturningCount(link.getToken()) == 0) {
       return Optional.empty();
     }
     return Optional.of(serviceSubmissionService.submit(
