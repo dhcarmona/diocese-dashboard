@@ -2,10 +2,13 @@ package org.iecr.diocesedashboard.webapp.controller;
 
 import jakarta.validation.Valid;
 import org.iecr.diocesedashboard.domain.objects.Church;
+import org.iecr.diocesedashboard.domain.objects.UserRole;
 import org.iecr.diocesedashboard.service.ChurchService;
+import org.iecr.diocesedashboard.webapp.DashboardUserDetails;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -30,12 +33,20 @@ public class ChurchController {
   }
 
   /**
-   * Returns all churches.
+   * Returns churches visible to the caller. Admins receive all churches; reporter users receive
+   * only the churches they are assigned to.
    *
-   * @return list of all churches
+   * @param auth the authenticated principal
+   * @return list of accessible churches
    */
   @GetMapping
-  public List<Church> getAll() {
+  public List<Church> getAll(Authentication auth) {
+    DashboardUserDetails details = (DashboardUserDetails) auth.getPrincipal();
+    if (details.getDashboardUser().getRole() == UserRole.REPORTER) {
+      List<String> assignedNames = details.getDashboardUser().getAssignedChurches()
+          .stream().map(Church::getName).toList();
+      return churchService.findAllById(assignedNames);
+    }
     return churchService.findAll();
   }
 

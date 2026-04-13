@@ -1,11 +1,10 @@
 package org.iecr.diocesedashboard.webapp.controller;
 
-import org.iecr.diocesedashboard.domain.objects.LinkSchedule;
-
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
+import org.iecr.diocesedashboard.domain.objects.LinkSchedule;
 
 import java.time.DayOfWeek;
 import java.util.List;
