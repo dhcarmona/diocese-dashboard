@@ -123,6 +123,18 @@ public class ReporterLinkService {
   }
 
   /**
+   * Atomically deletes the reporter link with the given token and returns whether the token
+   * existed and was successfully claimed. Used to guarantee single-use token semantics.
+   *
+   * @param token the token to claim
+   * @return true if the token existed and was deleted, false if it was already gone
+   */
+  @Transactional
+  public boolean claimToken(String token) {
+    return reporterLinkRepository.deleteByTokenReturningCount(token) > 0;
+  }
+
+  /**
    * Deletes the reporter link with the given token.
    *
    * @param token the token of the link to delete

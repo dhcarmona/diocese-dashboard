@@ -147,9 +147,10 @@ class ReporterLinkPublicControllerTest {
   }
 
   @Test
-  void submit_activeLink_returns201AndRevokesToken() throws Exception {
+  void submit_activeLink_returns201AndClaimsToken() throws Exception {
     when(reporterLinkService.findByToken(TOKEN)).thenReturn(
         Optional.of(buildLink(TOKEN, 5L, "Trinity")));
+    when(reporterLinkService.claimToken(TOKEN)).thenReturn(true);
     ServiceInstance instance = new ServiceInstance();
     instance.setId(42L);
     when(serviceSubmissionService.submit(eq(2L), any(ServiceInstanceRequest.class), any()))
@@ -165,7 +166,7 @@ class ReporterLinkPublicControllerTest {
         .andExpect(status().isCreated())
         .andExpect(jsonPath("$.serviceInstanceId").value(42));
 
-    verify(reporterLinkService).deleteByToken(TOKEN);
+    verify(reporterLinkService).claimToken(TOKEN);
   }
 
   @Test
@@ -200,6 +201,7 @@ class ReporterLinkPublicControllerTest {
   void submit_noCsrfRequired_publiclyAccessible() throws Exception {
     when(reporterLinkService.findByToken(TOKEN)).thenReturn(
         Optional.of(buildLink(TOKEN, 5L, "Trinity")));
+    when(reporterLinkService.claimToken(TOKEN)).thenReturn(true);
     ServiceInstance instance = new ServiceInstance();
     instance.setId(7L);
     when(serviceSubmissionService.submit(eq(2L), any(ServiceInstanceRequest.class), any()))
@@ -213,6 +215,21 @@ class ReporterLinkPublicControllerTest {
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(request)))
         .andExpect(status().isCreated());
+  }
+
+  @Test
+  void submit_tokenAlreadyClaimed_returns409() throws Exception {
+    when(reporterLinkService.findByToken(TOKEN)).thenReturn(
+        Optional.of(buildLink(TOKEN, 5L, "Trinity")));
+    when(reporterLinkService.claimToken(TOKEN)).thenReturn(false);
+
+    ReporterLinkSubmitRequest request = new ReporterLinkSubmitRequest(
+        List.of(), LocalDate.of(2024, 1, 14), List.of());
+
+    mockMvc.perform(post("/api/reporter-links/public/" + TOKEN + "/submit")
+        .contentType(MediaType.APPLICATION_JSON)
+        .content(objectMapper.writeValueAsString(request)))
+        .andExpect(status().isConflict());
   }
 
   @Test
