@@ -1,5 +1,7 @@
 package org.iecr.diocesedashboard.service;
 
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import org.iecr.diocesedashboard.domain.objects.DashboardUser;
 import org.iecr.diocesedashboard.domain.objects.UserRole;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,7 +13,7 @@ import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Locale;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Manages one-time passcodes (OTPs) for reporter user authentication.
@@ -33,6 +35,7 @@ public class ReporterOtpService {
   static final long VERIFY_LOCKOUT_SECONDS = OTP_TTL_SECONDS;
   private static final int OTP_DIGITS = 6;
   private static final int OTP_MODULUS = 1_000_000;
+  private static final long MAX_TRACKED_USERNAMES = 10_000;
 
   private static final Locale WHATSAPP_LOCALE = Locale.forLanguageTag("es");
 
@@ -41,11 +44,9 @@ public class ReporterOtpService {
   private final MessageSource messageSource;
   private final Clock clock;
   private final SecureRandom secureRandom = new SecureRandom();
-  private final ConcurrentHashMap<String, OtpEntry> otpStore = new ConcurrentHashMap<>();
-  private final ConcurrentHashMap<String, RequestAttemptState> requestAttemptStore =
-      new ConcurrentHashMap<>();
-  private final ConcurrentHashMap<String, VerifyAttemptState> verifyAttemptStore =
-      new ConcurrentHashMap<>();
+  private final Cache<String, OtpEntry> otpStore;
+  private final Cache<String, RequestAttemptState> requestAttemptStore;
+  private final Cache<String, VerifyAttemptState> verifyAttemptStore;
 
   @Autowired
   public ReporterOtpService(
@@ -62,6 +63,9 @@ public class ReporterOtpService {
     this.userService = userService;
     this.messageSource = messageSource;
     this.clock = clock;
+    this.otpStore = buildCache(Duration.ofSeconds(OTP_TTL_SECONDS));
+    this.requestAttemptStore = buildCache(Duration.ofSeconds(REQUEST_LOCKOUT_SECONDS));
+    this.verifyAttemptStore = buildCache(Duration.ofSeconds(VERIFY_LOCKOUT_SECONDS));
   }
 
   /**
@@ -77,7 +81,7 @@ public class ReporterOtpService {
     evictExpiredEntries();
     evictExpiredRequestAttempts();
     Instant now = Instant.now(clock);
-    RequestAttemptState existingRequestState = requestAttemptStore.get(username);
+    RequestAttemptState existingRequestState = requestAttemptStore.getIfPresent(username);
     if (existingRequestState != null && now.isBefore(existingRequestState.blockedUntil())) {
       return;
     }
@@ -123,7 +127,7 @@ public class ReporterOtpService {
   public OtpVerificationResult verifyAndConsumeOtp(String username, String code) {
     evictExpiredVerifyAttempts();
     Instant now = Instant.now(clock);
-    VerifyAttemptState attemptState = verifyAttemptStore.get(username);
+    VerifyAttemptState attemptState = verifyAttemptStore.getIfPresent(username);
     if (attemptState != null && now.isBefore(attemptState.blockedUntil())) {
       return OtpVerificationResult.attemptLimitExceeded(
           secondsUntil(now, attemptState.blockedUntil()));
@@ -133,39 +137,36 @@ public class ReporterOtpService {
           secondsUntil(now, attemptState.nextAllowedAttemptAt()));
     }
 
-    OtpEntry entry = otpStore.get(username);
+    OtpEntry entry = otpStore.getIfPresent(username);
     if (entry == null) {
       return recordFailedVerifyAttempt(username, now);
     }
     if (now.isAfter(entry.expiry())) {
-      otpStore.remove(username);
+      otpStore.invalidate(username);
       return recordFailedVerifyAttempt(username, now);
     }
     if (!entry.code().equals(code)) {
       return recordFailedVerifyAttempt(username, now);
     }
-    otpStore.remove(username);
-    verifyAttemptStore.remove(username);
+    otpStore.invalidate(username);
+    verifyAttemptStore.invalidate(username);
     return OtpVerificationResult.success();
   }
 
   private void evictExpiredEntries() {
-    Instant now = Instant.now(clock);
-    otpStore.entrySet().removeIf(entry -> now.isAfter(entry.getValue().expiry()));
+    otpStore.cleanUp();
   }
 
   private void evictExpiredVerifyAttempts() {
-    Instant now = Instant.now(clock);
-    verifyAttemptStore.entrySet().removeIf(entry -> isExpired(entry.getValue(), now));
+    verifyAttemptStore.cleanUp();
   }
 
   private void evictExpiredRequestAttempts() {
-    Instant now = Instant.now(clock);
-    requestAttemptStore.entrySet().removeIf(entry -> isExpired(entry.getValue(), now));
+    requestAttemptStore.cleanUp();
   }
 
   private RequestAttemptState recordOtpRequestAttempt(String username, Instant now) {
-    return requestAttemptStore.compute(
+    return requestAttemptStore.asMap().compute(
         username,
         (ignored, existing) -> {
           RequestAttemptState currentState = existing;
@@ -185,7 +186,7 @@ public class ReporterOtpService {
   }
 
   private OtpVerificationResult recordFailedVerifyAttempt(String username, Instant now) {
-    VerifyAttemptState updatedState = verifyAttemptStore.compute(
+    VerifyAttemptState updatedState = verifyAttemptStore.asMap().compute(
         username,
         (ignored, existing) -> {
           VerifyAttemptState currentState = existing;
@@ -204,7 +205,7 @@ public class ReporterOtpService {
         });
 
     if (updatedState.failedAttempts() >= MAX_FAILED_VERIFY_ATTEMPTS) {
-      otpStore.remove(username);
+      otpStore.invalidate(username);
       return OtpVerificationResult.attemptLimitExceeded(
           secondsUntil(now, updatedState.blockedUntil()));
     }
@@ -221,6 +222,14 @@ public class ReporterOtpService {
 
   private long secondsUntil(Instant now, Instant target) {
     return Math.max(1L, Duration.between(now, target).toSeconds());
+  }
+
+  private <T> Cache<String, T> buildCache(Duration expiryDuration) {
+    return Caffeine.newBuilder()
+        .maximumSize(MAX_TRACKED_USERNAMES)
+        .expireAfterWrite(expiryDuration)
+        .ticker(() -> TimeUnit.MILLISECONDS.toNanos(clock.millis()))
+        .build();
   }
 
   private String generateCode() {
@@ -275,17 +284,17 @@ public class ReporterOtpService {
 
   /** Tracks failed verification attempts and retry timing for a username. */
   record VerifyAttemptState(
-  int failedAttempts,
-  Instant nextAllowedAttemptAt,
-  Instant blockedUntil,
-  Instant attemptWindowEndsAt) {
+      int failedAttempts,
+      Instant nextAllowedAttemptAt,
+      Instant blockedUntil,
+      Instant attemptWindowEndsAt) {
   }
 
   /** Tracks OTP request timing for a username. */
   record RequestAttemptState(
-  int requestAttempts,
-  Instant nextAllowedAttemptAt,
-  Instant blockedUntil,
-  Instant attemptWindowEndsAt) {
+      int requestAttempts,
+      Instant nextAllowedAttemptAt,
+      Instant blockedUntil,
+      Instant attemptWindowEndsAt) {
   }
 }

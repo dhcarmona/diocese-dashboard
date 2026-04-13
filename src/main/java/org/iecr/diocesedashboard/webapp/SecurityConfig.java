@@ -52,7 +52,7 @@ public class SecurityConfig {
    * Configures the security filter chain with session-based form login,
    * session-backed CSRF protection for the React SPA, and role-based authorization.
    *
-    * @param http the {@link HttpSecurity} to configure
+   * @param http the {@link HttpSecurity} to configure
    * @param adminLoginThrottleService tracks failed password attempts for admin login
    * @return the configured {@link SecurityFilterChain}
    * @throws Exception if configuration fails
