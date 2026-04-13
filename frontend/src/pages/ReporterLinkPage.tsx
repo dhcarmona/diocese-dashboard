@@ -18,7 +18,9 @@ import { Link as RouterLink, Navigate, useLocation, useParams } from 'react-rout
 import { type Celebrant, getCelebrants } from '../api/celebrants';
 import {
   getReporterLinkByToken,
+  getReporterLinkPublic,
   submitViaReporterLink,
+  submitViaReporterLinkPublic,
   type ReporterLink,
 } from '../api/reporterLinks';
 import { type ServiceInfoItemSummary, getServiceTemplateById } from '../api/serviceTemplates';
@@ -53,7 +55,7 @@ export default function ReporterLinkPage() {
   const [submitSuccess, setSubmitSuccess] = useState(false);
 
   useEffect(() => {
-    if (status !== 'authenticated' || !token) return;
+    if (status === 'loading' || status === 'error' || !token) return;
 
     let active = true;
     setLoading(true);
@@ -61,25 +63,46 @@ export default function ReporterLinkPage() {
 
     async function loadData() {
       try {
-        const loadedLink = await getReporterLinkByToken(token!);
-        if (!active) return;
+        if (status === 'authenticated') {
+          const loadedLink = await getReporterLinkByToken(token!);
+          if (!active) return;
 
-        if (loadedLink.reporterId !== user!.id) {
-          setLoadError('wrongUser');
-          setLoading(false);
-          return;
+          if (loadedLink.reporterId !== user!.id) {
+            setLoadError('wrongUser');
+            setLoading(false);
+            return;
+          }
+
+          const [loadedTemplate, loadedCelebrants] = await Promise.all([
+            getServiceTemplateById(loadedLink.serviceTemplateId),
+            getCelebrants(),
+          ]);
+          if (!active) return;
+
+          setLink(loadedLink);
+          setInfoItems(loadedTemplate.serviceInfoItems ?? []);
+          setAllCelebrants(loadedCelebrants);
+          setServiceDate(dayjs(loadedLink.activeDate));
+        } else {
+          // Unauthenticated: use the public endpoint; the token is the credential.
+          const publicData = await getReporterLinkPublic(token!);
+          if (!active) return;
+
+          setLink({
+            id: publicData.id,
+            token: publicData.token,
+            reporterId: 0,
+            reporterUsername: '',
+            reporterFullName: null,
+            churchName: publicData.churchName,
+            serviceTemplateId: publicData.serviceTemplateId,
+            serviceTemplateName: publicData.serviceTemplateName,
+            activeDate: publicData.activeDate,
+          });
+          setInfoItems(publicData.serviceInfoItems);
+          setAllCelebrants(publicData.celebrants);
+          setServiceDate(dayjs(publicData.activeDate));
         }
-
-        const [loadedTemplate, loadedCelebrants] = await Promise.all([
-          getServiceTemplateById(loadedLink.serviceTemplateId),
-          getCelebrants(),
-        ]);
-        if (!active) return;
-
-        setLink(loadedLink);
-        setInfoItems(loadedTemplate.serviceInfoItems ?? []);
-        setAllCelebrants(loadedCelebrants);
-        setServiceDate(dayjs(loadedLink.activeDate));
       } catch (err: unknown) {
         if (!active) return;
         const isAxiosError =
@@ -116,7 +139,7 @@ export default function ReporterLinkPage() {
     );
   }
 
-  if (status !== 'authenticated') {
+  if (status === 'error') {
     return (
       <Navigate to={`/login?redirect=${encodeURIComponent(location.pathname)}`} replace />
     );
@@ -238,11 +261,19 @@ export default function ReporterLinkPage() {
       .filter((entry) => entry.responseValue !== '');
 
     try {
-      await submitViaReporterLink(link.token, {
-        celebrantIds: selectedCelebrants.map((c) => c.id),
-        serviceDate: serviceDate.format('YYYY-MM-DD'),
-        responses: responseEntries,
-      });
+      if (status === 'authenticated') {
+        await submitViaReporterLink(link.token, {
+          celebrantIds: selectedCelebrants.map((c) => c.id),
+          serviceDate: serviceDate.format('YYYY-MM-DD'),
+          responses: responseEntries,
+        });
+      } else {
+        await submitViaReporterLinkPublic(link.token, {
+          celebrantIds: selectedCelebrants.map((c) => c.id),
+          serviceDate: serviceDate.format('YYYY-MM-DD'),
+          responses: responseEntries,
+        });
+      }
       setSubmitSuccess(true);
     } catch {
       setSubmitError(true);

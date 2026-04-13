@@ -1,4 +1,5 @@
 import { api, getCsrfHeaders } from './auth';
+import type { Celebrant } from './celebrants';
 import type { ServiceInfoItemSummary } from './serviceTemplates';
 
 export interface ReporterLink {
@@ -15,6 +16,18 @@ export interface ReporterLink {
 
 export interface ReporterLinkWithTemplate extends ReporterLink {
   serviceInfoItems?: ServiceInfoItemSummary[];
+}
+
+/** Full link data returned by the public (unauthenticated) endpoint. */
+export interface ReporterLinkPublicData {
+  id: number;
+  token: string;
+  churchName: string;
+  serviceTemplateId: number;
+  serviceTemplateName: string;
+  activeDate: string;
+  serviceInfoItems: ServiceInfoItemSummary[];
+  celebrants: Celebrant[];
 }
 
 export interface ReporterLinkBulkResult {
@@ -53,6 +66,17 @@ export async function getReporterLinkByToken(token: string): Promise<ReporterLin
   return response.data;
 }
 
+/**
+ * Fetches all data needed to render the reporter link form without authentication.
+ * The token itself serves as the authorization credential.
+ */
+export async function getReporterLinkPublic(token: string): Promise<ReporterLinkPublicData> {
+  const response = await api.get<ReporterLinkPublicData>(
+    `/api/reporter-links/public/${encodeURIComponent(token)}`,
+  );
+  return response.data;
+}
+
 export async function revokeReporterLink(token: string): Promise<void> {
   await api.delete(`/api/reporter-links/${encodeURIComponent(token)}`, {
     headers: await getCsrfHeaders(),
@@ -67,6 +91,21 @@ export async function submitViaReporterLink(
     `/api/reporter-links/${encodeURIComponent(token)}/submit`,
     payload,
     { headers: await getCsrfHeaders() },
+  );
+  return response.data;
+}
+
+/**
+ * Submits a report via the public (unauthenticated) reporter link endpoint.
+ * No session or CSRF token is required.
+ */
+export async function submitViaReporterLinkPublic(
+  token: string,
+  payload: ReporterLinkSubmitPayload,
+): Promise<{ serviceInstanceId: number }> {
+  const response = await api.post<{ serviceInstanceId: number }>(
+    `/api/reporter-links/public/${encodeURIComponent(token)}/submit`,
+    payload,
   );
   return response.data;
 }
