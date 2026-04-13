@@ -127,6 +127,13 @@ class ReporterOtpServiceTest {
   }
 
   @Test
+  void generateAndSendOtp_blankUsername_throwsIllegalArgument() {
+    assertThatThrownBy(() -> reporterOtpService.generateAndSendOtp(" "))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessageContaining("Username");
+  }
+
+  @Test
   void generateAndSendOtp_adminUser_throwsIllegalArgument() {
     DashboardUser admin = new DashboardUser();
     admin.setUsername("admin");
@@ -186,6 +193,12 @@ class ReporterOtpServiceTest {
   @Test
   void verifyAndConsumeOtp_noOtpGenerated_returnsFalse() {
     assertThat(reporterOtpService.verifyAndConsumeOtp("rep1", "123456").isSuccess()).isFalse();
+  }
+
+  @Test
+  void verifyAndConsumeOtp_blankUsername_returnsInvalidWithoutTracking() {
+    assertThat(reporterOtpService.verifyAndConsumeOtp(" ", "123456").isSuccess()).isFalse();
+    verify(userService, never()).findByUsername(anyString());
   }
 
   @Test
