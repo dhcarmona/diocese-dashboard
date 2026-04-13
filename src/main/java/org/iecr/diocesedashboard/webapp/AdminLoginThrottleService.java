@@ -1,9 +1,12 @@
 package org.iecr.diocesedashboard.webapp;
 
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
+
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 /** Tracks failed admin login attempts and enforces throttling plus temporary lockouts. */
 class AdminLoginThrottleService {
@@ -12,13 +15,18 @@ class AdminLoginThrottleService {
   static final int MAX_FAILED_LOGIN_ATTEMPTS = 5;
   static final long LOGIN_ATTEMPT_WINDOW_SECONDS = 600;
   static final long LOGIN_LOCKOUT_SECONDS = 600;
+  private static final long MAX_TRACKED_USERNAMES = 10_000;
 
   private final Clock clock;
-  private final ConcurrentHashMap<String, LoginAttemptState> attemptStore =
-      new ConcurrentHashMap<>();
+  private final Cache<String, LoginAttemptState> attemptStore;
 
   AdminLoginThrottleService(Clock clock) {
     this.clock = clock;
+    this.attemptStore = Caffeine.newBuilder()
+        .maximumSize(MAX_TRACKED_USERNAMES)
+        .expireAfterWrite(Duration.ofSeconds(LOGIN_LOCKOUT_SECONDS))
+        .ticker(() -> TimeUnit.MILLISECONDS.toNanos(clock.millis()))
+        .build();
   }
 
   /**
@@ -33,7 +41,7 @@ class AdminLoginThrottleService {
     }
     evictExpiredAttempts();
     Instant now = Instant.now(clock);
-    LoginAttemptState state = attemptStore.get(username);
+    LoginAttemptState state = attemptStore.getIfPresent(username);
     if (state != null && now.isBefore(state.blockedUntil())) {
       return LoginAttemptResult.attemptLimitExceeded(secondsUntil(now, state.blockedUntil()));
     }
@@ -55,7 +63,7 @@ class AdminLoginThrottleService {
     }
     evictExpiredAttempts();
     Instant now = Instant.now(clock);
-    LoginAttemptState updatedState = attemptStore.compute(
+    LoginAttemptState updatedState = attemptStore.asMap().compute(
         username,
         (ignored, existing) -> {
           LoginAttemptState currentState = existing;
@@ -84,16 +92,15 @@ class AdminLoginThrottleService {
     if (username == null || username.isBlank()) {
       return;
     }
-    attemptStore.remove(username);
+    attemptStore.invalidate(username);
   }
 
   void clearAllAttempts() {
-    attemptStore.clear();
+    attemptStore.invalidateAll();
   }
 
   private void evictExpiredAttempts() {
-    Instant now = Instant.now(clock);
-    attemptStore.entrySet().removeIf(entry -> isExpired(entry.getValue(), now));
+    attemptStore.cleanUp();
   }
 
   private boolean isExpired(LoginAttemptState state, Instant now) {
@@ -141,9 +148,9 @@ class AdminLoginThrottleService {
 
   /** Tracks failed login attempt counts and retry timing for a username. */
   record LoginAttemptState(
-  int failedAttempts,
-  Instant nextAllowedAttemptAt,
-  Instant blockedUntil,
-  Instant attemptWindowEndsAt) {
+      int failedAttempts,
+      Instant nextAllowedAttemptAt,
+      Instant blockedUntil,
+      Instant attemptWindowEndsAt) {
   }
 }
