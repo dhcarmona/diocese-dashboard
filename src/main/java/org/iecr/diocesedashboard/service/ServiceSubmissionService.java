@@ -8,14 +8,20 @@ import org.iecr.diocesedashboard.domain.objects.ServiceInfoItemResponse;
 import org.iecr.diocesedashboard.domain.objects.ServiceInstance;
 import org.iecr.diocesedashboard.domain.objects.ServiceTemplate;
 import org.iecr.diocesedashboard.webapp.controller.ServiceInstanceRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.MessageSource;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Set;
 
 /**
@@ -25,12 +31,17 @@ import java.util.Set;
 @Service
 public class ServiceSubmissionService {
 
+  private static final Logger logger = LoggerFactory.getLogger(ServiceSubmissionService.class);
+  private static final Locale WHATSAPP_LOCALE = Locale.forLanguageTag("es");
+
   private final ServiceTemplateService serviceTemplateService;
   private final ServiceInstanceService serviceInstanceService;
   private final ChurchService churchService;
   private final CelebrantService celebrantService;
   private final ServiceInfoItemService serviceInfoItemService;
   private final ServiceInfoItemResponseService responseService;
+  private final WhatsAppService whatsAppService;
+  private final MessageSource messageSource;
 
   @Autowired
   public ServiceSubmissionService(ServiceTemplateService serviceTemplateService,
@@ -38,18 +49,23 @@ public class ServiceSubmissionService {
       ChurchService churchService,
       CelebrantService celebrantService,
       ServiceInfoItemService serviceInfoItemService,
-      ServiceInfoItemResponseService responseService) {
+      ServiceInfoItemResponseService responseService,
+      WhatsAppService whatsAppService,
+      MessageSource messageSource) {
     this.serviceTemplateService = serviceTemplateService;
     this.serviceInstanceService = serviceInstanceService;
     this.churchService = churchService;
     this.celebrantService = celebrantService;
     this.serviceInfoItemService = serviceInfoItemService;
     this.responseService = responseService;
+    this.whatsAppService = whatsAppService;
+    this.messageSource = messageSource;
   }
 
   /**
    * Creates and persists a new {@link ServiceInstance} from the given template and request,
-   * including all associated celebrants and survey responses.
+   * including all associated celebrants and survey responses. If the submitter has a phone
+   * number on file, a WhatsApp confirmation is sent after the transaction commits.
    *
    * @param templateId  the ID of the {@link ServiceTemplate} to use
    * @param request     the submission request containing church, celebrants, date, and responses
@@ -104,6 +120,42 @@ public class ServiceSubmissionService {
       }
     }
 
+    scheduleSubmissionNotification(submittedBy, template.getServiceTemplateName(),
+        church.getName(),
+        request.serviceDate() != null ? request.serviceDate().toString() : "");
+
     return saved;
+  }
+
+  private void scheduleSubmissionNotification(DashboardUser submittedBy,
+      String templateName, String churchName, String serviceDate) {
+    if (submittedBy == null || submittedBy.getPhoneNumber() == null
+        || submittedBy.getPhoneNumber().isBlank()) {
+      return;
+    }
+    String phone = submittedBy.getPhoneNumber();
+    String username = submittedBy.getUsername();
+    String body = messageSource.getMessage(
+        "whatsapp.report.submitted",
+        new Object[]{templateName, churchName, serviceDate},
+        WHATSAPP_LOCALE);
+    Runnable notify = () -> {
+      try {
+        whatsAppService.sendMessageAndLog(phone, body, username);
+      } catch (Exception ex) {
+        logger.warn("WhatsApp submission notification failed for reporter {} ({}): {}",
+            submittedBy.getId(), username, ex.getMessage());
+      }
+    };
+    if (TransactionSynchronizationManager.isSynchronizationActive()) {
+      TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+        @Override
+        public void afterCommit() {
+          notify.run();
+        }
+      });
+    } else {
+      notify.run();
+    }
   }
 }

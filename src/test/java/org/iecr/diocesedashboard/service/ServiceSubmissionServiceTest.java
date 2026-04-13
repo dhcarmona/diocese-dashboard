@@ -3,26 +3,32 @@ package org.iecr.diocesedashboard.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import org.iecr.diocesedashboard.domain.objects.Celebrant;
 import org.iecr.diocesedashboard.domain.objects.Church;
+import org.iecr.diocesedashboard.domain.objects.DashboardUser;
 import org.iecr.diocesedashboard.domain.objects.ServiceInfoItem;
 import org.iecr.diocesedashboard.domain.objects.ServiceInfoItemType;
 import org.iecr.diocesedashboard.domain.objects.ServiceInstance;
 import org.iecr.diocesedashboard.domain.objects.ServiceTemplate;
+import org.iecr.diocesedashboard.domain.objects.UserRole;
 import org.iecr.diocesedashboard.webapp.controller.ServiceInstanceRequest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.MessageSource;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 
 @ExtendWith(MockitoExtension.class)
@@ -40,6 +46,10 @@ class ServiceSubmissionServiceTest {
   private ServiceInfoItemService serviceInfoItemService;
   @Mock
   private ServiceInfoItemResponseService responseService;
+  @Mock
+  private WhatsAppService whatsAppService;
+  @Mock
+  private MessageSource messageSource;
 
   @InjectMocks
   private ServiceSubmissionService serviceSubmissionService;
@@ -71,6 +81,15 @@ class ServiceSubmissionServiceTest {
     item.setTitle("attendance");
     item.setServiceInfoItemType(ServiceInfoItemType.NUMERICAL);
     return item;
+  }
+
+  private DashboardUser buildReporter(String phone) {
+    DashboardUser user = new DashboardUser();
+    user.setId(42L);
+    user.setUsername("reporter1");
+    user.setRole(UserRole.REPORTER);
+    user.setPhoneNumber(phone);
+    return user;
   }
 
   @Test
@@ -176,5 +195,42 @@ class ServiceSubmissionServiceTest {
     assertThatThrownBy(() -> serviceSubmissionService.submit(1L, request, null))
         .isInstanceOf(ResponseStatusException.class)
         .hasMessageContaining("ServiceInfoItem not found");
+  }
+
+  @Test
+  void submit_withReporterPhone_sendsWhatsAppNotification() {
+    when(serviceTemplateService.findById(1L)).thenReturn(Optional.of(buildTemplate()));
+    when(churchService.findById("Trinity")).thenReturn(Optional.of(buildChurch()));
+    ServiceInstance saved = new ServiceInstance();
+    saved.setId(1L);
+    when(serviceInstanceService.save(any())).thenReturn(saved);
+    when(messageSource.getMessage(eq("whatsapp.report.submitted"), any(), any(Locale.class)))
+        .thenReturn("Confirmation message");
+
+    DashboardUser reporter = buildReporter("+50688887777");
+    ServiceInstanceRequest request = new ServiceInstanceRequest(
+        "Trinity", List.of(), LocalDate.of(2024, 3, 10), List.of());
+
+    serviceSubmissionService.submit(1L, request, reporter);
+
+    verify(whatsAppService).sendMessageAndLog(
+        eq("+50688887777"), eq("Confirmation message"), eq("reporter1"));
+  }
+
+  @Test
+  void submit_withNoPhone_doesNotSendWhatsApp() {
+    when(serviceTemplateService.findById(1L)).thenReturn(Optional.of(buildTemplate()));
+    when(churchService.findById("Trinity")).thenReturn(Optional.of(buildChurch()));
+    ServiceInstance saved = new ServiceInstance();
+    saved.setId(1L);
+    when(serviceInstanceService.save(any())).thenReturn(saved);
+
+    DashboardUser reporter = buildReporter(null);
+    ServiceInstanceRequest request = new ServiceInstanceRequest(
+        "Trinity", List.of(), LocalDate.of(2024, 3, 10), List.of());
+
+    serviceSubmissionService.submit(1L, request, reporter);
+
+    verify(whatsAppService, never()).sendMessageAndLog(any(), any(), any(String.class));
   }
 }
