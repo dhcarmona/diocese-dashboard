@@ -15,8 +15,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.hamcrest.Matchers;
 import org.iecr.diocesedashboard.domain.objects.Church;
+import org.iecr.diocesedashboard.domain.objects.UserRole;
 import org.iecr.diocesedashboard.service.ChurchService;
 import org.iecr.diocesedashboard.webapp.SecurityConfig;
+import org.iecr.diocesedashboard.webapp.WithMockDashboardUser;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -57,7 +59,7 @@ class ChurchControllerTest {
   // --- GET /api/churches ---
 
   @Test
-  @WithMockUser(roles = "ADMIN")
+  @WithMockDashboardUser(role = UserRole.ADMIN)
   void getAll_asAdmin_returns200WithList() throws Exception {
     when(churchService.findAll()).thenReturn(List.of(buildChurch("ChurchA"), buildChurch("ChurchB")));
 
@@ -69,12 +71,14 @@ class ChurchControllerTest {
   }
 
   @Test
-  @WithMockUser(roles = "REPORTER")
-  void getAll_asReporter_returns200() throws Exception {
-    when(churchService.findAll()).thenReturn(List.of());
+  @WithMockDashboardUser(role = UserRole.REPORTER, churchName = "ChurchA")
+  void getAll_asReporter_returnsOnlyAssignedChurches() throws Exception {
+    when(churchService.findAllById(List.of("ChurchA"))).thenReturn(List.of(buildChurch("ChurchA")));
 
     mockMvc.perform(get("/api/churches"))
-        .andExpect(status().isOk());
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.length()").value(1))
+        .andExpect(jsonPath("$[0].name").value("ChurchA"));
   }
 
   @Test

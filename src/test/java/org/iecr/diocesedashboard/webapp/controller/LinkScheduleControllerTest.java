@@ -21,10 +21,12 @@ import org.iecr.diocesedashboard.service.LinkScheduleService;
 import org.iecr.diocesedashboard.webapp.SecurityConfig;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.test.context.support.WithMockUser;
@@ -35,8 +37,6 @@ import java.time.DayOfWeek;
 import java.time.Instant;
 import java.util.List;
 import java.util.Set;
-
-import org.springframework.http.HttpStatus;
 
 @WebMvcTest(LinkScheduleController.class)
 @Import(SecurityConfig.class)
@@ -244,7 +244,7 @@ class LinkScheduleControllerTest {
   @Test
   @WithMockUser(roles = "ADMIN")
   void delete_notFound_returns404() throws Exception {
-    org.mockito.Mockito.doThrow(new ResponseStatusException(HttpStatus.NOT_FOUND))
+    Mockito.doThrow(new ResponseStatusException(HttpStatus.NOT_FOUND))
         .when(linkScheduleService).delete(99L);
 
     mockMvc.perform(delete("/api/link-schedules/99").with(csrf()))
