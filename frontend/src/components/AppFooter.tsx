@@ -15,7 +15,7 @@ function formatBuildTime(iso: string): string {
   return `${yyyy}-${mm}-${dd} ${hh}:${min} GMT-6`;
 }
 
-const BUILD_LABEL = formatBuildTime(__BUILD_TIME__);
+const BUILD_LABEL = `${formatBuildTime(__BUILD_TIME__)} (${__COMMIT_HASH__})`;
 
 interface AppFooterProps {
   showBuildInfo?: boolean;
@@ -26,26 +26,24 @@ export default function AppFooter({ showBuildInfo = false }: Readonly<AppFooterP
     <Box
       component="footer"
       sx={{
-        position: 'relative',
         display: 'flex',
         alignItems: 'center',
-        justifyContent: 'center',
         px: 3,
         py: 1.5,
         bgcolor: 'primary.dark',
       }}
     >
+      <Box sx={{ flex: 1 }} />
       <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.7)' }}>
         © {CURRENT_YEAR} Misión Santa Clara de Asís – IECR
       </Typography>
-      {showBuildInfo && (
-        <Typography
-          variant="caption"
-          sx={{ position: 'absolute', right: 16, color: 'rgba(255,255,255,0.4)' }}
-        >
-          Build {BUILD_LABEL}
-        </Typography>
-      )}
+      <Box sx={{ flex: 1, display: 'flex', justifyContent: 'flex-end' }}>
+        {showBuildInfo && (
+          <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.4)' }}>
+            Build {BUILD_LABEL}
+          </Typography>
+        )}
+      </Box>
     </Box>
   );
 }

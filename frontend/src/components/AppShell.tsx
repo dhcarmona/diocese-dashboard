@@ -79,7 +79,7 @@ export default function AppShell({ children }: Readonly<{ children: ReactNode }>
       <Box component="main" sx={{ flex: 1, maxWidth: 1200, mx: 'auto', px: { xs: 2, md: 4 }, py: 4 }}>
         {children}
       </Box>
-      <AppFooter showBuildInfo={user !== null} />
+      <AppFooter showBuildInfo={true} />
     </Box>
   );
 }
