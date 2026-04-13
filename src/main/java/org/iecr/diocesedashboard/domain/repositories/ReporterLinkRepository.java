@@ -4,6 +4,9 @@ import org.iecr.diocesedashboard.domain.objects.Church;
 import org.iecr.diocesedashboard.domain.objects.ReporterLink;
 import org.iecr.diocesedashboard.domain.objects.ServiceTemplate;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
@@ -33,6 +36,17 @@ public interface ReporterLinkRepository extends JpaRepository<ReporterLink, Long
    * @param token the token of the link to delete
    */
   void deleteByToken(String token);
+
+  /**
+   * Atomically deletes the link with the given token and returns the number of rows deleted.
+   * Used to implement single-use token semantics without a race condition.
+   *
+   * @param token the token of the link to delete
+   * @return 1 if the token existed and was deleted, 0 if it was not found
+   */
+  @Modifying
+  @Query("DELETE FROM ReporterLink r WHERE r.token = :token")
+  int deleteByTokenReturningCount(@Param("token") String token);
 
   /**
    * Finds all reporter links for a given church and service template.

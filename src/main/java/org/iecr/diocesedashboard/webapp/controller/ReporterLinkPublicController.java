@@ -53,8 +53,11 @@ public class ReporterLinkPublicController {
     ReporterLink link = reporterLinkService.findByToken(token)
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
             "Reporter link not found"));
-    List<ServiceInfoItemSummary> infoItems = link.getServiceTemplate().getServiceInfoItems()
-        .stream().map(ServiceInfoItemSummary::from).toList();
+    List<ServiceInfoItemSummary> infoItems;
+    var rawItems = link.getServiceTemplate().getServiceInfoItems();
+    infoItems = rawItems == null
+        ? List.of()
+        : rawItems.stream().map(ServiceInfoItemSummary::from).toList();
     List<CelebrantSummary> celebrants = celebrantService.findAll()
         .stream().map(CelebrantSummary::from).toList();
     return ResponseEntity.ok(ReporterLinkPublicResponse.from(link, infoItems, celebrants));
@@ -95,9 +98,12 @@ public class ReporterLinkPublicController {
         request.celebrantIds(),
         request.serviceDate(),
         request.responses());
+    if (!reporterLinkService.claimToken(token)) {
+      throw new ResponseStatusException(HttpStatus.CONFLICT,
+          "This reporter link has already been used");
+    }
     ServiceInstance created = serviceSubmissionService.submit(
-        link.getServiceTemplate().getId(), instanceRequest, link.getReporter());
-    reporterLinkService.deleteByToken(token);
+        link.getServiceTemplate().getId(), instanceRequest, reporter);
     return ResponseEntity.status(HttpStatus.CREATED)
         .body(ReporterLinkSubmissionResponse.from(created));
   }
