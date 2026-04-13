@@ -112,7 +112,15 @@ class AdminLoginThrottleService {
   }
 
   private long secondsUntil(Instant now, Instant target) {
-    return Math.max(1L, Duration.between(now, target).toSeconds());
+    if (!target.isAfter(now)) {
+      return 1L;
+    }
+    Duration duration = Duration.between(now, target);
+    long seconds = duration.getSeconds();
+    if (duration.getNano() > 0) {
+      seconds++;
+    }
+    return Math.max(1L, seconds);
   }
 
   /** Result of checking or recording a login attempt. */

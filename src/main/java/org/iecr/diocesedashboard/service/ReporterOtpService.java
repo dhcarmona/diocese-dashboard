@@ -94,6 +94,9 @@ public class ReporterOtpService {
    *                                  or if the reporter has no phone number registered
    */
   public void generateAndSendOtp(String username) {
+    if (!hasText(username)) {
+      throw new IllegalArgumentException("Username must not be blank.");
+    }
     evictExpiredEntries();
     evictExpiredRequestAttempts();
     Instant now = Instant.now(clock);
@@ -141,6 +144,9 @@ public class ReporterOtpService {
    * @return the verification result, including rate-limit information when applicable
    */
   public OtpVerificationResult verifyAndConsumeOtp(String username, String code) {
+    if (!hasText(username) || !hasText(code)) {
+      return OtpVerificationResult.invalid();
+    }
     evictExpiredVerifyAttempts();
     Instant now = Instant.now(clock);
     VerifyAttemptState attemptState = verifyAttemptStore.getIfPresent(username);
@@ -237,7 +243,19 @@ public class ReporterOtpService {
   }
 
   private long secondsUntil(Instant now, Instant target) {
-    return Math.max(1L, Duration.between(now, target).toSeconds());
+    if (!target.isAfter(now)) {
+      return 1L;
+    }
+    Duration duration = Duration.between(now, target);
+    long seconds = duration.getSeconds();
+    if (duration.getNano() > 0) {
+      seconds++;
+    }
+    return Math.max(1L, seconds);
+  }
+
+  private boolean hasText(String value) {
+    return value != null && !value.isBlank();
   }
 
   private <T> Cache<String, T> buildCache(Duration expiryDuration) {

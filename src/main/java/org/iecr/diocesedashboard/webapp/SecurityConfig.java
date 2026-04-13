@@ -62,14 +62,11 @@ public class SecurityConfig {
    * session-backed CSRF protection for the React SPA, and role-based authorization.
    *
    * @param http the {@link HttpSecurity} to configure
-   * @param adminLoginThrottleService tracks failed password attempts for admin login
    * @return the configured {@link SecurityFilterChain}
    * @throws Exception if configuration fails
    */
   @Bean
-  public SecurityFilterChain filterChain(
-      HttpSecurity http,
-      AdminLoginThrottleService adminLoginThrottleService) throws Exception {
+  public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
     HttpSessionCsrfTokenRepository csrfTokenRepository = new HttpSessionCsrfTokenRepository();
     csrfTokenRepository.setHeaderName("X-CSRF-TOKEN");
     http
@@ -135,10 +132,7 @@ public class SecurityConfig {
         )
         .formLogin(form -> form
                 .loginProcessingUrl("/api/auth/login")
-                .successHandler((req, res, auth) -> {
-                  adminLoginThrottleService.clearFailedAttempts(req.getParameter("username"));
-                  res.setStatus(HttpStatus.OK.value());
-                })
+                .successHandler((req, res, auth) -> res.setStatus(HttpStatus.OK.value()))
                 .failureHandler((req, res, ex) ->
                     writeAuthenticationFailureResponse(res, ex))
                 .permitAll()
