@@ -4,6 +4,9 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
 function getCommitHash(): string {
+  if (process.env.SOURCE_VERSION) {
+    return process.env.SOURCE_VERSION.slice(0, 7);
+  }
   try {
     return execSync('git rev-parse --short=7 HEAD').toString().trim();
   } catch {
