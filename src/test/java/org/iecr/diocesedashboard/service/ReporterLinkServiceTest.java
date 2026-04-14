@@ -184,18 +184,27 @@ class ReporterLinkServiceTest {
     DashboardUser reporter = buildReporter();
     reporter.setPhoneNumber("+50688887777");
     reporter.setPreferredLanguage("en");
+    LocalDate activeDate = LocalDate.now();
     when(userRepository.findReportersByAssignedChurchName("Trinity"))
         .thenReturn(List.of(reporter));
     when(reporterLinkRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
     when(messageSource.getMessage(any(), any(), any(), any())).thenReturn("link message");
 
     reporterLinkService.createLinksForChurches(
-        List.of(buildChurch()), buildTemplate(), LocalDate.now(), "http://testserver");
+        List.of(buildChurch()), buildTemplate(), activeDate, "http://testserver");
 
+    ArgumentCaptor<Object[]> messageArguments = ArgumentCaptor.forClass(Object[].class);
     verify(whatsAppService).sendMessageAndLog(eq("+50688887777"), eq("link message"),
         contains("Sunday Mass"), eq("reporter1"));
     verify(messageSource).getMessage(
-        eq("reporter.link.whatsapp.message"), any(), any(), eq(Locale.ENGLISH));
+        eq("reporter.link.whatsapp.message"), messageArguments.capture(), any(),
+        eq(Locale.ENGLISH));
+    Object[] localizedArguments = messageArguments.getValue();
+    assertThat(localizedArguments[0]).isEqualTo("Sunday Mass");
+    assertThat(localizedArguments[1]).isEqualTo("Trinity");
+    assertThat(localizedArguments[2]).isEqualTo(activeDate);
+    assertThat(localizedArguments[3]).isInstanceOf(String.class);
+    assertThat((String) localizedArguments[3]).startsWith("http://testserver/r/");
   }
 
   @Test

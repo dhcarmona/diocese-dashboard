@@ -95,7 +95,8 @@ public class ReporterLinkService {
       String token = link.getToken();
       String templateName = serviceTemplate.getServiceTemplateName();
       pendingNotifications.add(
-          () -> sendLinkNotification(reporter, token, activeDate, templateName, baseUrl));
+          () -> sendLinkNotification(reporter, token, activeDate, templateName,
+              church.getName(), baseUrl));
     }
 
     dispatchAfterCommit(pendingNotifications);
@@ -131,7 +132,7 @@ public class ReporterLinkService {
   }
 
   private void sendLinkNotification(DashboardUser reporter, String token,
-      LocalDate activeDate, String templateName, String baseUrl) {
+      LocalDate activeDate, String templateName, String churchName, String baseUrl) {
     String phone = reporter.getPhoneNumber();
     if (phone == null || phone.isBlank()) {
       return;
@@ -139,9 +140,9 @@ public class ReporterLinkService {
     String linkUrl = baseUrl + "/r/" + token;
     String message = messageSource.getMessage(
         "reporter.link.whatsapp.message",
-        new Object[]{templateName, activeDate, linkUrl},
+        new Object[]{templateName, churchName, activeDate, linkUrl},
         "Tiene un nuevo enlace de reporte para \"" + templateName + "\" ("
-            + activeDate + "): " + linkUrl,
+            + churchName + ", " + activeDate + "): " + linkUrl,
         reporter.getPreferredLocale());
     try {
       whatsAppService.sendMessageAndLog(phone, message,
