@@ -211,7 +211,7 @@ public class ReporterLinkController {
     reporterLinkService.deleteByToken(token);
     var nextReporterLink = reporterLinkService.findNextPendingLinkForReporter(user);
     return ResponseEntity.status(HttpStatus.CREATED)
-        .body(ReportSubmissionResponse.from(created, nextReporterLink));
+        .body(ReportSubmissionResponse.fromAuthenticated(created, nextReporterLink));
   }
 
   private boolean canAccess(ReporterLink link, Authentication auth) {

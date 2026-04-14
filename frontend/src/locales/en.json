@@ -129,6 +129,7 @@
     "nextPendingMessage": "You still have a pending reporter link for {{date}}.",
     "nextPendingMessageNoDate": "You still have a pending reporter link waiting for you.",
     "openNextPendingLink": "Open Next Pending Link",
+    "nextPendingError": "We could not open the next pending link. Please try again.",
     "upToDateTitle": "You are up to date",
     "upToDateMessage": "All your pending reporter links have been completed.",
     "submitAnother": "Submit Another",

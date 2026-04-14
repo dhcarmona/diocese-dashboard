@@ -48,6 +48,11 @@ export interface ReporterLinkSubmitPayload {
   responses: Array<{ serviceInfoItemId: number; responseValue: string }>;
 }
 
+export interface ReporterLinkFollowUpResponse {
+  nextReporterLinkToken: string;
+  nextReporterLinkActiveDate: string | null;
+}
+
 export async function getReporterLinks(): Promise<ReporterLink[]> {
   const response = await api.get<ReporterLink[]>('/api/reporter-links');
   return response.data;
@@ -107,6 +112,15 @@ export async function submitViaReporterLinkPublic(
   const response = await api.post<ReportSubmissionResponse>(
     `/api/reporter-links/public/${encodeURIComponent(token)}/submit`,
     payload,
+  );
+  return response.data;
+}
+
+export async function getNextPublicReporterLink(
+  followUpToken: string,
+): Promise<ReporterLinkFollowUpResponse> {
+  const response = await api.get<ReporterLinkFollowUpResponse>(
+    `/api/reporter-links/public/follow-up/${encodeURIComponent(followUpToken)}`,
   );
   return response.data;
 }

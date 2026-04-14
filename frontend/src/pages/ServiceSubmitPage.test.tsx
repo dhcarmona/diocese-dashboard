@@ -219,6 +219,7 @@ describe('ServiceSubmitPage', () => {
     mockedSubmit.mockResolvedValue({
       serviceInstanceId: 99,
       nextReporterLinkToken: 'next-token',
+      nextReporterLinkFollowUpToken: null,
       nextReporterLinkActiveDate: '2026-04-15',
     });
 
@@ -270,6 +271,7 @@ describe('ServiceSubmitPage', () => {
     mockedSubmit.mockResolvedValue({
       serviceInstanceId: 100,
       nextReporterLinkToken: null,
+      nextReporterLinkFollowUpToken: null,
       nextReporterLinkActiveDate: null,
     });
 
