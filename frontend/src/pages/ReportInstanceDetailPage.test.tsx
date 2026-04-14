@@ -170,7 +170,7 @@ describe('ReportInstanceDetailPage', () => {
 
     expect(screen.getByText(/Trinity Church/)).toBeInTheDocument();
     expect(screen.getByText(/Jonathan Smith/)).toBeInTheDocument();
-    expect(screen.getByText(/2026-01-15/)).toBeInTheDocument();
+    expect(screen.getByText(/15 Jan 2026/)).toBeInTheDocument();
     expect(screen.getByLabelText(/attendance/i)).toHaveValue(42);
   });
 

@@ -109,6 +109,7 @@ describe('StatisticsReportPage', () => {
       expect(screen.getByText('Sunday Eucharist')).toBeInTheDocument();
     });
     expect(screen.getByText('Trinity')).toBeInTheDocument();
+    expect(screen.getByText('01 Jan 2024 – 31 Dec 2024')).toBeInTheDocument();
   });
 
   it('renders celebrant names in the celebrant section', async () => {
@@ -149,6 +150,7 @@ describe('StatisticsReportPage', () => {
       expect(screen.getByText('Reports to Fill')).toBeInTheDocument();
     });
     expect(screen.getByText('Maria Lopez (mlopez)')).toBeInTheDocument();
+    expect(screen.getByText('01 Jun 2025')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /\/r\/abc123/ })).toHaveAttribute(
       'href',
       '/r/abc123',

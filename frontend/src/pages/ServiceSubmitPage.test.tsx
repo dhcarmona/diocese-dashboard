@@ -240,7 +240,7 @@ describe('ServiceSubmitPage', () => {
     });
 
     expect(
-      screen.getByText('You still have a pending reporter link for 15/04/2026.'),
+      screen.getByText('You still have a pending reporter link for 15 Apr 2026.'),
     ).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Open Next Pending Link' })).toHaveAttribute(
       'href',

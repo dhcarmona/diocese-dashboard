@@ -40,6 +40,7 @@ import {
 import { type ServiceTemplate, getServiceTemplates } from '../api/serviceTemplates';
 import PageHeader from '../components/PageHeader';
 import ScheduleDialog, { type ScheduleFormValues } from '../components/ScheduleDialog';
+import { APP_DATE_FORMAT, formatDate } from '../utils/dateFormatting';
 
 type FeedbackSeverity = 'success' | 'error' | 'warning';
 
@@ -49,7 +50,7 @@ interface FeedbackState {
 }
 
 export default function ReporterLinkManagementPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   const [templates, setTemplates] = useState<ServiceTemplate[]>([]);
   const [allChurches, setAllChurches] = useState<Church[]>([]);
@@ -318,7 +319,7 @@ export default function ReporterLinkManagementPage() {
                 label={t('reporterLinks.form.dateLabel')}
                 value={selectedDate}
                 onChange={(val) => setSelectedDate(val)}
-                format="DD/MM/YYYY"
+                format={APP_DATE_FORMAT}
                 disabled={submitting}
                 slotProps={{
                   textField: { required: true, fullWidth: true },
@@ -493,7 +494,10 @@ export default function ReporterLinkManagementPage() {
                             <Typography component="span" variant="body2" color="text.secondary">
                               {schedule.lastTriggeredDate
                                 ? t('reporterLinks.schedules.lastTriggered', {
-                                    date: dayjs(schedule.lastTriggeredDate).format('DD/MM/YYYY'),
+                                    date: formatDate(
+                                      schedule.lastTriggeredDate,
+                                      i18n.resolvedLanguage,
+                                    ),
                                   })
                                 : t('reporterLinks.schedules.neverTriggered')}
                             </Typography>
@@ -563,7 +567,7 @@ export default function ReporterLinkManagementPage() {
                             </Typography>
                             <Typography component="span" variant="body2" color="text.secondary">
                               {t('reporterLinks.list.activeDate', {
-                                date: dayjs(link.activeDate).format('DD/MM/YYYY'),
+                                date: formatDate(link.activeDate, i18n.resolvedLanguage),
                               })}
                             </Typography>
                           </Stack>

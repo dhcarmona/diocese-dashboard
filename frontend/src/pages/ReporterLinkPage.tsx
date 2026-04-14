@@ -35,6 +35,7 @@ import { useAuth } from '../auth/auth-context';
 import AppShell from '../components/AppShell';
 import PageHeader from '../components/PageHeader';
 import ReporterLinkFollowUpCard from '../components/ReporterLinkFollowUpCard';
+import { formatDate } from '../utils/dateFormatting';
 
 function getInputAdornment(type: ServiceInfoItemSummary['serviceInfoItemType']): string | null {
   if (type === 'DOLLARS') return '$';
@@ -44,7 +45,7 @@ function getInputAdornment(type: ServiceInfoItemSummary['serviceInfoItemType']):
 
 export default function ReporterLinkPage() {
   const { token } = useParams<{ token: string }>();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { user, status } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
@@ -217,7 +218,7 @@ export default function ReporterLinkPage() {
 
   const today = dayjs().startOf('day');
   const activeDateObj = dayjs(link.activeDate);
-  const formattedActiveDate = activeDateObj.format('DD/MM/YYYY');
+  const formattedActiveDate = formatDate(link.activeDate, i18n.resolvedLanguage);
   const isNotYetActive = activeDateObj.isAfter(today);
 
   if (isNotYetActive) {

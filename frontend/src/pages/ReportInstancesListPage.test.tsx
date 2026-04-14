@@ -67,6 +67,7 @@ describe('ReportInstancesListPage', () => {
     expect(screen.getByText('St. Paul')).toBeInTheDocument();
     expect(screen.getByText('Jonathan Smith')).toBeInTheDocument();
     expect(screen.getByText('Ana Perez')).toBeInTheDocument();
+    expect(screen.getAllByText('15 Jan 2026')).toHaveLength(2);
     expect(screen.getAllByRole('link', { name: /view details/i })).toHaveLength(2);
   });
 
@@ -113,6 +114,7 @@ describe('ReportInstancesListPage', () => {
     await waitFor(() => {
       expect(screen.getByText('Submitted At')).toBeInTheDocument();
     });
+    expect(screen.getByText('15 Jan 2026, 10:30')).toBeInTheDocument();
   });
 
   it('hides the Submitted At column when all values are null', async () => {
