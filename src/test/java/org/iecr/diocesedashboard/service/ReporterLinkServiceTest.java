@@ -188,7 +188,7 @@ class ReporterLinkServiceTest {
     when(userRepository.findReportersByAssignedChurchName("Trinity"))
         .thenReturn(List.of(reporter));
     when(reporterLinkRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
-    when(messageSource.getMessage(any(), any(), any(), any())).thenReturn("link message");
+    when(messageSource.getMessage(any(), any(), any(Locale.class))).thenReturn("link message");
 
     reporterLinkService.createLinksForChurches(
         List.of(buildChurch()), buildTemplate(), activeDate, "http://testserver");
@@ -197,8 +197,7 @@ class ReporterLinkServiceTest {
     verify(whatsAppService).sendMessageAndLog(eq("+50688887777"), eq("link message"),
         contains("Sunday Mass"), eq("reporter1"));
     verify(messageSource).getMessage(
-        eq("reporter.link.whatsapp.message"), messageArguments.capture(), any(),
-        eq(Locale.ENGLISH));
+        eq("reporter.link.whatsapp.message"), messageArguments.capture(), eq(Locale.ENGLISH));
     Object[] localizedArguments = messageArguments.getValue();
     assertThat(localizedArguments[0]).isEqualTo("Sunday Mass");
     assertThat(localizedArguments[1]).isEqualTo("Trinity");
@@ -228,7 +227,7 @@ class ReporterLinkServiceTest {
     when(userRepository.findReportersByAssignedChurchName("Trinity"))
         .thenReturn(List.of(reporter));
     when(reporterLinkRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
-    when(messageSource.getMessage(any(), any(), any(), any())).thenReturn("msg");
+    when(messageSource.getMessage(any(), any(), any(Locale.class))).thenReturn("msg");
     Mockito.doThrow(new RuntimeException("network error"))
         .when(whatsAppService).sendMessageAndLog(any(), any(), any(), any());
 
