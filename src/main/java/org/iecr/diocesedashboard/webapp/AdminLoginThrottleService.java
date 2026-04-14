@@ -160,9 +160,9 @@ class AdminLoginThrottleService {
 
   /** Tracks failed login attempt counts and retry timing for a username. */
   record LoginAttemptState(
-      int failedAttempts,
-      Instant nextAllowedAttemptAt,
-      Instant blockedUntil,
-      Instant attemptWindowEndsAt) {
+  int failedAttempts,
+  Instant nextAllowedAttemptAt,
+  Instant blockedUntil,
+  Instant attemptWindowEndsAt) {
   }
 }

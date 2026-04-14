@@ -315,17 +315,17 @@ public class ReporterOtpService {
 
   /** Tracks failed verification attempts and retry timing for a username. */
   record VerifyAttemptState(
-      int failedAttempts,
-      Instant nextAllowedAttemptAt,
-      Instant blockedUntil,
-      Instant attemptWindowEndsAt) {
+  int failedAttempts,
+  Instant nextAllowedAttemptAt,
+  Instant blockedUntil,
+  Instant attemptWindowEndsAt) {
   }
 
   /** Tracks OTP request timing for a username. */
   record RequestAttemptState(
-      int requestAttempts,
-      Instant nextAllowedAttemptAt,
-      Instant blockedUntil,
-      Instant attemptWindowEndsAt) {
+  int requestAttempts,
+  Instant nextAllowedAttemptAt,
+  Instant blockedUntil,
+  Instant attemptWindowEndsAt) {
   }
 }
