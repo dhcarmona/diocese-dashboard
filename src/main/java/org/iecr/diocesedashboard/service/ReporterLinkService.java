@@ -18,7 +18,6 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -27,7 +26,6 @@ import java.util.UUID;
 public class ReporterLinkService {
 
   private static final Logger logger = LoggerFactory.getLogger(ReporterLinkService.class);
-  private static final Locale WHATSAPP_LOCALE = Locale.forLanguageTag("es");
 
   private final ReporterLinkRepository reporterLinkRepository;
   private final UserRepository userRepository;
@@ -144,7 +142,7 @@ public class ReporterLinkService {
         new Object[]{templateName, activeDate, linkUrl},
         "Tiene un nuevo enlace de reporte para \"" + templateName + "\" ("
             + activeDate + "): " + linkUrl,
-        WHATSAPP_LOCALE);
+        reporter.getPreferredLocale());
     try {
       whatsAppService.sendMessageAndLog(phone, message,
           "Link for \"" + templateName + "\" sent.", reporter.getUsername());

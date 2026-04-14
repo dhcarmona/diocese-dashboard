@@ -10,6 +10,7 @@ function renderHomePage(overrides: Partial<AuthContextValue>) {
       id: 1,
       username: 'demo',
       role: 'REPORTER',
+      preferredLanguage: 'en',
       assignedChurchNames: ['Trinity'],
     },
     status: 'authenticated',
@@ -18,6 +19,7 @@ function renderHomePage(overrides: Partial<AuthContextValue>) {
     reporterSignIn: async () => {},
     signOut: async () => {},
     refreshUser: async () => null,
+    updatePreferredLanguage: async () => {},
     ...overrides,
   };
 
@@ -61,6 +63,7 @@ describe('HomePage', () => {
         id: 2,
         username: 'admin',
         role: 'ADMIN',
+        preferredLanguage: 'en',
         assignedChurchNames: [],
       },
     });
@@ -75,7 +78,13 @@ describe('HomePage', () => {
 
   it('shows the statistics tile for admins', () => {
     renderHomePage({
-      user: { id: 2, username: 'admin', role: 'ADMIN', assignedChurchNames: [] },
+      user: {
+        id: 2,
+        username: 'admin',
+        role: 'ADMIN',
+        preferredLanguage: 'en',
+        assignedChurchNames: [],
+      },
     });
 
     expect(screen.getByRole('link', { name: /statistics/i })).toBeInTheDocument();

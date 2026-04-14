@@ -4,6 +4,7 @@ import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -229,6 +230,23 @@ class SecurityConfigTest {
   @WithMockDashboardUser(role = UserRole.REPORTER)
   void currentUser_reporter_passesSecurityLayer() throws Exception {
     mockMvc.perform(get("/api/auth/me"))
+        .andExpect(status().isOk());
+  }
+
+  @Test
+  @WithMockDashboardUser(role = UserRole.REPORTER)
+  void updatePreferredLanguage_reporter_passesSecurityLayer() throws Exception {
+    DashboardUser user = new DashboardUser();
+    user.setId(1L);
+    user.setUsername("testuser");
+    user.setRole(UserRole.REPORTER);
+    user.setPreferredLanguage("en");
+    when(userDetailsService.updatePreferredLanguage(1L, "en")).thenReturn(user);
+
+    mockMvc.perform(put("/api/auth/me/language")
+        .with(csrf())
+        .contentType("application/json")
+        .content("{\"language\":\"en\"}"))
         .andExpect(status().isOk());
   }
 

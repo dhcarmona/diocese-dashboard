@@ -138,6 +138,23 @@ class UserServiceTest {
   }
 
   @Test
+  void createUser_reporter_usesPreferredLanguageForWelcomeMessage() {
+    when(userRepository.save(any(DashboardUser.class))).thenAnswer(inv -> {
+      DashboardUser saved = inv.getArgument(0);
+      saved.setPreferredLanguage("en");
+      return saved;
+    });
+    when(messageSource.getMessage(anyString(), any(Object[].class), any()))
+        .thenReturn("Welcome message");
+
+    userService.createUser("rep", null,
+        UserRole.REPORTER, Set.of(), "Full Name", "+50688888888", "https://example.com");
+
+    verify(messageSource).getMessage(
+        eq("reporter.welcome.whatsapp.message"), any(Object[].class), eq(java.util.Locale.ENGLISH));
+  }
+
+  @Test
   void createUser_reporter_whatsAppFailure_doesNotThrow() {
     when(userRepository.save(any(DashboardUser.class))).thenAnswer(inv -> inv.getArgument(0));
     when(messageSource.getMessage(anyString(), any(Object[].class), any()))
@@ -230,6 +247,17 @@ class UserServiceTest {
         UserRole.ADMIN, Set.of(), null, null))
         .isInstanceOf(UsernameNotFoundException.class)
         .hasMessageContaining("99");
+  }
+
+  @Test
+  void updatePreferredLanguage_savesNormalizedLanguage() {
+    DashboardUser existing = buildUser(1L, "user1", UserRole.REPORTER);
+    when(userRepository.findById(1L)).thenReturn(Optional.of(existing));
+    when(userRepository.save(any(DashboardUser.class))).thenAnswer(inv -> inv.getArgument(0));
+
+    DashboardUser result = userService.updatePreferredLanguage(1L, "en");
+
+    assertThat(result.getPreferredLanguage()).isEqualTo("en");
   }
 
   // --- CRUD delegations ---

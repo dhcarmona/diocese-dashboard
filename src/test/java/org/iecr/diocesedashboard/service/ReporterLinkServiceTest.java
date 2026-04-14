@@ -26,6 +26,7 @@ import org.springframework.context.MessageSource;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -182,6 +183,7 @@ class ReporterLinkServiceTest {
   void createLinksForChurches_sendsWhatsAppWhenPhonePresent() {
     DashboardUser reporter = buildReporter();
     reporter.setPhoneNumber("+50688887777");
+    reporter.setPreferredLanguage("en");
     when(userRepository.findReportersByAssignedChurchName("Trinity"))
         .thenReturn(List.of(reporter));
     when(reporterLinkRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
@@ -192,6 +194,8 @@ class ReporterLinkServiceTest {
 
     verify(whatsAppService).sendMessageAndLog(eq("+50688887777"), eq("link message"),
         contains("Sunday Mass"), eq("reporter1"));
+    verify(messageSource).getMessage(
+        eq("reporter.link.whatsapp.message"), any(), any(), eq(Locale.ENGLISH));
   }
 
   @Test

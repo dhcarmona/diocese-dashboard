@@ -20,6 +20,7 @@ import org.springframework.security.web.context.HttpSessionSecurityContextReposi
 import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -65,6 +66,24 @@ public class AuthController {
     DashboardUser user =
         ((DashboardUserDetails) authentication.getPrincipal()).getDashboardUser();
     return ResponseEntity.ok(AuthenticatedUserResponse.from(user));
+  }
+
+  /**
+   * Updates the authenticated user's preferred language.
+   *
+   * @param request        contains the preferred language code
+   * @param authentication the current Spring Security authentication
+   * @return the updated authenticated user payload
+   */
+  @PutMapping("/me/language")
+  public ResponseEntity<AuthenticatedUserResponse> updatePreferredLanguage(
+      @RequestBody @Valid PreferredLanguageRequest request,
+      Authentication authentication) {
+    DashboardUserDetails details = (DashboardUserDetails) authentication.getPrincipal();
+    DashboardUser updated =
+        userService.updatePreferredLanguage(details.getDashboardUser().getId(), request.language());
+    details.getDashboardUser().setPreferredLanguage(updated.getPreferredLanguage());
+    return ResponseEntity.ok(AuthenticatedUserResponse.from(updated));
   }
 
   /**

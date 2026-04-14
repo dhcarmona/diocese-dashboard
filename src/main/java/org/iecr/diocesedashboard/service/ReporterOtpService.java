@@ -13,7 +13,6 @@ import java.security.SecureRandom;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Locale;
 
 /**
  * Manages one-time passcodes (OTPs) for reporter user authentication.
@@ -36,8 +35,6 @@ public class ReporterOtpService {
   private static final int OTP_DIGITS = 6;
   private static final int OTP_MODULUS = 1_000_000;
   private static final long MAX_TRACKED_USERNAMES = 10_000;
-
-  private static final Locale WHATSAPP_LOCALE = Locale.forLanguageTag("es");
 
   private final WhatsAppService whatsAppService;
   private final UserService userService;
@@ -132,7 +129,7 @@ public class ReporterOtpService {
             "otp.whatsapp.message",
             new Object[]{code},
             "Tu código de verificación es " + code + ".",
-            WHATSAPP_LOCALE),
+            user.getPreferredLocale()),
         username);
   }
 

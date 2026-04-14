@@ -113,6 +113,7 @@ class ServiceInstanceControllerTest {
     reporter.setUsername("reporter1");
     reporter.setFullName("Reporter One");
     reporter.setPhoneNumber(reporterPhone);
+    reporter.setPreferredLanguage("es");
     reporter.setRole(UserRole.REPORTER);
     ServiceInstance i = new ServiceInstance();
     i.setId(id);
@@ -401,6 +402,31 @@ class ServiceInstanceControllerTest {
 
   @Test
   @WithMockDashboardUser
+  void update_withChangesAndNotifyTrue_usesReporterPreferredLanguage() throws Exception {
+    ServiceInstance instance = buildFullInstance(1L, "Trinity", "Sunday Mass", "+50612345678");
+    instance.getSubmittedBy().setPreferredLanguage("en");
+    ServiceInfoItem item = buildItem(5L, "Attendance");
+    ServiceInfoItemResponse existing = buildResponse(100L, item, instance, "42");
+    when(serviceInstanceService.findById(1L)).thenReturn(Optional.of(instance));
+    when(responseService.findByServiceInstance(instance)).thenReturn(List.of(existing));
+    when(messageSource.getMessage(
+        eq("whatsapp.report.updated"), any(Object[].class), any(Locale.class)))
+        .thenReturn("updated report");
+    String body = objectMapper.writeValueAsString(new ServiceInstanceUpdateRequest(
+        List.of(new ServiceInstanceUpdateRequest.ResponseEntry(5L, "55")), null, true));
+
+    mockMvc.perform(put("/api/service-instances/1")
+        .with(csrf())
+        .contentType(MediaType.APPLICATION_JSON)
+        .content(body))
+        .andExpect(status().isOk());
+
+    verify(messageSource).getMessage(
+        eq("whatsapp.report.updated"), any(Object[].class), eq(Locale.ENGLISH));
+  }
+
+  @Test
+  @WithMockDashboardUser
   void update_withNotifyTrue_noPhoneNumber_doesNotSendWhatsApp() throws Exception {
     ServiceInstance instance = buildFullInstance(1L, "Trinity", "Sunday Mass", null);
     ServiceInfoItem item = buildItem(5L, "Attendance");
@@ -572,6 +598,24 @@ class ServiceInstanceControllerTest {
     order.verify(whatsAppService).sendMessageAndLog(eq("+50612345678"), eq("reporte eliminado"), any());
     order.verify(responseService).deleteByServiceInstance(instance);
     order.verify(serviceInstanceService).deleteById(1L);
+  }
+
+  @Test
+  @WithMockUser(roles = "ADMIN")
+  void delete_withNotify_usesReporterPreferredLanguage() throws Exception {
+    ServiceInstance instance = buildFullInstance(1L, "Trinity", "Sunday Mass", "+50612345678");
+    instance.getSubmittedBy().setPreferredLanguage("en");
+    when(serviceInstanceService.findById(1L)).thenReturn(Optional.of(instance));
+    when(messageSource.getMessage(
+        eq("whatsapp.report.deleted"), any(Object[].class), any(Locale.class)))
+        .thenReturn("deleted report");
+
+    mockMvc.perform(delete("/api/service-instances/1").with(csrf())
+        .param("notify", "true"))
+        .andExpect(status().isNoContent());
+
+    verify(messageSource).getMessage(
+        eq("whatsapp.report.deleted"), any(Object[].class), eq(Locale.ENGLISH));
   }
 
   @Test

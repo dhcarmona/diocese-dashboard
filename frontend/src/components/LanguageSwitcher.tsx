@@ -2,7 +2,10 @@ import Box from '@mui/material/Box';
 import ToggleButton from '@mui/material/ToggleButton';
 import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 import type { MouseEvent } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useAuth } from '../auth/auth-context';
+import type { PreferredLanguage } from '../api/auth';
 
 interface LanguageSwitcherProps {
   placement?: 'fixed' | 'static';
@@ -13,11 +16,30 @@ export default function LanguageSwitcher({
   placement = 'fixed',
 }: Readonly<LanguageSwitcherProps>) {
   const { i18n, t } = useTranslation();
+  const { user, updatePreferredLanguage } = useAuth();
   const current = i18n.language.startsWith('es') ? 'es' : 'en';
   const onDark = placement === 'static';
+  const [saving, setSaving] = useState(false);
 
-  function handleChange(_e: MouseEvent<HTMLElement>, lang: string | null) {
-    if (lang) void i18n.changeLanguage(lang);
+  async function handleChange(_e: MouseEvent<HTMLElement>, lang: string | null) {
+    if (!lang || lang === current || saving) {
+      return;
+    }
+    const nextLanguage = lang as PreferredLanguage;
+    setSaving(true);
+    await i18n.changeLanguage(nextLanguage);
+    try {
+      if (user) {
+        try {
+          await updatePreferredLanguage(nextLanguage);
+        } catch (error) {
+          await i18n.changeLanguage(current);
+          console.error('Failed to save preferred language.', error);
+        }
+      }
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
@@ -33,6 +55,7 @@ export default function LanguageSwitcher({
         exclusive
         onChange={handleChange}
         size="small"
+        disabled={saving}
         sx={onDark ? {
           '& .MuiToggleButton-root': {
             color: 'rgba(255,255,255,0.7)',
@@ -57,4 +80,3 @@ export default function LanguageSwitcher({
     </Box>
   );
 }
-

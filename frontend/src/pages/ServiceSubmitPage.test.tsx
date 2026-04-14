@@ -52,13 +52,20 @@ const CELEBRANTS = [
 
 function makeAuthValue(overrides: Partial<AuthContextValue> = {}): AuthContextValue {
   return {
-    user: { id: 1, username: 'reporter', role: 'REPORTER', assignedChurchNames: ['Trinity Church'] },
+    user: {
+      id: 1,
+      username: 'reporter',
+      role: 'REPORTER',
+      preferredLanguage: 'en',
+      assignedChurchNames: ['Trinity Church'],
+    },
     status: 'authenticated',
     authErrorKey: null,
     signIn: async () => {},
     reporterSignIn: async () => {},
     signOut: async () => {},
     refreshUser: async () => null,
+    updatePreferredLanguage: async () => {},
     ...overrides,
   };
 }
@@ -141,6 +148,7 @@ describe('ServiceSubmitPage', () => {
         id: 1,
         username: 'reporter',
         role: 'REPORTER',
+        preferredLanguage: 'en',
         assignedChurchNames: ['Trinity Church'],
       },
     });
@@ -164,6 +172,7 @@ describe('ServiceSubmitPage', () => {
         id: 1,
         username: 'reporter',
         role: 'REPORTER',
+        preferredLanguage: 'en',
         assignedChurchNames: [],
       },
     });
@@ -181,7 +190,13 @@ describe('ServiceSubmitPage', () => {
     mockedGetChurches.mockResolvedValue(CHURCHES);
 
     renderPage({
-      user: { id: 2, username: 'admin', role: 'ADMIN', assignedChurchNames: [] },
+      user: {
+        id: 2,
+        username: 'admin',
+        role: 'ADMIN',
+        preferredLanguage: 'en',
+        assignedChurchNames: [],
+      },
     });
 
     await waitFor(() => {

@@ -1,11 +1,13 @@
 import axios from 'axios';
 
 export type UserRole = 'ADMIN' | 'REPORTER';
+export type PreferredLanguage = 'en' | 'es';
 
 export interface AuthenticatedUser {
   id: number;
   username: string;
   role: UserRole;
+  preferredLanguage: PreferredLanguage;
   assignedChurchNames: string[];
 }
 
@@ -74,6 +76,17 @@ export async function requestReporterOtp(username: string): Promise<void> {
 
 export async function verifyReporterOtp(username: string, code: string): Promise<void> {
   await api.post('/api/auth/reporter/verify-otp', { username, code });
+}
+
+export async function updatePreferredLanguage(
+  language: PreferredLanguage,
+): Promise<AuthenticatedUser> {
+  const response = await api.put<AuthenticatedUser>(
+    '/api/auth/me/language',
+    { language },
+    { headers: await getCsrfHeaders() },
+  );
+  return response.data;
 }
 
 export function isUnauthorizedError(error: unknown): boolean {

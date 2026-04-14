@@ -115,6 +115,8 @@ public class SecurityConfig {
                     "/api/auth/reporter/request-otp",
                     "/api/auth/reporter/verify-otp").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/auth/me").hasAnyRole("ADMIN", "REPORTER")
+                .requestMatchers(HttpMethod.PUT, "/api/auth/me/language")
+                .hasAnyRole("ADMIN", "REPORTER")
                 .requestMatchers(HttpMethod.GET, "/api/portraits/**").hasAnyRole("ADMIN", "REPORTER")
                 .requestMatchers(HttpMethod.GET, "/api/churches").hasAnyRole("ADMIN", "REPORTER")
                 .requestMatchers(HttpMethod.GET, "/api/celebrants").hasAnyRole("ADMIN", "REPORTER")

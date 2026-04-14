@@ -1,5 +1,5 @@
 import { createContext, useContext } from 'react';
-import type { AuthenticatedUser } from '../api/auth';
+import type { AuthenticatedUser, PreferredLanguage } from '../api/auth';
 
 export type AuthStatus = 'loading' | 'authenticated' | 'unauthenticated' | 'error';
 export type AuthErrorKey = 'auth.sessionLoadFailed' | 'auth.backendUnavailable';
@@ -12,6 +12,7 @@ export interface AuthContextValue {
   reporterSignIn: (username: string, code: string) => Promise<void>;
   signOut: () => Promise<void>;
   refreshUser: () => Promise<AuthenticatedUser | null>;
+  updatePreferredLanguage: (language: PreferredLanguage) => Promise<void>;
 }
 
 export const AuthContext = createContext<AuthContextValue | undefined>(undefined);

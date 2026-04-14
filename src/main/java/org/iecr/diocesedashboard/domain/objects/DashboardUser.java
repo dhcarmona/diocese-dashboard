@@ -16,6 +16,7 @@ import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Set;
 
 /** A user account for accessing the diocese dashboard. */
@@ -23,6 +24,7 @@ import java.util.Set;
 @Table(name = "DashboardUser")
 public class DashboardUser {
 
+  public static final String DEFAULT_PREFERRED_LANGUAGE = "es";
   @Id
   @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "dashboard_user_seq")
   @SequenceGenerator(name = "dashboard_user_seq", allocationSize = 50)
@@ -40,6 +42,9 @@ public class DashboardUser {
 
   @Column(length = 50)
   private String phoneNumber;
+
+  @Column(nullable = false, length = 5)
+  private String preferredLanguage = DEFAULT_PREFERRED_LANGUAGE;
 
   @Enumerated(EnumType.STRING)
   @Column(nullable = false)
@@ -99,6 +104,18 @@ public class DashboardUser {
     this.phoneNumber = phoneNumber;
   }
 
+  public String getPreferredLanguage() {
+    return normalizePreferredLanguage(preferredLanguage);
+  }
+
+  public void setPreferredLanguage(String preferredLanguage) {
+    this.preferredLanguage = normalizePreferredLanguage(preferredLanguage);
+  }
+
+  public Locale getPreferredLocale() {
+    return Locale.forLanguageTag(getPreferredLanguage());
+  }
+
   public UserRole getRole() {
     return role;
   }
@@ -134,6 +151,13 @@ public class DashboardUser {
 
   public void setEnabled(boolean enabled) {
     this.enabled = enabled;
+  }
+
+  public static String normalizePreferredLanguage(String preferredLanguage) {
+    if ("en".equalsIgnoreCase(preferredLanguage)) {
+      return "en";
+    }
+    return DEFAULT_PREFERRED_LANGUAGE;
   }
 
   @Override
