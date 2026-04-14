@@ -1,9 +1,11 @@
 import dayjs, { type ConfigType } from 'dayjs';
 import updateLocale from 'dayjs/plugin/updateLocale';
+import utc from 'dayjs/plugin/utc';
 import 'dayjs/locale/en';
 import 'dayjs/locale/es';
 
 dayjs.extend(updateLocale);
+dayjs.extend(utc);
 
 dayjs.updateLocale('es', {
   monthsShort: [
@@ -28,4 +30,16 @@ export function formatDate(value: ConfigType, language?: string | null): string 
 
 export function formatDateTime(value: ConfigType, language?: string | null): string {
   return getLocalizedDate(value, language).format(`${APP_DATE_FORMAT}, HH:mm`);
+}
+
+export function formatDateTimeAtFixedOffset(
+  value: ConfigType,
+  offsetHours: number,
+  language?: string | null,
+): string {
+  return dayjs
+    .utc(value)
+    .add(offsetHours, 'hour')
+    .locale(getAppDateLocale(language))
+    .format(`${APP_DATE_FORMAT}, HH:mm`);
 }
