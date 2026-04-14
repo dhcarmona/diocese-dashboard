@@ -1,11 +1,14 @@
 import type { ReactNode } from 'react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import i18n from '../i18n';
 import {
   fetchAuthenticatedUser,
   isBackendUnavailableError,
   type AuthenticatedUser,
   login,
   logout,
+  type PreferredLanguage,
+  updatePreferredLanguage as savePreferredLanguage,
   verifyReporterOtp,
 } from '../api/auth';
 import { AuthContext, type AuthContextValue, type AuthStatus } from './auth-context';
@@ -15,11 +18,19 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
   const [status, setStatus] = useState<AuthStatus>('loading');
   const [authErrorKey, setAuthErrorKey] = useState<AuthContextValue['authErrorKey']>(null);
 
+  const syncUserLanguage = useCallback(async (currentUser: AuthenticatedUser | null) => {
+    if (!currentUser || i18n.language === currentUser.preferredLanguage) {
+      return;
+    }
+    await i18n.changeLanguage(currentUser.preferredLanguage);
+  }, []);
+
   const refreshUser = useCallback(async () => {
     setStatus('loading');
     setAuthErrorKey(null);
     try {
       const currentUser = await fetchAuthenticatedUser();
+      await syncUserLanguage(currentUser);
       setUser(currentUser);
       setStatus(currentUser ? 'authenticated' : 'unauthenticated');
       return currentUser;
@@ -31,7 +42,7 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
       );
       return null;
     }
-  }, []);
+  }, [syncUserLanguage]);
 
   const signIn = useCallback(
     async (username: string, password: string) => {
@@ -43,10 +54,11 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
         setStatus('unauthenticated');
         throw new Error('Authenticated user could not be loaded after login.');
       }
+      await syncUserLanguage(currentUser);
       setUser(currentUser);
       setStatus('authenticated');
     },
-    [],
+    [syncUserLanguage],
   );
 
   const reporterSignIn = useCallback(
@@ -59,10 +71,11 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
         setStatus('unauthenticated');
         throw new Error('Authenticated user could not be loaded after OTP verification.');
       }
+      await syncUserLanguage(currentUser);
       setUser(currentUser);
       setStatus('authenticated');
     },
-    [],
+    [syncUserLanguage],
   );
 
   const signOut = useCallback(async () => {
@@ -72,12 +85,21 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
     setAuthErrorKey(null);
   }, []);
 
+  const updatePreferredLanguage = useCallback(
+    async (language: PreferredLanguage) => {
+      const updatedUser = await savePreferredLanguage(language);
+      setUser(updatedUser);
+    },
+    [],
+  );
+
   useEffect(() => {
     let active = true;
 
     async function loadInitialUser() {
       try {
         const currentUser = await fetchAuthenticatedUser();
+        await syncUserLanguage(currentUser);
         if (!active) {
           return;
         }
@@ -101,7 +123,7 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
     return () => {
       active = false;
     };
-  }, []);
+  }, [syncUserLanguage]);
 
   const value = useMemo<AuthContextValue>(
     () => ({
@@ -112,8 +134,10 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
       reporterSignIn,
       signOut,
       refreshUser,
+      updatePreferredLanguage,
     }),
-    [authErrorKey, refreshUser, reporterSignIn, signIn, signOut, status, user],
+    [authErrorKey, refreshUser, reporterSignIn, signIn, signOut, status, updatePreferredLanguage,
+      user],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

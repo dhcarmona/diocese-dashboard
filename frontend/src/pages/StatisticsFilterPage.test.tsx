@@ -31,13 +31,14 @@ const mockedGetChurches = vi.mocked(getChurches);
 
 function renderPage(role: 'ADMIN' | 'REPORTER') {
   const value: AuthContextValue = {
-    user: { id: 1, username: 'u', role, assignedChurchNames: ['Trinity'] },
+    user: { id: 1, username: 'u', role, preferredLanguage: 'en', assignedChurchNames: ['Trinity'] },
     status: 'authenticated',
     authErrorKey: null,
     signIn: async () => {},
     reporterSignIn: async () => {},
     signOut: async () => {},
     refreshUser: async () => null,
+    updatePreferredLanguage: async () => {},
   };
 
   return render(

@@ -10,6 +10,7 @@ public record AuthenticatedUserResponse(
 Long id,
 String username,
 UserRole role,
+String preferredLanguage,
 List<String> assignedChurchNames) {
 
   /**
@@ -23,6 +24,7 @@ List<String> assignedChurchNames) {
         user.getId(),
         user.getUsername(),
         user.getRole(),
+        user.getPreferredLanguage(),
         user.getAssignedChurches().stream()
             .map(church -> church.getName())
             .sorted()

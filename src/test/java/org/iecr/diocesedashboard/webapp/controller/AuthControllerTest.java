@@ -5,6 +5,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -57,6 +59,7 @@ class AuthControllerTest {
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.username").value("testuser"))
         .andExpect(jsonPath("$.role").value("ADMIN"))
+        .andExpect(jsonPath("$.preferredLanguage").value("es"))
         .andExpect(jsonPath("$.assignedChurchNames").isArray())
         .andExpect(jsonPath("$.passwordHash").doesNotExist());
   }
@@ -67,8 +70,24 @@ class AuthControllerTest {
     mockMvc.perform(get("/api/auth/me"))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.role").value("REPORTER"))
+        .andExpect(jsonPath("$.preferredLanguage").value("es"))
         .andExpect(jsonPath("$.assignedChurchNames[0]").value("StPaul"))
         .andExpect(jsonPath("$.assignedChurchNames[1]").value("Trinity"));
+  }
+
+  @Test
+  @WithMockDashboardUser(role = UserRole.REPORTER)
+  void updatePreferredLanguage_updatesUserAndReturnsPayload() throws Exception {
+    DashboardUser reporter = buildReporter("testuser");
+    reporter.setPreferredLanguage("en");
+    when(userService.updatePreferredLanguage(1L, "en")).thenReturn(reporter);
+
+    mockMvc.perform(put("/api/auth/me/language")
+        .with(csrf())
+        .contentType(MediaType.APPLICATION_JSON)
+        .content("{\"language\":\"en\"}"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.preferredLanguage").value("en"));
   }
 
   @Test

@@ -21,6 +21,7 @@ public class MockDashboardUserSecurityContextFactory
     user.setUsername("testuser");
     user.setPasswordHash("$2a$10$mockhash");
     user.setRole(annotation.role());
+    user.setPreferredLanguage(annotation.preferredLanguage());
     user.setEnabled(true);
     user.setAssignedChurches(buildChurches(annotation));
     DashboardUserDetails details = new DashboardUserDetails(user);

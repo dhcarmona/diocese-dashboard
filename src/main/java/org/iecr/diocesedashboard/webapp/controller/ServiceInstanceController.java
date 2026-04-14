@@ -33,7 +33,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -44,8 +43,6 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/service-instances")
 public class ServiceInstanceController {
-
-  private static final Locale WHATSAPP_LOCALE = Locale.forLanguageTag("es");
 
   private final ServiceInstanceService serviceInstanceService;
   private final ServiceInfoItemResponseService responseService;
@@ -277,7 +274,7 @@ public class ServiceInstanceController {
     String body = messageSource.getMessage(
         "whatsapp.report.updated",
         new Object[]{templateName, church, date, changeList},
-        WHATSAPP_LOCALE);
+        reporter.getPreferredLocale());
     whatsAppService.sendMessageAndLog(reporter.getPhoneNumber(), body, reporter.getUsername());
   }
 
@@ -295,7 +292,7 @@ public class ServiceInstanceController {
     String body = messageSource.getMessage(
         "whatsapp.report.deleted",
         new Object[]{templateName, church, date},
-        WHATSAPP_LOCALE);
+        reporter.getPreferredLocale());
     whatsAppService.sendMessageAndLog(reporter.getPhoneNumber(), body, reporter.getUsername());
   }
 

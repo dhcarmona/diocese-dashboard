@@ -75,6 +75,18 @@ class ReporterOtpServiceTest {
   }
 
   @Test
+  void generateAndSendOtp_usesPreferredLanguageTemplate() {
+    DashboardUser reporter = buildReporter("rep1");
+    reporter.setPreferredLanguage("en");
+    when(userService.findByUsername("rep1")).thenReturn(Optional.of(reporter));
+
+    reporterOtpService.generateAndSendOtp("rep1");
+
+    verify(whatsAppService)
+        .sendOtpAndLog(eq("+50688888888"), contains("login code"), any());
+  }
+
+  @Test
   void generateAndSendOtp_immediateRetry_isThrottled() {
     DashboardUser reporter = buildReporter("rep1");
     when(userService.findByUsername("rep1")).thenReturn(Optional.of(reporter));

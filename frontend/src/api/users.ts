@@ -1,10 +1,11 @@
-import { api, getCsrfHeaders } from './auth';
+import { api, getCsrfHeaders, type PreferredLanguage } from './auth';
 
 export interface ReporterUser {
   id: number;
   username: string;
   fullName: string;
   phoneNumber: string;
+  preferredLanguage: PreferredLanguage;
   role: 'REPORTER';
   enabled: boolean;
   assignedChurches: { name: string }[];

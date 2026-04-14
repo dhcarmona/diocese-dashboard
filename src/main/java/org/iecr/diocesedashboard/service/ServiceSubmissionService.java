@@ -21,7 +21,6 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
-import java.util.Locale;
 import java.util.Set;
 
 /**
@@ -32,7 +31,6 @@ import java.util.Set;
 public class ServiceSubmissionService {
 
   private static final Logger logger = LoggerFactory.getLogger(ServiceSubmissionService.class);
-  private static final Locale WHATSAPP_LOCALE = Locale.forLanguageTag("es");
 
   private final ServiceTemplateService serviceTemplateService;
   private final ServiceInstanceService serviceInstanceService;
@@ -140,7 +138,7 @@ public class ServiceSubmissionService {
         String body = messageSource.getMessage(
             "whatsapp.report.submitted",
             new Object[]{templateName, churchName, serviceDate},
-            WHATSAPP_LOCALE);
+            submittedBy.getPreferredLocale());
         whatsAppService.sendMessageAndLog(phone, body, username);
       } catch (Exception ex) {
         logger.warn("WhatsApp submission notification failed for reporter {} ({}): {}",

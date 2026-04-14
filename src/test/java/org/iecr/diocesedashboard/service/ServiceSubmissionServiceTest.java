@@ -220,6 +220,27 @@ class ServiceSubmissionServiceTest {
   }
 
   @Test
+  void submit_usesReporterPreferredLanguageForNotification() {
+    when(serviceTemplateService.findById(1L)).thenReturn(Optional.of(buildTemplate()));
+    when(churchService.findById("Trinity")).thenReturn(Optional.of(buildChurch()));
+    ServiceInstance saved = new ServiceInstance();
+    saved.setId(1L);
+    when(serviceInstanceService.save(any())).thenReturn(saved);
+    when(messageSource.getMessage(eq("whatsapp.report.submitted"), any(), any(Locale.class)))
+        .thenReturn("Confirmation message");
+
+    DashboardUser reporter = buildReporter("+50688887777");
+    reporter.setPreferredLanguage("en");
+    ServiceInstanceRequest request = new ServiceInstanceRequest(
+        "Trinity", List.of(), LocalDate.of(2024, 3, 10), List.of());
+
+    serviceSubmissionService.submit(1L, request, reporter);
+
+    verify(messageSource).getMessage(
+        eq("whatsapp.report.submitted"), any(), eq(Locale.ENGLISH));
+  }
+
+  @Test
   void submit_withNoPhone_doesNotSendWhatsApp() {
     when(serviceTemplateService.findById(1L)).thenReturn(Optional.of(buildTemplate()));
     when(churchService.findById("Trinity")).thenReturn(Optional.of(buildChurch()));

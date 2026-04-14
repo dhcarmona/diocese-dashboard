@@ -29,4 +29,7 @@ public @interface WithMockDashboardUser {
 
   /** Multiple church names to assign to the mock user. */
   String[] churchNames() default {};
+
+  /** Preferred language to assign to the mock user. */
+  String preferredLanguage() default "es";
 }

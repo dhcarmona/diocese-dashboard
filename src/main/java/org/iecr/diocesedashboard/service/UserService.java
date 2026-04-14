@@ -14,7 +14,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
 import java.util.logging.Level;
@@ -25,7 +24,6 @@ import java.util.logging.Logger;
 public class UserService implements UserDetailsService {
 
   private static final Logger LOG = Logger.getLogger(UserService.class.getName());
-  private static final Locale WHATSAPP_LOCALE = Locale.forLanguageTag("es");
 
   private final UserRepository userRepository;
   private final PasswordEncoder passwordEncoder;
@@ -112,7 +110,7 @@ public class UserService implements UserDetailsService {
         String body = messageSource.getMessage(
             "reporter.welcome.whatsapp.message",
             new Object[]{fullName, username, appBaseUrl},
-            WHATSAPP_LOCALE);
+            saved.getPreferredLocale());
         whatsAppService.sendMessageAndLog(phoneNumber, body, username);
       } catch (Exception ex) {
         LOG.log(Level.WARNING,
@@ -149,6 +147,21 @@ public class UserService implements UserDetailsService {
     if (rawPassword != null && !rawPassword.isBlank()) {
       user.setPasswordHash(passwordEncoder.encode(rawPassword));
     }
+    return userRepository.save(user);
+  }
+
+  /**
+   * Updates the preferred UI and WhatsApp language for an existing user.
+   *
+   * @param id       the ID of the user to update
+   * @param language the requested language code
+   * @return the saved {@link DashboardUser}
+   * @throws UsernameNotFoundException if no user with the given ID exists
+   */
+  public DashboardUser updatePreferredLanguage(Long id, String language) {
+    DashboardUser user = userRepository.findById(id)
+        .orElseThrow(() -> new UsernameNotFoundException("User not found: " + id));
+    user.setPreferredLanguage(language);
     return userRepository.save(user);
   }
 

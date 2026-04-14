@@ -61,6 +61,7 @@ describe('App routing', () => {
       id: 1,
       username: 'admin',
       role: 'ADMIN',
+      preferredLanguage: 'en',
       assignedChurchNames: [],
     });
 
@@ -77,6 +78,7 @@ describe('App routing', () => {
       id: 2,
       username: 'reporter',
       role: 'REPORTER',
+      preferredLanguage: 'en',
       assignedChurchNames: ['Trinity'],
     });
 

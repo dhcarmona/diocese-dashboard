@@ -24,6 +24,7 @@ function renderLoginPage(overrides: Partial<AuthContextValue> = {}) {
     reporterSignIn: vi.fn(),
     signOut: vi.fn(),
     refreshUser: vi.fn(),
+    updatePreferredLanguage: vi.fn(),
     ...overrides,
   };
 
