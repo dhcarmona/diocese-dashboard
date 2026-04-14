@@ -26,6 +26,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
 
@@ -151,7 +152,7 @@ class UserServiceTest {
         UserRole.REPORTER, Set.of(), "Full Name", "+50688888888", "https://example.com");
 
     verify(messageSource).getMessage(
-        eq("reporter.welcome.whatsapp.message"), any(Object[].class), eq(java.util.Locale.ENGLISH));
+        eq("reporter.welcome.whatsapp.message"), any(Object[].class), eq(Locale.ENGLISH));
   }
 
   @Test

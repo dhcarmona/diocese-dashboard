@@ -27,8 +27,8 @@ export default function LanguageSwitcher({
     }
     const nextLanguage = lang as PreferredLanguage;
     setSaving(true);
-    await i18n.changeLanguage(nextLanguage);
     try {
+      await i18n.changeLanguage(nextLanguage);
       if (user) {
         try {
           await updatePreferredLanguage(nextLanguage);

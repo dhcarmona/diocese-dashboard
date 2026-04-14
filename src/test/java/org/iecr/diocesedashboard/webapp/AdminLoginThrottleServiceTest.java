@@ -45,7 +45,7 @@ class AdminLoginThrottleServiceTest {
   void checkAttemptAllowed_afterTooManyFailures_isLockedOut() {
     for (int ii = 0; ii < AdminLoginThrottleService.MAX_FAILED_LOGIN_ATTEMPTS; ii++) {
       AdminLoginThrottleService.LoginAttemptResult result =
-        throttleService.recordFailedAttempt("admin");
+          throttleService.recordFailedAttempt("admin");
       if (ii < AdminLoginThrottleService.MAX_FAILED_LOGIN_ATTEMPTS - 1) {
         assertThat(result.isAllowed()).isTrue();
         advanceSeconds(AdminLoginThrottleService.LOGIN_THROTTLE_SECONDS);
