@@ -1,6 +1,7 @@
 package org.iecr.diocesedashboard.domain.repositories;
 
 import org.iecr.diocesedashboard.domain.objects.Church;
+import org.iecr.diocesedashboard.domain.objects.DashboardUser;
 import org.iecr.diocesedashboard.domain.objects.ReporterLink;
 import org.iecr.diocesedashboard.domain.objects.ServiceTemplate;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -66,4 +67,12 @@ public interface ReporterLinkRepository extends JpaRepository<ReporterLink, Long
    */
   List<ReporterLink> findByChurchInAndServiceTemplate(
       Iterable<Church> churches, ServiceTemplate serviceTemplate);
+
+  /**
+   * Finds the oldest pending reporter link for the given reporter.
+   *
+   * @param reporter the reporter whose next link should be returned
+   * @return the earliest active-date link still pending for that reporter
+   */
+  Optional<ReporterLink> findFirstByReporterOrderByActiveDateAscIdAsc(DashboardUser reporter);
 }

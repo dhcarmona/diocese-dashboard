@@ -71,11 +71,11 @@ public class ReporterLinkPublicController {
    *
    * @param token   the reporter link token
    * @param request the submission data (celebrants, date, responses)
-   * @return 201 with the created service instance identifier, 404 if the token is unknown,
-   *         or 409 if the link is not yet active
+   * @return 201 with the created service instance identifier and next pending reporter link,
+   *         404 if the token is unknown, or 409 if the link is not yet active
    */
   @PostMapping("/{token}/submit")
-  public ResponseEntity<ReporterLinkSubmissionResponse> submit(@PathVariable String token,
+  public ResponseEntity<ReportSubmissionResponse> submit(@PathVariable String token,
       @RequestBody @Valid ReporterLinkSubmitRequest request) {
     ReporterLink link = reporterLinkService.findByToken(token)
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
@@ -101,7 +101,8 @@ public class ReporterLinkPublicController {
     var created = submissionService.claimAndSubmit(link, instanceRequest, reporter)
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT,
             "This reporter link has already been used"));
+    var nextReporterLink = reporterLinkService.findNextPendingLinkForReporter(reporter);
     return ResponseEntity.status(HttpStatus.CREATED)
-        .body(ReporterLinkSubmissionResponse.from(created));
+        .body(ReportSubmissionResponse.from(created, nextReporterLink));
   }
 }

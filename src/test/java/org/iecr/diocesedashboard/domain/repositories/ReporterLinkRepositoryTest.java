@@ -208,4 +208,26 @@ class ReporterLinkRepositoryTest {
 
     assertThat(result).hasSize(1);
   }
+
+  @Test
+  void findFirstByReporterOrderByActiveDateAscIdAsc_returnsOldestPendingLink() {
+    ReporterLink newest = buildLink(UUID.randomUUID().toString(), church);
+    newest.setActiveDate(LocalDate.of(2026, 4, 20));
+    entityManager.persist(newest);
+
+    ReporterLink oldest = buildLink(UUID.randomUUID().toString(), secondChurch);
+    oldest.setActiveDate(LocalDate.of(2026, 4, 10));
+    entityManager.persist(oldest);
+
+    ReporterLink middle = buildLink(UUID.randomUUID().toString(), church);
+    middle.setActiveDate(LocalDate.of(2026, 4, 15));
+    entityManager.persist(middle);
+    entityManager.flush();
+
+    Optional<ReporterLink> result =
+        reporterLinkRepository.findFirstByReporterOrderByActiveDateAscIdAsc(reporter);
+
+    assertThat(result).isPresent();
+    assertThat(result.get().getToken()).isEqualTo(oldest.getToken());
+  }
 }

@@ -15,9 +15,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import org.iecr.diocesedashboard.domain.objects.ReporterLink;
 import org.iecr.diocesedashboard.domain.objects.ServiceInstance;
 import org.iecr.diocesedashboard.domain.objects.ServiceTemplate;
 import org.iecr.diocesedashboard.domain.objects.UserRole;
+import org.iecr.diocesedashboard.service.ReporterLinkService;
 import org.iecr.diocesedashboard.service.ServiceSubmissionService;
 import org.iecr.diocesedashboard.service.ServiceTemplateService;
 import org.iecr.diocesedashboard.webapp.SecurityConfig;
@@ -55,6 +57,9 @@ class ServiceTemplateControllerTest {
   private ServiceSubmissionService serviceSubmissionService;
 
   @MockBean
+  private ReporterLinkService reporterLinkService;
+
+  @MockBean
   private UserDetailsService userDetailsService;
 
   @BeforeEach
@@ -71,6 +76,13 @@ class ServiceTemplateControllerTest {
 
   private ServiceTemplateRequest buildTemplateRequest(String name) {
     return new ServiceTemplateRequest(name);
+  }
+
+  private ReporterLink buildLink(String token) {
+    ReporterLink link = new ReporterLink();
+    link.setToken(token);
+    link.setActiveDate(LocalDate.of(2026, 4, 15));
+    return link;
   }
 
   private ServiceInstanceRequest buildRequest() {
@@ -233,13 +245,17 @@ class ServiceTemplateControllerTest {
     instance.setId(42L);
     when(serviceSubmissionService.submit(eq(1L), any(ServiceInstanceRequest.class), any()))
         .thenReturn(instance);
+    when(reporterLinkService.findNextPendingLinkForReporter(any()))
+        .thenReturn(Optional.of(buildLink("next-template-token")));
 
     mockMvc.perform(post("/api/service-templates/1/submit")
         .with(csrf())
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(buildRequest())))
         .andExpect(status().isCreated())
-        .andExpect(jsonPath("$.id").value(42));
+        .andExpect(jsonPath("$.serviceInstanceId").value(42))
+        .andExpect(jsonPath("$.nextReporterLinkToken").value("next-template-token"))
+        .andExpect(jsonPath("$.nextReporterLinkActiveDate").value("2026-04-15"));
   }
 
   @Test
@@ -255,7 +271,8 @@ class ServiceTemplateControllerTest {
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(buildRequest())))
         .andExpect(status().isCreated())
-        .andExpect(jsonPath("$.id").value(43));
+        .andExpect(jsonPath("$.serviceInstanceId").value(43))
+        .andExpect(jsonPath("$.nextReporterLinkToken").doesNotExist());
   }
 
   @Test

@@ -19,6 +19,7 @@ import dayjs, { type Dayjs } from 'dayjs';
 import { type FormEvent, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link as RouterLink, useParams } from 'react-router-dom';
+import type { ReportSubmissionResponse } from '../api/reportSubmissions';
 import { type Celebrant, getCelebrants } from '../api/celebrants';
 import { type Church, getChurches } from '../api/churches';
 import {
@@ -29,6 +30,7 @@ import {
 import { submitServiceInstance } from '../api/serviceInstances';
 import { useAuth } from '../auth/auth-context';
 import PageHeader from '../components/PageHeader';
+import ReporterLinkFollowUpCard from '../components/ReporterLinkFollowUpCard';
 
 function getInputAdornment(type: ServiceInfoItemSummary['serviceInfoItemType']): string | null {
   if (type === 'DOLLARS') return '$';
@@ -55,6 +57,7 @@ export default function ServiceSubmitPage() {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [submissionResult, setSubmissionResult] = useState<ReportSubmissionResponse | null>(null);
 
   const availableChurches = useMemo(() => {
     if (!user || user.role === 'ADMIN') {
@@ -137,12 +140,13 @@ export default function ServiceSubmitPage() {
       .filter((entry) => entry.responseValue !== '');
 
     try {
-      await submitServiceInstance(template.id, {
+      const result = await submitServiceInstance(template.id, {
         churchName: selectedChurch.name,
         celebrantIds: selectedCelebrants.map((c) => c.id),
         serviceDate: serviceDate.format('YYYY-MM-DD'),
         responses: responseEntries,
       });
+      setSubmissionResult(result);
       setSubmitSuccess(true);
     } catch {
       setSubmitError(true);
@@ -155,6 +159,7 @@ export default function ServiceSubmitPage() {
     setSubmitSuccess(false);
     setSubmitError(false);
     setServiceDate(dayjs());
+    setSubmissionResult(null);
     if (availableChurches.length !== 1) setSelectedChurch(null);
     setSelectedCelebrants([]);
     setResponses({});
@@ -195,6 +200,12 @@ export default function ServiceSubmitPage() {
             {t('submitService.successTitle')}
           </Typography>
           <Typography color="text.secondary">{t('submitService.successMessage')}</Typography>
+          {user?.role === 'REPORTER' && submissionResult && (
+            <ReporterLinkFollowUpCard
+              nextReporterLinkToken={submissionResult.nextReporterLinkToken}
+              nextReporterLinkActiveDate={submissionResult.nextReporterLinkActiveDate}
+            />
+          )}
           <Stack direction="row" spacing={2} sx={{ mt: 2 }}>
             <Button variant="outlined" onClick={handleSubmitAnother}>
               {t('submitService.submitAnother')}

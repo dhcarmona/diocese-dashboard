@@ -1,4 +1,5 @@
 import { api, getCsrfHeaders } from './auth';
+import type { ReportSubmissionResponse } from './reportSubmissions';
 
 export interface ServiceInstanceSubmitRequest {
   churchName: string;
@@ -55,12 +56,13 @@ export interface ServiceInstanceDetail {
 export async function submitServiceInstance(
   templateId: number,
   request: ServiceInstanceSubmitRequest,
-): Promise<void> {
-  await api.post<unknown>(
+): Promise<ReportSubmissionResponse> {
+  const response = await api.post<ReportSubmissionResponse>(
     `/api/service-templates/${templateId}/submit`,
     request,
     { headers: await getCsrfHeaders() },
   );
+  return response.data;
 }
 
 export async function getInstancesByTemplate(

@@ -125,6 +125,12 @@
     "noChurchesAssigned": "You have no churches assigned. Contact an administrator.",
     "successTitle": "Report Submitted",
     "successMessage": "Your service report has been recorded successfully.",
+    "nextPendingTitle": "One more report is waiting",
+    "nextPendingMessage": "You still have a pending reporter link for {{date}}.",
+    "nextPendingMessageNoDate": "You still have a pending reporter link waiting for you.",
+    "openNextPendingLink": "Open Next Pending Link",
+    "upToDateTitle": "You are up to date",
+    "upToDateMessage": "All your pending reporter links have been completed.",
     "submitAnother": "Submit Another",
     "backHome": "Back to Home",
     "fields": {

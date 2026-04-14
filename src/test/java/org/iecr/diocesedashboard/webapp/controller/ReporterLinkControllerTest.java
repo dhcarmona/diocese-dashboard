@@ -337,6 +337,10 @@ class ReporterLinkControllerTest {
     instance.setId(42L);
     when(serviceSubmissionService.submit(eq(2L), any(ServiceInstanceRequest.class), any()))
         .thenReturn(instance);
+    ReporterLink nextLink = buildLink("next-token", 1L, "StPaul");
+    nextLink.setActiveDate(LocalDate.of(2026, 4, 15));
+    when(reporterLinkService.findNextPendingLinkForReporter(any(DashboardUser.class)))
+        .thenReturn(Optional.of(nextLink));
 
     ReporterLinkSubmitRequest request = new ReporterLinkSubmitRequest(
         List.of(10L), LocalDate.of(2024, 1, 14),
@@ -347,7 +351,9 @@ class ReporterLinkControllerTest {
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(request)))
         .andExpect(status().isCreated())
-        .andExpect(jsonPath("$.serviceInstanceId").value(42));
+        .andExpect(jsonPath("$.serviceInstanceId").value(42))
+        .andExpect(jsonPath("$.nextReporterLinkToken").value("next-token"))
+        .andExpect(jsonPath("$.nextReporterLinkActiveDate").value("2026-04-15"));
   }
 
   @Test

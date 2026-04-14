@@ -180,10 +180,10 @@ public class ReporterLinkController {
    * @param token   the link token
    * @param request the submission data (celebrants, date, responses)
    * @param auth    the current authentication
-   * @return 201 with the created service instance identifier
+   * @return 201 with the created service instance identifier and next pending reporter link
    */
   @PostMapping("/{token}/submit")
-  public ResponseEntity<ReporterLinkSubmissionResponse> submit(@PathVariable String token,
+  public ResponseEntity<ReportSubmissionResponse> submit(@PathVariable String token,
       @RequestBody @Valid ReporterLinkSubmitRequest request, Authentication auth) {
     DashboardUser user = ((DashboardUserDetails) auth.getPrincipal()).getDashboardUser();
     ReporterLink link = reporterLinkService.findByToken(token)
@@ -209,8 +209,9 @@ public class ReporterLinkController {
     ServiceInstance created = serviceSubmissionService.submit(
         link.getServiceTemplate().getId(), instanceRequest, user);
     reporterLinkService.deleteByToken(token);
+    var nextReporterLink = reporterLinkService.findNextPendingLinkForReporter(user);
     return ResponseEntity.status(HttpStatus.CREATED)
-        .body(ReporterLinkSubmissionResponse.from(created));
+        .body(ReportSubmissionResponse.from(created, nextReporterLink));
   }
 
   private boolean canAccess(ReporterLink link, Authentication auth) {
