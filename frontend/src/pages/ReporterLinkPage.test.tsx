@@ -225,4 +225,47 @@ describe('ReporterLinkPage', () => {
 
     expect(screen.queryByRole('link', { name: 'Back to Home' })).not.toBeInTheDocument();
   });
+
+  it('shows the fixed link date and submits without a client-selected date', async () => {
+    mockedGetReporterLinkPublic.mockResolvedValue({
+      id: 1,
+      token: 'test-token',
+      churchName: 'Trinity Church',
+      serviceTemplateId: 10,
+      serviceTemplateName: 'Sunday Eucharist',
+      activeDate: '2024-04-14',
+      serviceInfoItems: [],
+      celebrants: [],
+    });
+    mockedSubmitViaReporterLinkPublic.mockResolvedValue({
+      serviceInstanceId: 5,
+      nextReporterLinkToken: null,
+      nextReporterLinkFollowUpToken: null,
+      nextReporterLinkActiveDate: null,
+    });
+
+    const user = userEvent.setup();
+    renderPage();
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(
+          'This report will be recorded for 14/04/2024.',
+        ),
+      ).toBeInTheDocument();
+    });
+
+    const serviceDateField = screen.getByRole('textbox', { name: 'Service Date' });
+    expect(serviceDateField).toHaveValue('14/04/2024');
+    expect(serviceDateField).toHaveAttribute('readonly');
+
+    await user.click(screen.getByRole('button', { name: /submit report/i }));
+
+    await waitFor(() => {
+      expect(mockedSubmitViaReporterLinkPublic).toHaveBeenCalledWith('test-token', {
+        celebrantIds: [],
+        responses: [],
+      });
+    });
+  });
 });

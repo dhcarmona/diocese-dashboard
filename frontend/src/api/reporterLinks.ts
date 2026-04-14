@@ -44,7 +44,6 @@ export interface ReporterLinkBulkPayload {
 
 export interface ReporterLinkSubmitPayload {
   celebrantIds: number[];
-  serviceDate: string;
   responses: Array<{ serviceInfoItemId: number; responseValue: string }>;
 }
 

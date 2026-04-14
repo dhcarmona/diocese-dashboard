@@ -343,7 +343,7 @@ class ReporterLinkControllerTest {
         .thenReturn(Optional.of(nextLink));
 
     ReporterLinkSubmitRequest request = new ReporterLinkSubmitRequest(
-        List.of(10L), LocalDate.of(2024, 1, 14),
+        List.of(10L),
         List.of(new ServiceInstanceRequest.ResponseEntry(5L, "120")));
 
     mockMvc.perform(post("/api/reporter-links/" + TOKEN + "/submit")
@@ -359,14 +359,15 @@ class ReporterLinkControllerTest {
   @Test
   @WithMockDashboardUser(role = UserRole.REPORTER, churchNames = {"StPaul", "Trinity"})
   void submit_asOwnerReporter_usesChurchFromLink() throws Exception {
-    when(reporterLinkService.findByToken(TOKEN)).thenReturn(
-        Optional.of(buildLink(TOKEN, 1L, "Trinity")));
+    ReporterLink link = buildLink(TOKEN, 1L, "Trinity");
+    link.setActiveDate(LocalDate.of(2024, 1, 20));
+    when(reporterLinkService.findByToken(TOKEN)).thenReturn(Optional.of(link));
     ServiceInstance instance = new ServiceInstance();
     instance.setId(43L);
     when(serviceSubmissionService.submit(eq(2L), any(ServiceInstanceRequest.class), any()))
         .thenReturn(instance);
     ReporterLinkSubmitRequest request = new ReporterLinkSubmitRequest(
-        List.of(10L), LocalDate.of(2024, 1, 14),
+        List.of(10L),
         List.of(new ServiceInstanceRequest.ResponseEntry(5L, "120")));
 
     mockMvc.perform(post("/api/reporter-links/" + TOKEN + "/submit")
@@ -381,6 +382,7 @@ class ReporterLinkControllerTest {
     verify(serviceSubmissionService).submit(eq(2L), captor.capture(), any());
     ServiceInstanceRequest submittedRequest = captor.getValue();
     Assertions.assertThat(submittedRequest.churchName()).isEqualTo("Trinity");
+    Assertions.assertThat(submittedRequest.serviceDate()).isEqualTo(LocalDate.of(2024, 1, 20));
   }
 
   @Test
@@ -389,7 +391,7 @@ class ReporterLinkControllerTest {
     when(reporterLinkService.findByToken("missing")).thenReturn(Optional.empty());
 
     ReporterLinkSubmitRequest request = new ReporterLinkSubmitRequest(
-        List.of(), LocalDate.of(2024, 1, 14), List.of());
+        List.of(), List.of());
 
     mockMvc.perform(post("/api/reporter-links/missing/submit")
         .with(csrf())
@@ -405,7 +407,7 @@ class ReporterLinkControllerTest {
         Optional.of(buildLink(TOKEN, 99L, "Trinity")));
 
     ReporterLinkSubmitRequest request = new ReporterLinkSubmitRequest(
-        List.of(), LocalDate.of(2024, 1, 14), List.of());
+        List.of(), List.of());
 
     mockMvc.perform(post("/api/reporter-links/" + TOKEN + "/submit")
         .with(csrf())
@@ -421,7 +423,7 @@ class ReporterLinkControllerTest {
         Optional.of(buildLink(TOKEN, 1L, "Trinity")));
 
     ReporterLinkSubmitRequest request = new ReporterLinkSubmitRequest(
-        List.of(), LocalDate.of(2024, 1, 14), List.of());
+        List.of(), List.of());
 
     mockMvc.perform(post("/api/reporter-links/" + TOKEN + "/submit")
         .with(csrf())
@@ -434,7 +436,7 @@ class ReporterLinkControllerTest {
   @WithMockUser(roles = "ADMIN")
   void submit_asAdmin_returns403() throws Exception {
     ReporterLinkSubmitRequest request = new ReporterLinkSubmitRequest(
-        List.of(), LocalDate.of(2024, 1, 14), List.of());
+        List.of(), List.of());
 
     mockMvc.perform(post("/api/reporter-links/" + TOKEN + "/submit")
         .with(csrf())
@@ -446,7 +448,7 @@ class ReporterLinkControllerTest {
   @Test
   void submit_unauthenticated_returns401() throws Exception {
     ReporterLinkSubmitRequest request = new ReporterLinkSubmitRequest(
-        List.of(), LocalDate.of(2024, 1, 14), List.of());
+        List.of(), List.of());
 
     mockMvc.perform(post("/api/reporter-links/" + TOKEN + "/submit")
         .with(csrf())
@@ -463,7 +465,7 @@ class ReporterLinkControllerTest {
     when(reporterLinkService.findByToken(TOKEN)).thenReturn(Optional.of(futureLink));
 
     ReporterLinkSubmitRequest request = new ReporterLinkSubmitRequest(
-        List.of(), LocalDate.now(), List.of());
+        List.of(), List.of());
 
     mockMvc.perform(post("/api/reporter-links/" + TOKEN + "/submit")
         .with(csrf())
@@ -483,7 +485,7 @@ class ReporterLinkControllerTest {
         .thenReturn(instance);
 
     ReporterLinkSubmitRequest request = new ReporterLinkSubmitRequest(
-        List.of(10L), LocalDate.of(2024, 1, 14),
+        List.of(10L),
         List.of(new ServiceInstanceRequest.ResponseEntry(5L, "120")));
 
     mockMvc.perform(post("/api/reporter-links/" + TOKEN + "/submit")

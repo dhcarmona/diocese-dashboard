@@ -227,6 +227,7 @@
     "notFound": "This report link does not exist or has already been used.",
     "wrongUser": "This report link belongs to a different reporter account.",
     "backHome": "Back to Home",
+    "fixedDateNotice": "This report will be recorded for {{date}}.",
     "notYetActiveSubtitle": "This link is not yet active.",
     "notYetActive": "This report link will be available starting {{date}}. Please come back on that date."
   },

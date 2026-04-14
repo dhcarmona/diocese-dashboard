@@ -108,7 +108,7 @@ public class ReporterLinkPublicController {
    * revoked upon successful submission.
    *
    * @param token   the reporter link token
-   * @param request the submission data (celebrants, date, responses)
+   * @param request the submission data (celebrants, responses)
    * @return 201 with the created service instance identifier and next pending reporter-link
    *         metadata, 404 if the token is unknown, or 409 if the link is not yet active
    */
@@ -134,7 +134,7 @@ public class ReporterLinkPublicController {
     ServiceInstanceRequest instanceRequest = new ServiceInstanceRequest(
         link.getChurch().getName(),
         request.celebrantIds(),
-        request.serviceDate(),
+        link.getActiveDate(),
         request.responses());
     var created = submissionService.claimAndSubmit(link, instanceRequest, reporter)
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT,
