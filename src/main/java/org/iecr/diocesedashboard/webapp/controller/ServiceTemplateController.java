@@ -135,7 +135,7 @@ public class ServiceTemplateController {
     }
     ServiceInstance created = serviceSubmissionService.submit(id, request, user);
     return ResponseEntity.status(HttpStatus.CREATED)
-        .body(ReportSubmissionResponse.from(
+        .body(ReportSubmissionResponse.fromAuthenticated(
             created,
             user.getRole() == UserRole.REPORTER
                 ? reporterLinkService.findNextPendingLinkForReporter(user)

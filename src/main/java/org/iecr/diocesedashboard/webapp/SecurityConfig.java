@@ -106,6 +106,8 @@ public class SecurityConfig {
                     "/statistics/*",
                     "/statistics/*/*").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/reporter-links/public/*").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/reporter-links/public/follow-up/*")
+                .permitAll()
                 .requestMatchers(HttpMethod.POST,
                     "/api/reporter-links/public/*/submit").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/statistics").hasAnyRole("ADMIN", "REPORTER")

@@ -1,5 +1,6 @@
 import ThumbUpAltOutlinedIcon from '@mui/icons-material/ThumbUpAltOutlined';
 import Button from '@mui/material/Button';
+import CircularProgress from '@mui/material/CircularProgress';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import dayjs from 'dayjs';
@@ -9,15 +10,20 @@ import { Link as RouterLink } from 'react-router-dom';
 interface ReporterLinkFollowUpCardProps {
   nextReporterLinkToken: string | null;
   nextReporterLinkActiveDate: string | null;
+  onOpenNextPendingLink?: () => void | Promise<void>;
+  openingNextPendingLink?: boolean;
 }
 
 export default function ReporterLinkFollowUpCard({
   nextReporterLinkToken,
   nextReporterLinkActiveDate,
+  onOpenNextPendingLink,
+  openingNextPendingLink = false,
 }: Readonly<ReporterLinkFollowUpCardProps>) {
   const { t } = useTranslation();
+  const hasNextPendingLink = nextReporterLinkToken !== null || onOpenNextPendingLink !== undefined;
 
-  if (nextReporterLinkToken) {
+  if (hasNextPendingLink) {
     const formattedDate = nextReporterLinkActiveDate
       ? dayjs(nextReporterLinkActiveDate).format('DD/MM/YYYY')
       : null;
@@ -32,13 +38,25 @@ export default function ReporterLinkFollowUpCard({
             ? t('submitService.nextPendingMessage', { date: formattedDate })
             : t('submitService.nextPendingMessageNoDate')}
         </Typography>
-        <Button
-          variant="contained"
-          component={RouterLink}
-          to={`/r/${nextReporterLinkToken}`}
-        >
-          {t('submitService.openNextPendingLink')}
-        </Button>
+        {nextReporterLinkToken ? (
+          <Button
+            variant="contained"
+            component={RouterLink}
+            to={`/r/${nextReporterLinkToken}`}
+          >
+            {t('submitService.openNextPendingLink')}
+          </Button>
+        ) : (
+          <Button
+            variant="contained"
+            onClick={() => void onOpenNextPendingLink?.()}
+            disabled={openingNextPendingLink}
+          >
+            {openingNextPendingLink
+              ? <CircularProgress size={22} color="inherit" />
+              : t('submitService.openNextPendingLink')}
+          </Button>
+        )}
       </Stack>
     );
   }

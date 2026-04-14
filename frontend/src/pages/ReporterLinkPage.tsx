@@ -14,10 +14,17 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import dayjs, { type Dayjs } from 'dayjs';
 import { type FormEvent, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link as RouterLink, Navigate, useLocation, useParams } from 'react-router-dom';
+import {
+  Link as RouterLink,
+  Navigate,
+  useLocation,
+  useNavigate,
+  useParams,
+} from 'react-router-dom';
 import type { ReportSubmissionResponse } from '../api/reportSubmissions';
 import { type Celebrant, getCelebrants } from '../api/celebrants';
 import {
+  getNextPublicReporterLink,
   getReporterLinkByToken,
   getReporterLinkPublic,
   submitViaReporterLink,
@@ -41,6 +48,7 @@ export default function ReporterLinkPage() {
   const { t } = useTranslation();
   const { user, status } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
 
   const [link, setLink] = useState<ReporterLink | null>(null);
   const [infoItems, setInfoItems] = useState<ServiceInfoItemSummary[]>([]);
@@ -55,6 +63,8 @@ export default function ReporterLinkPage() {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(false);
   const [submissionResult, setSubmissionResult] = useState<ReportSubmissionResponse | null>(null);
+  const [openingNextPendingLink, setOpeningNextPendingLink] = useState(false);
+  const [openNextPendingLinkError, setOpenNextPendingLinkError] = useState(false);
   const showHomeButton = status === 'authenticated';
 
   useEffect(() => {
@@ -63,6 +73,7 @@ export default function ReporterLinkPage() {
     let active = true;
     setSubmissionResult(null);
     setSubmitError(false);
+    setOpenNextPendingLinkError(false);
     setResponses({});
     setSelectedCelebrants([]);
     setLoading(true);
@@ -243,9 +254,22 @@ export default function ReporterLinkPage() {
             {t('submitService.successTitle')}
           </Typography>
           <Typography color="text.secondary">{t('submitService.successMessage')}</Typography>
+          {openNextPendingLinkError && (
+            <Alert severity="error" sx={{ maxWidth: 640 }}>
+              {t('submitService.nextPendingError')}
+            </Alert>
+          )}
           <ReporterLinkFollowUpCard
-            nextReporterLinkToken={submissionResult.nextReporterLinkToken}
+            nextReporterLinkToken={
+              status === 'authenticated' ? submissionResult.nextReporterLinkToken : null
+            }
             nextReporterLinkActiveDate={submissionResult.nextReporterLinkActiveDate}
+            onOpenNextPendingLink={
+              status !== 'authenticated' && submissionResult.nextReporterLinkFollowUpToken
+                ? () => void handleOpenNextPendingLink()
+                : undefined
+            }
+            openingNextPendingLink={openingNextPendingLink}
           />
           {showHomeButton && (
             <Button variant="contained" component={RouterLink} to="/">
@@ -255,6 +279,25 @@ export default function ReporterLinkPage() {
         </Stack>
       </AppShell>
     );
+  }
+
+  async function handleOpenNextPendingLink() {
+    if (!submissionResult?.nextReporterLinkFollowUpToken) {
+      return;
+    }
+
+    setOpeningNextPendingLink(true);
+    setOpenNextPendingLinkError(false);
+    try {
+      const nextLink = await getNextPublicReporterLink(
+        submissionResult.nextReporterLinkFollowUpToken,
+      );
+      navigate(`/r/${nextLink.nextReporterLinkToken}`);
+    } catch {
+      setOpenNextPendingLinkError(true);
+    } finally {
+      setOpeningNextPendingLink(false);
+    }
   }
 
   async function handleSubmit(e: FormEvent) {

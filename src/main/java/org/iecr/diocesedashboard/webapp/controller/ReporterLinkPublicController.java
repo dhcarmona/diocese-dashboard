@@ -3,9 +3,12 @@ package org.iecr.diocesedashboard.webapp.controller;
 import jakarta.validation.Valid;
 import org.iecr.diocesedashboard.domain.objects.DashboardUser;
 import org.iecr.diocesedashboard.domain.objects.ReporterLink;
+import org.iecr.diocesedashboard.domain.objects.UserRole;
 import org.iecr.diocesedashboard.service.CelebrantService;
+import org.iecr.diocesedashboard.service.ReporterLinkFollowUpTokenService;
 import org.iecr.diocesedashboard.service.ReporterLinkPublicSubmissionService;
 import org.iecr.diocesedashboard.service.ReporterLinkService;
+import org.iecr.diocesedashboard.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -31,14 +34,20 @@ public class ReporterLinkPublicController {
   private final ReporterLinkService reporterLinkService;
   private final CelebrantService celebrantService;
   private final ReporterLinkPublicSubmissionService submissionService;
+  private final ReporterLinkFollowUpTokenService followUpTokenService;
+  private final UserService userService;
 
   @Autowired
   public ReporterLinkPublicController(ReporterLinkService reporterLinkService,
       CelebrantService celebrantService,
-      ReporterLinkPublicSubmissionService submissionService) {
+      ReporterLinkPublicSubmissionService submissionService,
+      ReporterLinkFollowUpTokenService followUpTokenService,
+      UserService userService) {
     this.reporterLinkService = reporterLinkService;
     this.celebrantService = celebrantService;
     this.submissionService = submissionService;
+    this.followUpTokenService = followUpTokenService;
+    this.userService = userService;
   }
 
   /**
@@ -64,6 +73,35 @@ public class ReporterLinkPublicController {
   }
 
   /**
+   * Resolves the next pending reporter link for a short-lived public follow-up token.
+   *
+   * @param followUpToken the short-lived follow-up token returned after a public submission
+   * @return 200 with the next pending reporter link token, or 404 if missing/expired
+   */
+  @GetMapping("/follow-up/{followUpToken}")
+  public ResponseEntity<ReporterLinkFollowUpResponse> getNextPendingLink(
+      @PathVariable String followUpToken) {
+    Long reporterId = followUpTokenService.resolveReporterId(followUpToken)
+        .orElse(null);
+    if (reporterId == null) {
+      return ResponseEntity.notFound().build();
+    }
+
+    DashboardUser reporter = userService.findById(reporterId)
+        .filter(user -> user.getRole() == UserRole.REPORTER)
+        .filter(DashboardUser::isEnabled)
+        .orElse(null);
+    if (reporter == null) {
+      return ResponseEntity.notFound().build();
+    }
+
+    return reporterLinkService.findNextPendingLinkForReporter(reporter)
+        .map(ReporterLinkFollowUpResponse::from)
+        .map(ResponseEntity::ok)
+        .orElse(ResponseEntity.notFound().build());
+  }
+
+  /**
    * Submits a new service instance via the reporter link identified by the given token.
    * No authentication is required; the token itself is the authorization credential.
    * The link must be active (its activeDate must be today or in the past), and it is
@@ -71,8 +109,8 @@ public class ReporterLinkPublicController {
    *
    * @param token   the reporter link token
    * @param request the submission data (celebrants, date, responses)
-   * @return 201 with the created service instance identifier and next pending reporter link,
-   *         404 if the token is unknown, or 409 if the link is not yet active
+   * @return 201 with the created service instance identifier and next pending reporter-link
+   *         metadata, 404 if the token is unknown, or 409 if the link is not yet active
    */
   @PostMapping("/{token}/submit")
   public ResponseEntity<ReportSubmissionResponse> submit(@PathVariable String token,
@@ -102,7 +140,10 @@ public class ReporterLinkPublicController {
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT,
             "This reporter link has already been used"));
     var nextReporterLink = reporterLinkService.findNextPendingLinkForReporter(reporter);
+    String followUpToken = nextReporterLink.isPresent()
+        ? followUpTokenService.createToken(reporter)
+        : null;
     return ResponseEntity.status(HttpStatus.CREATED)
-        .body(ReportSubmissionResponse.from(created, nextReporterLink));
+        .body(ReportSubmissionResponse.fromPublic(created, nextReporterLink, followUpToken));
   }
 }

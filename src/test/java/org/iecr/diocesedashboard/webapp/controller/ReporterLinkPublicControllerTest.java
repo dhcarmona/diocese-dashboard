@@ -19,8 +19,10 @@ import org.iecr.diocesedashboard.domain.objects.ServiceInstance;
 import org.iecr.diocesedashboard.domain.objects.ServiceTemplate;
 import org.iecr.diocesedashboard.domain.objects.UserRole;
 import org.iecr.diocesedashboard.service.CelebrantService;
+import org.iecr.diocesedashboard.service.ReporterLinkFollowUpTokenService;
 import org.iecr.diocesedashboard.service.ReporterLinkPublicSubmissionService;
 import org.iecr.diocesedashboard.service.ReporterLinkService;
+import org.iecr.diocesedashboard.service.UserService;
 import org.iecr.diocesedashboard.webapp.SecurityConfig;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -29,7 +31,6 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDate;
@@ -59,7 +60,10 @@ class ReporterLinkPublicControllerTest {
   private ReporterLinkPublicSubmissionService submissionService;
 
   @MockBean
-  private UserDetailsService userDetailsService;
+  private ReporterLinkFollowUpTokenService followUpTokenService;
+
+  @MockBean
+  private UserService userService;
 
   private static final String TOKEN = "public-test-token-uuid";
 
@@ -159,6 +163,7 @@ class ReporterLinkPublicControllerTest {
     nextLink.setActiveDate(LocalDate.of(2026, 4, 15));
     when(reporterLinkService.findNextPendingLinkForReporter(any(DashboardUser.class)))
         .thenReturn(Optional.of(nextLink));
+    when(followUpTokenService.createToken(any(DashboardUser.class))).thenReturn("follow-up-token");
 
     ReporterLinkSubmitRequest request = new ReporterLinkSubmitRequest(
         List.of(10L), LocalDate.of(2024, 1, 14),
@@ -169,7 +174,8 @@ class ReporterLinkPublicControllerTest {
         .content(objectMapper.writeValueAsString(request)))
         .andExpect(status().isCreated())
         .andExpect(jsonPath("$.serviceInstanceId").value(42))
-        .andExpect(jsonPath("$.nextReporterLinkToken").value("next-public-token"))
+        .andExpect(jsonPath("$.nextReporterLinkToken").doesNotExist())
+        .andExpect(jsonPath("$.nextReporterLinkFollowUpToken").value("follow-up-token"))
         .andExpect(jsonPath("$.nextReporterLinkActiveDate").value("2026-04-15"));
 
     verify(submissionService).claimAndSubmit(any(ReporterLink.class),
@@ -187,6 +193,22 @@ class ReporterLinkPublicControllerTest {
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(request)))
         .andExpect(status().isNotFound());
+  }
+
+  @Test
+  void getNextPendingLink_validFollowUpToken_returns200() throws Exception {
+    DashboardUser reporter = buildReporter(5L, "Trinity");
+    ReporterLink nextLink = buildLink("next-public-token", 5L, "Trinity");
+    nextLink.setActiveDate(LocalDate.of(2026, 4, 15));
+    when(followUpTokenService.resolveReporterId("follow-up-token")).thenReturn(Optional.of(5L));
+    when(userService.findById(5L)).thenReturn(Optional.of(reporter));
+    when(reporterLinkService.findNextPendingLinkForReporter(reporter))
+        .thenReturn(Optional.of(nextLink));
+
+    mockMvc.perform(get("/api/reporter-links/public/follow-up/follow-up-token"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.nextReporterLinkToken").value("next-public-token"))
+        .andExpect(jsonPath("$.nextReporterLinkActiveDate").value("2026-04-15"));
   }
 
   @Test

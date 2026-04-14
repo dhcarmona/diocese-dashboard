@@ -7,6 +7,7 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import type { ReactNode } from 'react';
 import {
+  getNextPublicReporterLink,
   getReporterLinkByToken,
   getReporterLinkPublic,
   submitViaReporterLink,
@@ -20,6 +21,7 @@ import ReporterLinkPage from './ReporterLinkPage';
 vi.mock('../api/reporterLinks', () => ({
   getReporterLinkByToken: vi.fn(),
   getReporterLinkPublic: vi.fn(),
+  getNextPublicReporterLink: vi.fn(),
   submitViaReporterLink: vi.fn(),
   submitViaReporterLinkPublic: vi.fn(),
 }));
@@ -32,6 +34,7 @@ vi.mock('../api/celebrants', () => ({
 
 const mockedGetReporterLinkByToken = vi.mocked(getReporterLinkByToken);
 const mockedGetReporterLinkPublic = vi.mocked(getReporterLinkPublic);
+const mockedGetNextPublicReporterLink = vi.mocked(getNextPublicReporterLink);
 const mockedSubmitViaReporterLink = vi.mocked(submitViaReporterLink);
 const mockedSubmitViaReporterLinkPublic = vi.mocked(submitViaReporterLinkPublic);
 const mockedGetServiceTemplateById = vi.mocked(getServiceTemplateById);
@@ -73,6 +76,7 @@ describe('ReporterLinkPage', () => {
   beforeEach(async () => {
     mockedGetReporterLinkByToken.mockReset();
     mockedGetReporterLinkPublic.mockReset();
+    mockedGetNextPublicReporterLink.mockReset();
     mockedSubmitViaReporterLink.mockReset();
     mockedSubmitViaReporterLinkPublic.mockReset();
     mockedGetServiceTemplateById.mockReset();
@@ -93,7 +97,8 @@ describe('ReporterLinkPage', () => {
     });
     mockedSubmitViaReporterLinkPublic.mockResolvedValue({
       serviceInstanceId: 5,
-      nextReporterLinkToken: 'next-public-token',
+      nextReporterLinkToken: null,
+      nextReporterLinkFollowUpToken: 'follow-up-token',
       nextReporterLinkActiveDate: '2026-04-15',
     });
 
@@ -107,10 +112,7 @@ describe('ReporterLinkPage', () => {
     await user.click(screen.getByRole('button', { name: /submit report/i }));
 
     await waitFor(() => {
-      expect(screen.getByRole('link', { name: 'Open Next Pending Link' })).toHaveAttribute(
-        'href',
-        '/r/next-public-token',
-      );
+      expect(screen.getByRole('button', { name: 'Open Next Pending Link' })).toBeInTheDocument();
     });
     expect(screen.queryByRole('link', { name: 'Back to Home' })).not.toBeInTheDocument();
   });
@@ -129,6 +131,7 @@ describe('ReporterLinkPage', () => {
     mockedSubmitViaReporterLinkPublic.mockResolvedValue({
       serviceInstanceId: 6,
       nextReporterLinkToken: null,
+      nextReporterLinkFollowUpToken: null,
       nextReporterLinkActiveDate: null,
     });
 
@@ -172,8 +175,13 @@ describe('ReporterLinkPage', () => {
       });
     mockedSubmitViaReporterLinkPublic.mockResolvedValue({
       serviceInstanceId: 5,
-      nextReporterLinkToken: 'next-public-token',
+      nextReporterLinkToken: null,
+      nextReporterLinkFollowUpToken: 'follow-up-token',
       nextReporterLinkActiveDate: '2026-04-15',
+    });
+    mockedGetNextPublicReporterLink.mockResolvedValue({
+      nextReporterLinkToken: 'next-public-token',
+      nextReporterLinkActiveDate: '2024-04-15',
     });
 
     const user = userEvent.setup();
@@ -186,10 +194,10 @@ describe('ReporterLinkPage', () => {
     await user.click(screen.getByRole('button', { name: /submit report/i }));
 
     await waitFor(() => {
-      expect(screen.getByRole('link', { name: 'Open Next Pending Link' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Open Next Pending Link' })).toBeInTheDocument();
     });
 
-    await user.click(screen.getByRole('link', { name: 'Open Next Pending Link' }));
+    await user.click(screen.getByRole('button', { name: 'Open Next Pending Link' }));
 
     await waitFor(() => {
       expect(screen.getByText('Evening Prayer')).toBeInTheDocument();
