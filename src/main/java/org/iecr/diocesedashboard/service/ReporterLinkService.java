@@ -141,8 +141,6 @@ public class ReporterLinkService {
     String message = messageSource.getMessage(
         "reporter.link.whatsapp.message",
         new Object[]{templateName, churchName, activeDate, linkUrl},
-        "Tiene un nuevo enlace de reporte para \"" + templateName + "\" ("
-            + churchName + ", " + activeDate + "): " + linkUrl,
         reporter.getPreferredLocale());
     try {
       whatsAppService.sendMessageAndLog(phone, message,
