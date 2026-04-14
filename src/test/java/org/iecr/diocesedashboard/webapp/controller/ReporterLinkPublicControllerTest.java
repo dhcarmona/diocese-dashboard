@@ -11,6 +11,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import org.assertj.core.api.Assertions;
 import org.iecr.diocesedashboard.domain.objects.Celebrant;
 import org.iecr.diocesedashboard.domain.objects.Church;
 import org.iecr.diocesedashboard.domain.objects.DashboardUser;
@@ -26,6 +27,7 @@ import org.iecr.diocesedashboard.service.UserService;
 import org.iecr.diocesedashboard.webapp.SecurityConfig;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -152,8 +154,9 @@ class ReporterLinkPublicControllerTest {
 
   @Test
   void submit_activeLink_returns201AndClaimsToken() throws Exception {
-    when(reporterLinkService.findByToken(TOKEN)).thenReturn(
-        Optional.of(buildLink(TOKEN, 5L, "Trinity")));
+    ReporterLink link = buildLink(TOKEN, 5L, "Trinity");
+    link.setActiveDate(LocalDate.of(2024, 1, 20));
+    when(reporterLinkService.findByToken(TOKEN)).thenReturn(Optional.of(link));
     ServiceInstance instance = new ServiceInstance();
     instance.setId(42L);
     when(submissionService.claimAndSubmit(any(ReporterLink.class),
@@ -166,7 +169,7 @@ class ReporterLinkPublicControllerTest {
     when(followUpTokenService.createToken(any(DashboardUser.class))).thenReturn("follow-up-token");
 
     ReporterLinkSubmitRequest request = new ReporterLinkSubmitRequest(
-        List.of(10L), LocalDate.of(2024, 1, 14),
+        List.of(10L),
         List.of(new ServiceInstanceRequest.ResponseEntry(5L, "120")));
 
     mockMvc.perform(post("/api/reporter-links/public/" + TOKEN + "/submit")
@@ -178,8 +181,11 @@ class ReporterLinkPublicControllerTest {
         .andExpect(jsonPath("$.nextReporterLinkFollowUpToken").value("follow-up-token"))
         .andExpect(jsonPath("$.nextReporterLinkActiveDate").value("2026-04-15"));
 
-    verify(submissionService).claimAndSubmit(any(ReporterLink.class),
-        any(ServiceInstanceRequest.class), any(DashboardUser.class));
+    ArgumentCaptor<ServiceInstanceRequest> captor =
+        ArgumentCaptor.forClass(ServiceInstanceRequest.class);
+    verify(submissionService).claimAndSubmit(any(ReporterLink.class), captor.capture(),
+        any(DashboardUser.class));
+    Assertions.assertThat(captor.getValue().serviceDate()).isEqualTo(LocalDate.of(2024, 1, 20));
   }
 
   @Test
@@ -187,7 +193,7 @@ class ReporterLinkPublicControllerTest {
     when(reporterLinkService.findByToken("bad-token")).thenReturn(Optional.empty());
 
     ReporterLinkSubmitRequest request = new ReporterLinkSubmitRequest(
-        List.of(), LocalDate.of(2024, 1, 14), List.of());
+        List.of(), List.of());
 
     mockMvc.perform(post("/api/reporter-links/public/bad-token/submit")
         .contentType(MediaType.APPLICATION_JSON)
@@ -218,7 +224,7 @@ class ReporterLinkPublicControllerTest {
     when(reporterLinkService.findByToken(TOKEN)).thenReturn(Optional.of(futureLink));
 
     ReporterLinkSubmitRequest request = new ReporterLinkSubmitRequest(
-        List.of(), LocalDate.of(2024, 1, 14), List.of());
+        List.of(), List.of());
 
     mockMvc.perform(post("/api/reporter-links/public/" + TOKEN + "/submit")
         .contentType(MediaType.APPLICATION_JSON)
@@ -237,7 +243,7 @@ class ReporterLinkPublicControllerTest {
         .thenReturn(Optional.of(instance));
 
     ReporterLinkSubmitRequest request = new ReporterLinkSubmitRequest(
-        List.of(), LocalDate.now(), List.of());
+        List.of(), List.of());
 
     // No CSRF header, no authentication — should still succeed
     mockMvc.perform(post("/api/reporter-links/public/" + TOKEN + "/submit")
@@ -255,7 +261,7 @@ class ReporterLinkPublicControllerTest {
         .thenReturn(Optional.empty());
 
     ReporterLinkSubmitRequest request = new ReporterLinkSubmitRequest(
-        List.of(), LocalDate.of(2024, 1, 14), List.of());
+        List.of(), List.of());
 
     mockMvc.perform(post("/api/reporter-links/public/" + TOKEN + "/submit")
         .contentType(MediaType.APPLICATION_JSON)
@@ -271,7 +277,7 @@ class ReporterLinkPublicControllerTest {
     when(reporterLinkService.findByToken(TOKEN)).thenReturn(Optional.of(link));
 
     ReporterLinkSubmitRequest request = new ReporterLinkSubmitRequest(
-        List.of(), LocalDate.of(2024, 1, 14), List.of());
+        List.of(), List.of());
 
     mockMvc.perform(post("/api/reporter-links/public/" + TOKEN + "/submit")
         .contentType(MediaType.APPLICATION_JSON)
@@ -288,7 +294,7 @@ class ReporterLinkPublicControllerTest {
     when(reporterLinkService.findByToken(TOKEN)).thenReturn(Optional.of(link));
 
     ReporterLinkSubmitRequest request = new ReporterLinkSubmitRequest(
-        List.of(), LocalDate.of(2024, 1, 14), List.of());
+        List.of(), List.of());
 
     mockMvc.perform(post("/api/reporter-links/public/" + TOKEN + "/submit")
         .contentType(MediaType.APPLICATION_JSON)

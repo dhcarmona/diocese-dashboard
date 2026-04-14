@@ -178,7 +178,7 @@ public class ReporterLinkController {
    * and it is revoked upon successful submission.
    *
    * @param token   the link token
-   * @param request the submission data (celebrants, date, responses)
+   * @param request the submission data (celebrants, responses)
    * @param auth    the current authentication
    * @return 201 with the created service instance identifier and next pending reporter link
    */
@@ -204,7 +204,7 @@ public class ReporterLinkController {
     ServiceInstanceRequest instanceRequest = new ServiceInstanceRequest(
         link.getChurch().getName(),
         request.celebrantIds(),
-        request.serviceDate(),
+        link.getActiveDate(),
         request.responses());
     ServiceInstance created = serviceSubmissionService.submit(
         link.getServiceTemplate().getId(), instanceRequest, user);

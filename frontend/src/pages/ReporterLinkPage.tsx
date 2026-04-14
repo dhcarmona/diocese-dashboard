@@ -10,8 +10,7 @@ import InputAdornment from '@mui/material/InputAdornment';
 import Stack from '@mui/material/Stack';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import dayjs, { type Dayjs } from 'dayjs';
+import dayjs from 'dayjs';
 import { type FormEvent, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -56,7 +55,6 @@ export default function ReporterLinkPage() {
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<'notFound' | 'wrongUser' | 'generic' | null>(null);
 
-  const [serviceDate, setServiceDate] = useState<Dayjs | null>(null);
   const [selectedCelebrants, setSelectedCelebrants] = useState<Celebrant[]>([]);
   const [responses, setResponses] = useState<Record<number, string>>({});
 
@@ -100,7 +98,6 @@ export default function ReporterLinkPage() {
           setLink(loadedLink);
           setInfoItems(loadedTemplate.serviceInfoItems ?? []);
           setAllCelebrants(loadedCelebrants);
-          setServiceDate(dayjs(loadedLink.activeDate));
         } else {
           // Unauthenticated: use the public endpoint; the token is the credential.
           const publicData = await getReporterLinkPublic(token!);
@@ -119,7 +116,6 @@ export default function ReporterLinkPage() {
           });
           setInfoItems(publicData.serviceInfoItems);
           setAllCelebrants(publicData.celebrants);
-          setServiceDate(dayjs(publicData.activeDate));
         }
       } catch (err: unknown) {
         if (!active) return;
@@ -221,6 +217,7 @@ export default function ReporterLinkPage() {
 
   const today = dayjs().startOf('day');
   const activeDateObj = dayjs(link.activeDate);
+  const formattedActiveDate = activeDateObj.format('DD/MM/YYYY');
   const isNotYetActive = activeDateObj.isAfter(today);
 
   if (isNotYetActive) {
@@ -232,7 +229,7 @@ export default function ReporterLinkPage() {
         />
         <Alert severity="info" sx={{ maxWidth: 640 }}>
           {t('reporterLink.notYetActive', {
-            date: activeDateObj.format('DD/MM/YYYY'),
+            date: formattedActiveDate,
           })}
         </Alert>
         {showHomeButton && (
@@ -302,7 +299,7 @@ export default function ReporterLinkPage() {
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    if (!link || !serviceDate || !serviceDate.isValid()) return;
+    if (!link) return;
 
     const hasMissingRequired = infoItems.some((item) => {
       const value = responses[item.id]?.trim() ?? '';
@@ -328,14 +325,12 @@ export default function ReporterLinkPage() {
       if (status === 'authenticated') {
         const result = await submitViaReporterLink(link.token, {
           celebrantIds: selectedCelebrants.map((c) => c.id),
-          serviceDate: serviceDate.format('YYYY-MM-DD'),
           responses: responseEntries,
         });
         setSubmissionResult(result);
       } else {
         const result = await submitViaReporterLinkPublic(link.token, {
           celebrantIds: selectedCelebrants.map((c) => c.id),
-          serviceDate: serviceDate.format('YYYY-MM-DD'),
           responses: responseEntries,
         });
         setSubmissionResult(result);
@@ -358,15 +353,15 @@ export default function ReporterLinkPage() {
         sx={{ maxWidth: 640 }}
       >
         <Stack spacing={3}>
-          <DatePicker
+          <Alert severity="info">
+            {t('reporterLink.fixedDateNotice', { date: formattedActiveDate })}
+          </Alert>
+
+          <TextField
             label={t('submitService.fields.date')}
-            value={serviceDate}
-            onChange={(val) => setServiceDate(val)}
-            maxDate={dayjs()}
-            format="DD/MM/YYYY"
-            slotProps={{
-              textField: { required: true, fullWidth: true },
-            }}
+            value={formattedActiveDate}
+            fullWidth
+            InputProps={{ readOnly: true }}
           />
 
           <Autocomplete
@@ -444,7 +439,7 @@ export default function ReporterLinkPage() {
               type="submit"
               variant="contained"
               size="large"
-              disabled={submitting || !serviceDate || !serviceDate.isValid()}
+              disabled={submitting}
             >
               {submitting ? (
                 <CircularProgress size={22} color="inherit" />
