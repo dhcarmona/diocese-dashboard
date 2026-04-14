@@ -18,10 +18,11 @@ import {
   getInstancesByTemplate,
 } from '../api/serviceInstances';
 import PageHeader from '../components/PageHeader';
+import { formatDate, formatDateTime } from '../utils/dateFormatting';
 
 export default function ReportInstancesListPage() {
   const { templateId } = useParams<{ templateId: string }>();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   const [instances, setInstances] = useState<ServiceInstanceSummary[]>([]);
   const [templateName, setTemplateName] = useState('');
@@ -101,7 +102,7 @@ export default function ReportInstancesListPage() {
             <TableBody>
               {instances.map((instance) => (
                 <TableRow key={instance.id} hover>
-                  <TableCell>{instance.serviceDate}</TableCell>
+                  <TableCell>{formatDate(instance.serviceDate, i18n.resolvedLanguage)}</TableCell>
                   <TableCell>{instance.churchName}</TableCell>
                   <TableCell>
                     {instance.submittedByFullName
@@ -111,7 +112,7 @@ export default function ReportInstancesListPage() {
                   {instances.some((i) => i.submittedAt != null) && (
                     <TableCell>
                       {instance.submittedAt != null
-                        ? new Date(instance.submittedAt).toLocaleString()
+                        ? formatDateTime(instance.submittedAt, i18n.resolvedLanguage)
                         : '—'}
                     </TableCell>
                   )}

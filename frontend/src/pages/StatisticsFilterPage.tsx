@@ -16,6 +16,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { getChurches, type Church } from '../api/churches';
 import { useAuth } from '../auth/auth-context';
 import PageHeader from '../components/PageHeader';
+import { APP_DATE_FORMAT } from '../utils/dateFormatting';
 
 const GLOBAL_VALUE = '__global__';
 
@@ -131,6 +132,7 @@ export default function StatisticsFilterPage() {
             <DatePicker
               label={t('statistics.filter.startDateLabel')}
               value={startDate}
+              format={APP_DATE_FORMAT}
               onChange={(val) => {
                 setStartDate(val);
                 setDateError(false);
@@ -140,6 +142,7 @@ export default function StatisticsFilterPage() {
             <DatePicker
               label={t('statistics.filter.endDateLabel')}
               value={endDate}
+              format={APP_DATE_FORMAT}
               onChange={(val) => {
                 setEndDate(val);
                 setDateError(false);

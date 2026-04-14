@@ -15,9 +15,10 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { type WhatsAppMessageLogEntry, getWhatsAppMessageLogs } from '../api/whatsappLogs';
 import PageHeader from '../components/PageHeader';
+import { formatDateTime } from '../utils/dateFormatting';
 
 export default function WhatsAppMessageLogPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   const [entries, setEntries] = useState<WhatsAppMessageLogEntry[]>([]);
   const [totalElements, setTotalElements] = useState(0);
@@ -97,7 +98,7 @@ export default function WhatsAppMessageLogPage() {
                 {entries.map((entry) => (
                   <TableRow key={entry.id} hover>
                     <TableCell sx={{ whiteSpace: 'nowrap' }}>
-                      {new Date(entry.sentAt).toLocaleString()}
+                      {formatDateTime(entry.sentAt, i18n.resolvedLanguage)}
                     </TableCell>
                     <TableCell>{entry.recipientUsername}</TableCell>
                     <TableCell>

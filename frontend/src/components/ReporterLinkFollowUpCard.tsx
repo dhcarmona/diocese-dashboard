@@ -3,9 +3,9 @@ import Button from '@mui/material/Button';
 import CircularProgress from '@mui/material/CircularProgress';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
-import dayjs from 'dayjs';
 import { useTranslation } from 'react-i18next';
 import { Link as RouterLink } from 'react-router-dom';
+import { formatDate } from '../utils/dateFormatting';
 
 interface ReporterLinkFollowUpCardProps {
   nextReporterLinkToken: string | null;
@@ -20,12 +20,12 @@ export default function ReporterLinkFollowUpCard({
   onOpenNextPendingLink,
   openingNextPendingLink = false,
 }: Readonly<ReporterLinkFollowUpCardProps>) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const hasNextPendingLink = nextReporterLinkToken !== null || onOpenNextPendingLink !== undefined;
 
   if (hasNextPendingLink) {
     const formattedDate = nextReporterLinkActiveDate
-      ? dayjs(nextReporterLinkActiveDate).format('DD/MM/YYYY')
+      ? formatDate(nextReporterLinkActiveDate, i18n.resolvedLanguage)
       : null;
 
     return (

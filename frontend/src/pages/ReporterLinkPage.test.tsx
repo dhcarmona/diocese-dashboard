@@ -250,13 +250,13 @@ describe('ReporterLinkPage', () => {
     await waitFor(() => {
       expect(
         screen.getByText(
-          'This report will be recorded for 14/04/2024.',
+          'This report will be recorded for 14 Apr 2024.',
         ),
       ).toBeInTheDocument();
     });
 
     const serviceDateField = screen.getByRole('textbox', { name: 'Service Date' });
-    expect(serviceDateField).toHaveValue('14/04/2024');
+    expect(serviceDateField).toHaveValue('14 Apr 2024');
     expect(serviceDateField).toHaveAttribute('readonly');
 
     await user.click(screen.getByRole('button', { name: /submit report/i }));

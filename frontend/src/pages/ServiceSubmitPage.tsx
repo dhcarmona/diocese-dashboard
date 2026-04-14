@@ -31,6 +31,7 @@ import { submitServiceInstance } from '../api/serviceInstances';
 import { useAuth } from '../auth/auth-context';
 import PageHeader from '../components/PageHeader';
 import ReporterLinkFollowUpCard from '../components/ReporterLinkFollowUpCard';
+import { APP_DATE_FORMAT } from '../utils/dateFormatting';
 
 function getInputAdornment(type: ServiceInfoItemSummary['serviceInfoItemType']): string | null {
   if (type === 'DOLLARS') return '$';
@@ -239,7 +240,7 @@ export default function ServiceSubmitPage() {
             value={serviceDate}
             onChange={(val) => setServiceDate(val)}
             maxDate={dayjs()}
-            format="DD/MM/YYYY"
+            format={APP_DATE_FORMAT}
             slotProps={{
               textField: { required: true, fullWidth: true },
             }}

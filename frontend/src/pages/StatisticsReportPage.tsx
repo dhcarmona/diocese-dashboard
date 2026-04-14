@@ -30,6 +30,7 @@ import {
 } from 'recharts';
 import { getStatistics, type AggregatedItem, type StatisticsReport } from '../api/statistics';
 import PageHeader from '../components/PageHeader';
+import { formatDate } from '../utils/dateFormatting';
 
 const CHART_COLORS = [
   '#1C3A6E', '#2E6DB4', '#4A9FD4', '#7BBFDB', '#AED6E8',
@@ -49,11 +50,11 @@ interface ItemSectionProps {
 }
 
 function ItemSection({ item, totalLabel, trendLabel }: Readonly<ItemSectionProps>) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const unit = t(`statistics.report.itemTypes.${item.itemType}`, { defaultValue: item.itemType });
 
   const barData = item.timeSeriesData.map((pt) => ({
-    date: pt.date,
+    date: formatDate(pt.date, i18n.resolvedLanguage),
     value: pt.value,
   }));
 
@@ -95,7 +96,7 @@ function ItemSection({ item, totalLabel, trendLabel }: Readonly<ItemSectionProps
 }
 
 export default function StatisticsReportPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { templateId } = useParams<{ templateId: string }>();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -180,7 +181,10 @@ export default function StatisticsReportPage() {
                 <Typography variant="overline" color="text.secondary">
                   {t('statistics.report.dateRangeLabel')}
                 </Typography>
-                <Typography variant="h6" fontWeight={700}>{startDate} – {endDate}</Typography>
+                <Typography variant="h6" fontWeight={700}>
+                  {formatDate(startDate, i18n.resolvedLanguage)} –{' '}
+                  {formatDate(endDate, i18n.resolvedLanguage)}
+                </Typography>
               </Box>
               <Box>
                 <Typography variant="overline" color="text.secondary">
@@ -321,7 +325,7 @@ export default function StatisticsReportPage() {
                       {report.global && (
                         <TableCell>{link.churchName}</TableCell>
                       )}
-                      <TableCell>{link.activeDate}</TableCell>
+                      <TableCell>{formatDate(link.activeDate, i18n.resolvedLanguage)}</TableCell>
                       <TableCell>
                         <Link href={`/r/${link.token}`} target="_blank" rel="noreferrer">
                           /r/{link.token}

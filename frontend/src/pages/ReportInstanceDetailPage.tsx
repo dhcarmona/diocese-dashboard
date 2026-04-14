@@ -26,6 +26,7 @@ import {
   updateInstance,
 } from '../api/serviceInstances';
 import PageHeader from '../components/PageHeader';
+import { formatDate } from '../utils/dateFormatting';
 
 function getAdornment(type: ResponseDetail['serviceInfoItemType']): string | null {
   if (type === 'DOLLARS') return '$';
@@ -40,7 +41,7 @@ export default function ReportInstanceDetailPage() {
     templateId: string;
     instanceId: string;
   }>();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
 
   const [detail, setDetail] = useState<ServiceInstanceDetail | null>(null);
@@ -213,7 +214,8 @@ export default function ReportInstanceDetailPage() {
       {/* Metadata */}
       <Stack spacing={0.5} sx={{ mb: 3 }}>
         <Typography variant="body2" color="text.secondary">
-          <strong>{t('reportDetail.meta.date')}:</strong> {detail.serviceDate}
+          <strong>{t('reportDetail.meta.date')}:</strong>{' '}
+          {formatDate(detail.serviceDate, i18n.resolvedLanguage)}
         </Typography>
         <Typography variant="body2" color="text.secondary">
           <strong>{t('reportDetail.meta.church')}:</strong> {detail.churchName}

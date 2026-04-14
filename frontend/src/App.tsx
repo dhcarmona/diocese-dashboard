@@ -6,8 +6,9 @@ import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
 import CircularProgress from '@mui/material/CircularProgress';
 import Typography from '@mui/material/Typography';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { enUS, esES } from '@mui/x-date-pickers/locales';
 import { useTranslation } from 'react-i18next';
 import { BrowserRouter, Navigate, Outlet, Route, Routes, useSearchParams } from 'react-router-dom';
 import { AuthProvider } from './auth/AuthProvider';
@@ -31,6 +32,7 @@ import StatisticsFilterPage from './pages/StatisticsFilterPage';
 import StatisticsReportPage from './pages/StatisticsReportPage';
 import StatisticsTemplateSelectionPage from './pages/StatisticsTemplateSelectionPage';
 import WhatsAppMessageLogPage from './pages/WhatsAppMessageLogPage';
+import { getAppDateLocale } from './utils/dateFormatting';
 
 function FullPageStatus({
   children,
@@ -181,8 +183,18 @@ function AppRoutes() {
 }
 
 function App() {
+  const { i18n } = useTranslation();
+  const locale = getAppDateLocale(i18n.resolvedLanguage);
+  const localeText = locale === 'en'
+    ? enUS.components.MuiLocalizationProvider.defaultProps.localeText
+    : esES.components.MuiLocalizationProvider.defaultProps.localeText;
+
   return (
-    <LocalizationProvider dateAdapter={AdapterDayjs}>
+    <LocalizationProvider
+      dateAdapter={AdapterDayjs}
+      adapterLocale={locale}
+      localeText={localeText}
+    >
       <BrowserRouter>
         <AuthProvider>
           <AppRoutes />
