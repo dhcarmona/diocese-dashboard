@@ -1,4 +1,5 @@
 import { api, getCsrfHeaders } from './auth';
+import type { ReportSubmissionResponse } from './reportSubmissions';
 import type { Celebrant } from './celebrants';
 import type { ServiceInfoItemSummary } from './serviceTemplates';
 
@@ -86,8 +87,8 @@ export async function revokeReporterLink(token: string): Promise<void> {
 export async function submitViaReporterLink(
   token: string,
   payload: ReporterLinkSubmitPayload,
-): Promise<{ serviceInstanceId: number }> {
-  const response = await api.post<{ serviceInstanceId: number }>(
+): Promise<ReportSubmissionResponse> {
+  const response = await api.post<ReportSubmissionResponse>(
     `/api/reporter-links/${encodeURIComponent(token)}/submit`,
     payload,
     { headers: await getCsrfHeaders() },
@@ -102,8 +103,8 @@ export async function submitViaReporterLink(
 export async function submitViaReporterLinkPublic(
   token: string,
   payload: ReporterLinkSubmitPayload,
-): Promise<{ serviceInstanceId: number }> {
-  const response = await api.post<{ serviceInstanceId: number }>(
+): Promise<ReportSubmissionResponse> {
+  const response = await api.post<ReportSubmissionResponse>(
     `/api/reporter-links/public/${encodeURIComponent(token)}/submit`,
     payload,
   );

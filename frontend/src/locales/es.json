@@ -125,6 +125,12 @@
     "noChurchesAssigned": "No tiene iglesias asignadas. Contacte a un administrador.",
     "successTitle": "Reporte enviado",
     "successMessage": "Su reporte de servicio fue registrado exitosamente.",
+    "nextPendingTitle": "Todavia tiene un reporte pendiente",
+    "nextPendingMessage": "Todavia tiene un enlace de reportero pendiente para {{date}}.",
+    "nextPendingMessageNoDate": "Todavia tiene un enlace de reportero pendiente.",
+    "openNextPendingLink": "Abrir el siguiente enlace pendiente",
+    "upToDateTitle": "Esta al dia",
+    "upToDateMessage": "Ya completo todos sus enlaces de reportero pendientes.",
     "submitAnother": "Enviar otro reporte",
     "backHome": "Volver al inicio",
     "fields": {

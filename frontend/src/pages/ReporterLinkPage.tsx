@@ -15,6 +15,7 @@ import dayjs, { type Dayjs } from 'dayjs';
 import { type FormEvent, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link as RouterLink, Navigate, useLocation, useParams } from 'react-router-dom';
+import type { ReportSubmissionResponse } from '../api/reportSubmissions';
 import { type Celebrant, getCelebrants } from '../api/celebrants';
 import {
   getReporterLinkByToken,
@@ -27,6 +28,7 @@ import { type ServiceInfoItemSummary, getServiceTemplateById } from '../api/serv
 import { useAuth } from '../auth/auth-context';
 import AppShell from '../components/AppShell';
 import PageHeader from '../components/PageHeader';
+import ReporterLinkFollowUpCard from '../components/ReporterLinkFollowUpCard';
 
 function getInputAdornment(type: ServiceInfoItemSummary['serviceInfoItemType']): string | null {
   if (type === 'DOLLARS') return '$';
@@ -52,12 +54,17 @@ export default function ReporterLinkPage() {
 
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(false);
-  const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [submissionResult, setSubmissionResult] = useState<ReportSubmissionResponse | null>(null);
+  const showHomeButton = status === 'authenticated';
 
   useEffect(() => {
     if (status === 'loading' || status === 'error' || !token) return;
 
     let active = true;
+    setSubmissionResult(null);
+    setSubmitError(false);
+    setResponses({});
+    setSelectedCelebrants([]);
     setLoading(true);
     setLoadError(null);
 
@@ -162,9 +169,11 @@ export default function ReporterLinkPage() {
         <Alert severity="warning" sx={{ maxWidth: 640 }}>
           {t('reporterLink.notFound')}
         </Alert>
-        <Button component={RouterLink} to="/" sx={{ mt: 2 }}>
-          {t('reporterLink.backHome')}
-        </Button>
+        {showHomeButton && (
+          <Button component={RouterLink} to="/" sx={{ mt: 2 }}>
+            {t('reporterLink.backHome')}
+          </Button>
+        )}
       </AppShell>
     );
   }
@@ -175,9 +184,11 @@ export default function ReporterLinkPage() {
         <Alert severity="error" sx={{ maxWidth: 640 }}>
           {t('reporterLink.wrongUser')}
         </Alert>
-        <Button component={RouterLink} to="/" sx={{ mt: 2 }}>
-          {t('reporterLink.backHome')}
-        </Button>
+        {showHomeButton && (
+          <Button component={RouterLink} to="/" sx={{ mt: 2 }}>
+            {t('reporterLink.backHome')}
+          </Button>
+        )}
       </AppShell>
     );
   }
@@ -188,9 +199,11 @@ export default function ReporterLinkPage() {
         <Alert severity="error" sx={{ maxWidth: 640 }}>
           {t('reporterLink.loadError')}
         </Alert>
-        <Button component={RouterLink} to="/" sx={{ mt: 2 }}>
-          {t('reporterLink.backHome')}
-        </Button>
+        {showHomeButton && (
+          <Button component={RouterLink} to="/" sx={{ mt: 2 }}>
+            {t('reporterLink.backHome')}
+          </Button>
+        )}
       </AppShell>
     );
   }
@@ -211,14 +224,16 @@ export default function ReporterLinkPage() {
             date: activeDateObj.format('DD/MM/YYYY'),
           })}
         </Alert>
-        <Button component={RouterLink} to="/" sx={{ mt: 2 }}>
-          {t('reporterLink.backHome')}
-        </Button>
+        {showHomeButton && (
+          <Button component={RouterLink} to="/" sx={{ mt: 2 }}>
+            {t('reporterLink.backHome')}
+          </Button>
+        )}
       </AppShell>
     );
   }
 
-  if (submitSuccess) {
+  if (submissionResult) {
     return (
       <AppShell>
         <PageHeader title={link.serviceTemplateName} subtitle={link.churchName} />
@@ -228,9 +243,15 @@ export default function ReporterLinkPage() {
             {t('submitService.successTitle')}
           </Typography>
           <Typography color="text.secondary">{t('submitService.successMessage')}</Typography>
-          <Button variant="contained" component={RouterLink} to="/">
-            {t('submitService.backHome')}
-          </Button>
+          <ReporterLinkFollowUpCard
+            nextReporterLinkToken={submissionResult.nextReporterLinkToken}
+            nextReporterLinkActiveDate={submissionResult.nextReporterLinkActiveDate}
+          />
+          {showHomeButton && (
+            <Button variant="contained" component={RouterLink} to="/">
+              {t('submitService.backHome')}
+            </Button>
+          )}
         </Stack>
       </AppShell>
     );
@@ -262,19 +283,20 @@ export default function ReporterLinkPage() {
 
     try {
       if (status === 'authenticated') {
-        await submitViaReporterLink(link.token, {
+        const result = await submitViaReporterLink(link.token, {
           celebrantIds: selectedCelebrants.map((c) => c.id),
           serviceDate: serviceDate.format('YYYY-MM-DD'),
           responses: responseEntries,
         });
+        setSubmissionResult(result);
       } else {
-        await submitViaReporterLinkPublic(link.token, {
+        const result = await submitViaReporterLinkPublic(link.token, {
           celebrantIds: selectedCelebrants.map((c) => c.id),
           serviceDate: serviceDate.format('YYYY-MM-DD'),
           responses: responseEntries,
         });
+        setSubmissionResult(result);
       }
-      setSubmitSuccess(true);
     } catch {
       setSubmitError(true);
     } finally {
@@ -387,15 +409,17 @@ export default function ReporterLinkPage() {
                 t('submitService.submit')
               )}
             </Button>
-            <Button
-              component={RouterLink}
-              to="/"
-              variant="outlined"
-              size="large"
-              disabled={submitting}
-            >
-              {t('reporterLink.backHome')}
-            </Button>
+            {showHomeButton && (
+              <Button
+                component={RouterLink}
+                to="/"
+                variant="outlined"
+                size="large"
+                disabled={submitting}
+              >
+                {t('reporterLink.backHome')}
+              </Button>
+            )}
           </Stack>
         </Stack>
       </Box>

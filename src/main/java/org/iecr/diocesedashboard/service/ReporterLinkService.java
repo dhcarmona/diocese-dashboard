@@ -117,6 +117,16 @@ public class ReporterLinkService {
     return reporterLinkRepository.findAll();
   }
 
+  /**
+   * Returns the next pending reporter link for the given reporter, ordered by report date.
+   *
+   * @param reporter the reporter whose next link should be returned
+   * @return the oldest remaining reporter link for that reporter, if any
+   */
+  public Optional<ReporterLink> findNextPendingLinkForReporter(DashboardUser reporter) {
+    return reporterLinkRepository.findFirstByReporterOrderByActiveDateAscIdAsc(reporter);
+  }
+
   public boolean existsByToken(String token) {
     return reporterLinkRepository.existsByToken(token);
   }

@@ -155,6 +155,10 @@ class ReporterLinkPublicControllerTest {
     when(submissionService.claimAndSubmit(any(ReporterLink.class),
         any(ServiceInstanceRequest.class), any(DashboardUser.class)))
         .thenReturn(Optional.of(instance));
+    ReporterLink nextLink = buildLink("next-public-token", 5L, "Trinity");
+    nextLink.setActiveDate(LocalDate.of(2026, 4, 15));
+    when(reporterLinkService.findNextPendingLinkForReporter(any(DashboardUser.class)))
+        .thenReturn(Optional.of(nextLink));
 
     ReporterLinkSubmitRequest request = new ReporterLinkSubmitRequest(
         List.of(10L), LocalDate.of(2024, 1, 14),
@@ -164,7 +168,9 @@ class ReporterLinkPublicControllerTest {
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(request)))
         .andExpect(status().isCreated())
-        .andExpect(jsonPath("$.serviceInstanceId").value(42));
+        .andExpect(jsonPath("$.serviceInstanceId").value(42))
+        .andExpect(jsonPath("$.nextReporterLinkToken").value("next-public-token"))
+        .andExpect(jsonPath("$.nextReporterLinkActiveDate").value("2026-04-15"));
 
     verify(submissionService).claimAndSubmit(any(ReporterLink.class),
         any(ServiceInstanceRequest.class), any(DashboardUser.class));

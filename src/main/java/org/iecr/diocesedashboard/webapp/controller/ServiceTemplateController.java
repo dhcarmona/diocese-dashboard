@@ -5,6 +5,7 @@ import org.iecr.diocesedashboard.domain.objects.DashboardUser;
 import org.iecr.diocesedashboard.domain.objects.ServiceInstance;
 import org.iecr.diocesedashboard.domain.objects.ServiceTemplate;
 import org.iecr.diocesedashboard.domain.objects.UserRole;
+import org.iecr.diocesedashboard.service.ReporterLinkService;
 import org.iecr.diocesedashboard.service.ServiceSubmissionService;
 import org.iecr.diocesedashboard.service.ServiceTemplateService;
 import org.iecr.diocesedashboard.webapp.DashboardUserDetails;
@@ -23,6 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import java.util.Optional;
 
 /** REST controller for managing service templates and submitting service instances. */
 @RestController
@@ -31,12 +33,15 @@ public class ServiceTemplateController {
 
   private final ServiceTemplateService serviceTemplateService;
   private final ServiceSubmissionService serviceSubmissionService;
+  private final ReporterLinkService reporterLinkService;
 
   @Autowired
   public ServiceTemplateController(ServiceTemplateService serviceTemplateService,
-      ServiceSubmissionService serviceSubmissionService) {
+      ServiceSubmissionService serviceSubmissionService,
+      ReporterLinkService reporterLinkService) {
     this.serviceTemplateService = serviceTemplateService;
     this.serviceSubmissionService = serviceSubmissionService;
+    this.reporterLinkService = reporterLinkService;
   }
 
   /**
@@ -117,10 +122,10 @@ public class ServiceTemplateController {
    * @param id      the template ID
    * @param request the submission request body
    * @param auth    the current authentication
-   * @return 201 with the created service instance
+   * @return 201 with the created service instance and next pending reporter link
    */
   @PostMapping("/{id}/submit")
-  public ResponseEntity<ServiceInstance> submit(@PathVariable Long id,
+  public ResponseEntity<ReportSubmissionResponse> submit(@PathVariable Long id,
       @RequestBody @Valid ServiceInstanceRequest request, Authentication auth) {
     DashboardUser user = ((DashboardUserDetails) auth.getPrincipal()).getDashboardUser();
     if (user.getRole() == UserRole.REPORTER
@@ -129,7 +134,12 @@ public class ServiceTemplateController {
           "Reporters may only submit for their assigned churches");
     }
     ServiceInstance created = serviceSubmissionService.submit(id, request, user);
-    return ResponseEntity.status(HttpStatus.CREATED).body(created);
+    return ResponseEntity.status(HttpStatus.CREATED)
+        .body(ReportSubmissionResponse.from(
+            created,
+            user.getRole() == UserRole.REPORTER
+                ? reporterLinkService.findNextPendingLinkForReporter(user)
+                : Optional.empty()));
   }
 
   private ServiceTemplate buildTemplateFromRequest(ServiceTemplateRequest request) {

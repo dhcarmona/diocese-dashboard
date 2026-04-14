@@ -216,7 +216,11 @@ describe('ServiceSubmitPage', () => {
     mockedGetTemplate.mockResolvedValue(TEMPLATE);
     mockedGetCelebrants.mockResolvedValue([]);
     mockedGetChurches.mockResolvedValue(CHURCHES);
-    mockedSubmit.mockResolvedValue(undefined);
+    mockedSubmit.mockResolvedValue({
+      serviceInstanceId: 99,
+      nextReporterLinkToken: 'next-token',
+      nextReporterLinkActiveDate: '2026-04-15',
+    });
 
     const user = userEvent.setup();
     renderPage();
@@ -234,6 +238,14 @@ describe('ServiceSubmitPage', () => {
       expect(screen.getByText('Report Submitted')).toBeInTheDocument();
     });
 
+    expect(
+      screen.getByText('You still have a pending reporter link for 15/04/2026.'),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Open Next Pending Link' })).toHaveAttribute(
+      'href',
+      '/r/next-token',
+    );
+
     expect(mockedSubmit).toHaveBeenCalledWith(
       1,
       expect.objectContaining({
@@ -249,6 +261,35 @@ describe('ServiceSubmitPage', () => {
     expect(callArgs.responses).not.toContainEqual(
       expect.objectContaining({ serviceInfoItemId: 11 }),
     );
+  });
+
+  it('shows the up-to-date message when the reporter has no pending links left', async () => {
+    mockedGetTemplate.mockResolvedValue(TEMPLATE);
+    mockedGetCelebrants.mockResolvedValue([]);
+    mockedGetChurches.mockResolvedValue(CHURCHES);
+    mockedSubmit.mockResolvedValue({
+      serviceInstanceId: 100,
+      nextReporterLinkToken: null,
+      nextReporterLinkActiveDate: null,
+    });
+
+    const user = userEvent.setup();
+    renderPage();
+
+    await waitFor(() => {
+      expect(screen.getByText('Sunday Eucharist')).toBeInTheDocument();
+    });
+
+    await user.type(screen.getByLabelText(/attendance/i), '40');
+    await user.click(screen.getByRole('button', { name: /submit report/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText('You are up to date')).toBeInTheDocument();
+    });
+
+    expect(
+      screen.getByText('All your pending reporter links have been completed.'),
+    ).toBeInTheDocument();
   });
 
   it('shows an error when submission fails', async () => {
