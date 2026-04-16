@@ -12,6 +12,7 @@ function renderLanguageSwitcher(overrides: Partial<AuthContextValue> = {}) {
     authErrorKey: null,
     signIn: vi.fn(),
     reporterSignIn: vi.fn(),
+    redeemToken: vi.fn(),
     signOut: vi.fn(),
     refreshUser: vi.fn(),
     updatePreferredLanguage: vi.fn(),

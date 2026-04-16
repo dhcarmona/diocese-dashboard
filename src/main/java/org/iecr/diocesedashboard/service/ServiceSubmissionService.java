@@ -20,7 +20,9 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
+import java.util.LinkedHashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -139,7 +141,13 @@ public class ServiceSubmissionService {
             "whatsapp.report.submitted",
             new Object[]{templateName, churchName, serviceDate},
             submittedBy.getPreferredLocale());
-        whatsAppService.sendMessageAndLog(phone, body, username);
+        whatsAppService.sendConfiguredMessageAndLog(
+            phone,
+            body,
+            username,
+            submittedBy.getPreferredLocale(),
+            WhatsAppService.TemplateType.REPORT_SUBMITTED,
+            buildTemplateVariables(templateName, churchName, serviceDate));
       } catch (Exception ex) {
         logger.warn("WhatsApp submission notification failed for reporter {} ({}): {}",
             submittedBy.getId(), username, ex.getMessage());
@@ -155,5 +163,14 @@ public class ServiceSubmissionService {
     } else {
       notify.run();
     }
+  }
+
+  private Map<String, String> buildTemplateVariables(String templateName, String churchName,
+      String serviceDate) {
+    Map<String, String> templateVariables = new LinkedHashMap<>();
+    templateVariables.put("1", templateName);
+    templateVariables.put("2", churchName);
+    templateVariables.put("3", serviceDate);
+    return templateVariables;
   }
 }

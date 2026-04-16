@@ -32,10 +32,11 @@ import org.springframework.web.server.ResponseStatusException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -275,7 +276,13 @@ public class ServiceInstanceController {
         "whatsapp.report.updated",
         new Object[]{templateName, church, date, changeList},
         reporter.getPreferredLocale());
-    whatsAppService.sendMessageAndLog(reporter.getPhoneNumber(), body, reporter.getUsername());
+    whatsAppService.sendConfiguredMessageAndLog(
+        reporter.getPhoneNumber(),
+        body,
+        reporter.getUsername(),
+        reporter.getPreferredLocale(),
+        WhatsAppService.TemplateType.REPORT_UPDATED,
+        buildTemplateVariables(templateName, church, date, changeList));
   }
 
   private void sendDeleteNotification(ServiceInstance instance) {
@@ -293,7 +300,13 @@ public class ServiceInstanceController {
         "whatsapp.report.deleted",
         new Object[]{templateName, church, date},
         reporter.getPreferredLocale());
-    whatsAppService.sendMessageAndLog(reporter.getPhoneNumber(), body, reporter.getUsername());
+    whatsAppService.sendConfiguredMessageAndLog(
+        reporter.getPhoneNumber(),
+        body,
+        reporter.getUsername(),
+        reporter.getPreferredLocale(),
+        WhatsAppService.TemplateType.REPORT_DELETED,
+        buildTemplateVariables(templateName, church, date));
   }
 
   private boolean isAccessible(ServiceInstance instance, DashboardUser user) {
@@ -301,5 +314,22 @@ public class ServiceInstanceController {
       return true;
     }
     return user.isAssignedToChurch(instance.getChurch());
+  }
+
+  private Map<String, String> buildTemplateVariables(String templateName, String churchName,
+      String serviceDate) {
+    Map<String, String> templateVariables = new LinkedHashMap<>();
+    templateVariables.put("1", templateName);
+    templateVariables.put("2", churchName);
+    templateVariables.put("3", serviceDate);
+    return templateVariables;
+  }
+
+  private Map<String, String> buildTemplateVariables(String templateName, String churchName,
+      String serviceDate, String changeList) {
+    Map<String, String> templateVariables = buildTemplateVariables(
+        templateName, churchName, serviceDate);
+    templateVariables.put("4", changeList);
+    return templateVariables;
   }
 }

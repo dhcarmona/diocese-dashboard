@@ -36,6 +36,7 @@ function renderPage(role: 'ADMIN' | 'REPORTER') {
     authErrorKey: null,
     signIn: async () => {},
     reporterSignIn: async () => {},
+    redeemToken: async () => {},
     signOut: async () => {},
     refreshUser: async () => null,
     updatePreferredLanguage: async () => {},

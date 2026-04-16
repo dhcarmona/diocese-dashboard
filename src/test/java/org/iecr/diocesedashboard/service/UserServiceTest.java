@@ -134,8 +134,13 @@ class UserServiceTest {
     userService.createUser("rep", null,
         UserRole.REPORTER, Set.of(), "Full Name", "+50688888888", "https://example.com");
 
-    verify(whatsAppService).sendMessageAndLog(
-        eq("+50688888888"), eq("Welcome message"), eq("rep"));
+    verify(whatsAppService).sendConfiguredMessageAndLog(
+        eq("+50688888888"),
+        eq("Welcome message"),
+        eq("rep"),
+        any(),
+        eq(WhatsAppService.TemplateType.REPORTER_WELCOME),
+        any());
   }
 
   @Test
@@ -161,7 +166,8 @@ class UserServiceTest {
     when(messageSource.getMessage(anyString(), any(Object[].class), any()))
         .thenReturn("Welcome message");
     Mockito.doThrow(new RuntimeException("Twilio error"))
-        .when(whatsAppService).sendMessageAndLog(any(), any(), any());
+        .when(whatsAppService).sendConfiguredMessageAndLog(any(), any(), any(), any(), any(),
+        any());
 
     DashboardUser result = userService.createUser("rep", null,
         UserRole.REPORTER, Set.of(), "Full Name", "+50688888888", "https://example.com");
@@ -176,7 +182,8 @@ class UserServiceTest {
     userService.createUser("rep", null,
         UserRole.REPORTER, Set.of(), "Full Name", "+50688888888", null);
 
-    verify(whatsAppService, never()).sendMessageAndLog(any(), any(), any());
+    verify(whatsAppService, never()).sendConfiguredMessageAndLog(
+        any(), any(), any(), any(), any(), any());
   }
 
   // --- updateUser ---

@@ -71,7 +71,7 @@ class ReporterOtpServiceTest {
     reporterOtpService.generateAndSendOtp("rep1");
 
     verify(whatsAppService)
-        .sendOtpAndLog(eq("+50688888888"), contains("Diocese Dashboard"), any());
+        .sendOtpAndLog(eq("+50688888888"), contains("Diocese Dashboard"), any(), any(), any());
   }
 
   @Test
@@ -83,7 +83,7 @@ class ReporterOtpServiceTest {
     reporterOtpService.generateAndSendOtp("rep1");
 
     verify(whatsAppService)
-        .sendOtpAndLog(eq("+50688888888"), contains("login code"), any());
+        .sendOtpAndLog(eq("+50688888888"), contains("login code"), any(), any(), any());
   }
 
   @Test
@@ -96,7 +96,7 @@ class ReporterOtpServiceTest {
 
     verify(userService).findByUsername("rep1");
     verify(whatsAppService)
-        .sendOtpAndLog(eq("+50688888888"), contains("Diocese Dashboard"), any());
+        .sendOtpAndLog(eq("+50688888888"), contains("Diocese Dashboard"), any(), any(), any());
   }
 
   @Test
@@ -113,7 +113,7 @@ class ReporterOtpServiceTest {
     verify(userService, times(ReporterOtpService.MAX_OTP_REQUEST_ATTEMPTS))
         .findByUsername("rep1");
     verify(whatsAppService, times(ReporterOtpService.MAX_OTP_REQUEST_ATTEMPTS))
-        .sendOtpAndLog(eq("+50688888888"), contains("Diocese Dashboard"), any());
+        .sendOtpAndLog(eq("+50688888888"), contains("Diocese Dashboard"), any(), any(), any());
   }
 
   @Test
@@ -126,7 +126,8 @@ class ReporterOtpServiceTest {
     reporterOtpService.generateAndSendOtp("ghost");
 
     verify(userService).findByUsername("ghost");
-    verify(whatsAppService, never()).sendOtpAndLog(anyString(), anyString(), anyString());
+    verify(whatsAppService, never()).sendOtpAndLog(
+        anyString(), anyString(), anyString(), anyString(), any());
   }
 
   @Test
@@ -196,7 +197,7 @@ class ReporterOtpServiceTest {
     reporterOtpService.generateAndSendOtp("rep1");
 
     var codeCaptor = ArgumentCaptor.forClass(String.class);
-    verify(whatsAppService).sendOtpAndLog(anyString(), codeCaptor.capture(), any());
+    verify(whatsAppService).sendOtpAndLog(anyString(), codeCaptor.capture(), any(), any(), any());
     String code = codeCaptor.getValue().replaceAll(".*?(\\d{6}).*", "$1");
 
     assertThat(reporterOtpService.verifyAndConsumeOtp("rep1", code).isSuccess()).isTrue();
@@ -229,7 +230,7 @@ class ReporterOtpServiceTest {
 
     var codeCaptor = ArgumentCaptor.forClass(String.class);
     reporterOtpService.generateAndSendOtp("rep1");
-    verify(whatsAppService).sendOtpAndLog(anyString(), codeCaptor.capture(), any());
+    verify(whatsAppService).sendOtpAndLog(anyString(), codeCaptor.capture(), any(), any(), any());
     String code = codeCaptor.getValue().replaceAll(".*?(\\d{6}).*", "$1");
 
     assertThat(reporterOtpService.verifyAndConsumeOtp("rep1", code).isSuccess()).isTrue();

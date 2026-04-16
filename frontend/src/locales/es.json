@@ -26,19 +26,17 @@
     "genericError": "No se pudo iniciar la sesión en este momento. Inténtelo de nuevo.",
     "switchToReporter": "Volver al inicio de sesión de reportero",
     "switchToAdmin": "¿Administrador? Inicie sesión con contraseña",
-    "reporterSubtitle": "Ingrese su usuario para recibir un código por WhatsApp.",
-    "sendCode": "Enviar código",
-    "verifyCode": "Verificar código",
-    "otpLabel": "Código de verificación",
-    "otpPlaceholder": "Código de 6 dígitos de WhatsApp",
-    "codeSent": "Si {{username}} es una cuenta de reportero registrada, se envió un código a su WhatsApp.",
+    "reporterSubtitle": "Ingrese su usuario para recibir un enlace de inicio de sesión por WhatsApp.",
+    "sendLink": "Enviar enlace",
+    "linkSent": "Si {{username}} es una cuenta de reportero registrada, se envió un enlace de inicio de sesión a su WhatsApp.",
     "tryDifferentUsername": "Intentar con otro usuario",
-    "invalidCode": "El código es incorrecto o ha expirado.",
+    "tokenInvalid": "Este enlace de inicio de sesión no es válido o ha expirado. Solicite uno nuevo.",
+    "linkGenericError": "No se pudo enviar el enlace en este momento. Inténtelo de nuevo.",
+    "redeemingToken": "Iniciando sesión...",
     "lockedOutMinutes_one": "Demasiados intentos. Espere {{count}} minuto antes de volver a intentarlo.",
     "lockedOutMinutes_other": "Demasiados intentos. Espere {{count}} minutos antes de volver a intentarlo.",
     "lockedOutSeconds_one": "Demasiados intentos. Espere {{count}} segundo antes de volver a intentarlo.",
-    "lockedOutSeconds_other": "Demasiados intentos. Espere {{count}} segundos antes de volver a intentarlo.",
-    "otpGenericError": "No se pudo enviar el código en este momento. Inténtelo de nuevo."
+    "lockedOutSeconds_other": "Demasiados intentos. Espere {{count}} segundos antes de volver a intentarlo."
   },
   "navigation": {
     "home": "Inicio"

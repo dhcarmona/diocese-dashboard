@@ -81,6 +81,8 @@ public class SecurityConfig {
                     "/api/auth/login",
                     "/api/auth/reporter/request-otp",
                     "/api/auth/reporter/verify-otp",
+                    "/api/auth/reporter/request-login-link",
+                    "/api/auth/reporter/redeem-login-token",
                     "/api/reporter-links/public/*/submit")
         )
         .authorizeHttpRequests(auth -> auth
@@ -115,7 +117,9 @@ public class SecurityConfig {
                 .requestMatchers("/api/auth/login", "/api/auth/logout").permitAll()
                 .requestMatchers(HttpMethod.POST,
                     "/api/auth/reporter/request-otp",
-                    "/api/auth/reporter/verify-otp").permitAll()
+                    "/api/auth/reporter/verify-otp",
+                    "/api/auth/reporter/request-login-link",
+                    "/api/auth/reporter/redeem-login-token").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/auth/me").hasAnyRole("ADMIN", "REPORTER")
                 .requestMatchers(HttpMethod.PUT, "/api/auth/me/language")
                 .hasAnyRole("ADMIN", "REPORTER")

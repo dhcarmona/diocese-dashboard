@@ -76,7 +76,7 @@ class ReporterLinkServiceIntegrationTest {
 
   @BeforeEach
   void setUp() {
-    doNothing().when(whatsAppService).dispatchMessage(any(), any(), any());
+    doNothing().when(whatsAppService).dispatchTextMessage(any(), any());
 
     church = new Church();
     church.setName("Integration Test Church");

@@ -194,8 +194,14 @@ class ReporterLinkServiceTest {
         List.of(buildChurch()), buildTemplate(), activeDate, "http://testserver");
 
     ArgumentCaptor<Object[]> messageArguments = ArgumentCaptor.forClass(Object[].class);
-    verify(whatsAppService).sendMessageAndLog(eq("+50688887777"), eq("link message"),
-        contains("Sunday Mass"), eq("reporter1"));
+    verify(whatsAppService).sendConfiguredMessageAndLog(
+        eq("+50688887777"),
+        eq("link message"),
+        contains("Sunday Mass"),
+        eq("reporter1"),
+        any(),
+        eq(WhatsAppService.TemplateType.REPORTER_LINK),
+        any());
     verify(messageSource).getMessage(
         eq("reporter.link.whatsapp.message"), messageArguments.capture(), eq(Locale.ENGLISH));
     Object[] localizedArguments = messageArguments.getValue();
@@ -217,7 +223,8 @@ class ReporterLinkServiceTest {
     reporterLinkService.createLinksForChurches(
         List.of(buildChurch()), buildTemplate(), LocalDate.now(), "http://testserver");
 
-    verify(whatsAppService, never()).sendMessageAndLog(any(), any(), any(), any());
+    verify(whatsAppService, never()).sendConfiguredMessageAndLog(any(), any(), any(), any(),
+        any(), any(), any());
   }
 
   @Test
@@ -229,7 +236,8 @@ class ReporterLinkServiceTest {
     when(reporterLinkRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
     when(messageSource.getMessage(any(), any(), any(Locale.class))).thenReturn("msg");
     Mockito.doThrow(new RuntimeException("network error"))
-        .when(whatsAppService).sendMessageAndLog(any(), any(), any(), any());
+        .when(whatsAppService).sendConfiguredMessageAndLog(any(), any(), any(), any(), any(),
+        any(), any());
 
     ReporterLinkService.BulkCreateResult result = reporterLinkService.createLinksForChurches(
         List.of(buildChurch()), buildTemplate(), LocalDate.now(), "http://testserver");

@@ -10,6 +10,7 @@ import {
   type PreferredLanguage,
   updatePreferredLanguage as savePreferredLanguage,
   verifyReporterOtp,
+  redeemLoginToken,
 } from '../api/auth';
 import { AuthContext, type AuthContextValue, type AuthStatus } from './auth-context';
 
@@ -78,6 +79,23 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
     [syncUserLanguage],
   );
 
+  const redeemToken = useCallback(
+    async (token: string) => {
+      setAuthErrorKey(null);
+      await redeemLoginToken(token);
+      const currentUser = await fetchAuthenticatedUser();
+      if (!currentUser) {
+        setUser(null);
+        setStatus('unauthenticated');
+        throw new Error('Authenticated user could not be loaded after token redemption.');
+      }
+      await syncUserLanguage(currentUser);
+      setUser(currentUser);
+      setStatus('authenticated');
+    },
+    [syncUserLanguage],
+  );
+
   const signOut = useCallback(async () => {
     await logout();
     setUser(null);
@@ -132,12 +150,13 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
       authErrorKey,
       signIn,
       reporterSignIn,
+      redeemToken,
       signOut,
       refreshUser,
       updatePreferredLanguage,
     }),
-    [authErrorKey, refreshUser, reporterSignIn, signIn, signOut, status, updatePreferredLanguage,
-      user],
+    [authErrorKey, redeemToken, refreshUser, reporterSignIn, signIn, signOut, status,
+      updatePreferredLanguage, user],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

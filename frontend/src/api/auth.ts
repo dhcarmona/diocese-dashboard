@@ -78,6 +78,14 @@ export async function verifyReporterOtp(username: string, code: string): Promise
   await api.post('/api/auth/reporter/verify-otp', { username, code });
 }
 
+export async function requestReporterLoginLink(username: string, locale: string): Promise<void> {
+  await api.post('/api/auth/reporter/request-login-link', { username, locale });
+}
+
+export async function redeemLoginToken(token: string): Promise<void> {
+  await api.post('/api/auth/reporter/redeem-login-token', { token });
+}
+
 export async function updatePreferredLanguage(
   language: PreferredLanguage,
 ): Promise<AuthenticatedUser> {

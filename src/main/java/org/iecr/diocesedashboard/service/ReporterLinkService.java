@@ -17,7 +17,9 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -153,8 +155,14 @@ public class ReporterLinkService {
         new Object[]{templateName, churchName, activeDate, linkUrl},
         reporter.getPreferredLocale());
     try {
-      whatsAppService.sendMessageAndLog(phone, message,
-          "Link for \"" + templateName + "\" sent.", reporter.getUsername());
+      whatsAppService.sendConfiguredMessageAndLog(
+          phone,
+          message,
+          "Link for \"" + templateName + "\" sent.",
+          reporter.getUsername(),
+          reporter.getPreferredLocale(),
+          WhatsAppService.TemplateType.REPORTER_LINK,
+          buildTemplateVariables(templateName, churchName, activeDate.toString(), linkUrl));
     } catch (Exception ex) {
       logger.warn("WhatsApp delivery failed for reporter {} ({}): {}",
           reporter.getId(), reporter.getUsername(), ex.getMessage());
@@ -172,6 +180,16 @@ public class ReporterLinkService {
     } else {
       tasks.forEach(Runnable::run);
     }
+  }
+
+  private Map<String, String> buildTemplateVariables(String templateName, String churchName,
+      String activeDate, String linkUrl) {
+    Map<String, String> templateVariables = new LinkedHashMap<>();
+    templateVariables.put("1", templateName);
+    templateVariables.put("2", churchName);
+    templateVariables.put("3", activeDate);
+    templateVariables.put("4", linkUrl);
+    return templateVariables;
   }
 
   /** Holds the result of a bulk link creation operation. */

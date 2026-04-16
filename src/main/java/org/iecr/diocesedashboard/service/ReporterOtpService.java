@@ -124,13 +124,12 @@ public class ReporterOtpService {
 
     String code = generateCode();
     otpStore.put(username, new OtpEntry(code, Instant.now(clock).plusSeconds(OTP_TTL_SECONDS)));
-    whatsAppService.sendOtpAndLog(phoneNumber,
-        messageSource.getMessage(
-            "otp.whatsapp.message",
-            new Object[]{code},
-            "Tu código de verificación es " + code + ".",
-            user.getPreferredLocale()),
-        username);
+    String body = messageSource.getMessage(
+        "otp.whatsapp.message",
+        new Object[]{code},
+        "Tu código de verificación es " + code + ".",
+        user.getPreferredLocale());
+    whatsAppService.sendOtpAndLog(phoneNumber, body, code, username, user.getPreferredLocale());
   }
 
   /**

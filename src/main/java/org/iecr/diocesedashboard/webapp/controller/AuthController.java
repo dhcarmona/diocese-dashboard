@@ -5,6 +5,7 @@ import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import org.iecr.diocesedashboard.domain.objects.DashboardUser;
 import org.iecr.diocesedashboard.domain.objects.UserRole;
+import org.iecr.diocesedashboard.service.ReporterMagicLinkService;
 import org.iecr.diocesedashboard.service.ReporterOtpService;
 import org.iecr.diocesedashboard.service.UserService;
 import org.iecr.diocesedashboard.webapp.DashboardUserDetails;
@@ -22,10 +23,12 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.Locale;
 import java.util.Map;
 
 /** REST controller for authenticated-session helper endpoints used by the SPA. */
@@ -35,11 +38,14 @@ public class AuthController {
 
   private final UserService userService;
   private final ReporterOtpService reporterOtpService;
+  private final ReporterMagicLinkService reporterMagicLinkService;
 
   @Autowired
-  public AuthController(UserService userService, ReporterOtpService reporterOtpService) {
+  public AuthController(UserService userService, ReporterOtpService reporterOtpService,
+      ReporterMagicLinkService reporterMagicLinkService) {
     this.userService = userService;
     this.reporterOtpService = reporterOtpService;
+    this.reporterMagicLinkService = reporterMagicLinkService;
   }
 
   /**
@@ -135,6 +141,67 @@ public class AuthController {
 
     DashboardUser user = userService.findByUsername(request.username())
         .filter(uu -> uu.getRole() == UserRole.REPORTER && uu.isEnabled())
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED));
+
+    DashboardUserDetails userDetails = new DashboardUserDetails(user);
+    UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
+        userDetails, null, userDetails.getAuthorities());
+    SecurityContext context = SecurityContextHolder.createEmptyContext();
+    context.setAuthentication(auth);
+    SecurityContextHolder.setContext(context);
+
+    // Rotate the session ID to prevent session fixation attacks.
+    HttpSession session = httpRequest.getSession(false);
+    if (session != null) {
+      httpRequest.changeSessionId();
+      session = httpRequest.getSession(false);
+    } else {
+      session = httpRequest.getSession(true);
+    }
+    session.setAttribute(
+        HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY, context);
+
+    return ResponseEntity.ok().build();
+  }
+
+  /**
+   * Sends a magic login link via WhatsApp to the reporter associated with the given username.
+   * Always returns 200 for valid requests to prevent account enumeration.
+   *
+   * @param request     contains the reporter's username
+   * @param origin      the HTTP Origin header used to build the login URL
+   * @return 200 for valid requests; 400 for invalid payloads
+   */
+  @PostMapping("/reporter/request-login-link")
+  public ResponseEntity<Void> requestReporterLoginLink(
+      @RequestBody @Valid ReporterOtpRequest request,
+      @RequestHeader(value = HttpHeaders.ORIGIN, required = false) String origin) {
+    try {
+      String baseUrl = origin != null && !origin.isBlank()
+          ? origin
+          : "http://localhost:5173";
+      Locale localeHint = request.locale() != null && !request.locale().isBlank()
+          ? Locale.forLanguageTag(request.locale())
+          : null;
+      reporterMagicLinkService.generateAndSendLoginLink(request.username(), baseUrl, localeHint);
+    } catch (Exception ignored) {
+      // Silently ignored to prevent account enumeration via differing response codes.
+    }
+    return ResponseEntity.ok().build();
+  }
+
+  /**
+   * Redeems a magic login token and, if valid, creates an authenticated session.
+   *
+   * @param request     contains the login token string
+   * @param httpRequest the current HTTP request used to bind the new session
+   * @return 200 on success, 401 if the token is invalid or expired
+   */
+  @PostMapping("/reporter/redeem-login-token")
+  public ResponseEntity<Void> redeemReporterLoginToken(
+      @RequestBody @Valid ReporterLoginTokenRequest request,
+      HttpServletRequest httpRequest) {
+    DashboardUser user = reporterMagicLinkService.redeemToken(request.token())
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED));
 
     DashboardUserDetails userDetails = new DashboardUserDetails(user);

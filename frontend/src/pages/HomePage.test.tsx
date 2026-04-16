@@ -17,6 +17,7 @@ function renderHomePage(overrides: Partial<AuthContextValue>) {
     authErrorKey: null,
     signIn: async () => {},
     reporterSignIn: async () => {},
+    redeemToken: async () => {},
     signOut: async () => {},
     refreshUser: async () => null,
     updatePreferredLanguage: async () => {},
