@@ -13,6 +13,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.iecr.diocesedashboard.domain.objects.DashboardUser;
 import org.iecr.diocesedashboard.domain.objects.UserRole;
 import org.iecr.diocesedashboard.service.PortraitService;
+import org.iecr.diocesedashboard.service.ReporterMagicLinkService;
 import org.iecr.diocesedashboard.service.ReporterOtpService;
 import org.iecr.diocesedashboard.service.UserService;
 import org.iecr.diocesedashboard.webapp.controller.AuthController;
@@ -51,6 +52,9 @@ class SecurityConfigTest {
 
   @MockBean
   private UserService userDetailsService;
+
+  @MockBean
+  private ReporterMagicLinkService reporterMagicLinkService;
 
   @MockBean
   private ReporterOtpService reporterOtpService;

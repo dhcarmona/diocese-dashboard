@@ -215,8 +215,13 @@ class ServiceSubmissionServiceTest {
 
     serviceSubmissionService.submit(1L, request, reporter);
 
-    verify(whatsAppService).sendMessageAndLog(
-        eq("+50688887777"), eq("Confirmation message"), eq("reporter1"));
+    verify(whatsAppService).sendConfiguredMessageAndLog(
+        eq("+50688887777"),
+        eq("Confirmation message"),
+        eq("reporter1"),
+        any(),
+        eq(WhatsAppService.TemplateType.REPORT_SUBMITTED),
+        any());
   }
 
   @Test
@@ -254,7 +259,8 @@ class ServiceSubmissionServiceTest {
 
     serviceSubmissionService.submit(1L, request, reporter);
 
-    verify(whatsAppService, never()).sendMessageAndLog(any(), any(), any(String.class));
+    verify(whatsAppService, never()).sendConfiguredMessageAndLog(
+        any(), any(), any(String.class), any(), any(), any());
   }
 
   @Test
@@ -275,13 +281,19 @@ class ServiceSubmissionServiceTest {
     try {
       serviceSubmissionService.submit(1L, request, reporter);
 
-      verify(whatsAppService, never()).sendMessageAndLog(any(), any(), any(String.class));
+      verify(whatsAppService, never()).sendConfiguredMessageAndLog(
+          any(), any(), any(String.class), any(), any(), any());
 
       TransactionSynchronizationManager.getSynchronizations()
           .forEach(TransactionSynchronization::afterCommit);
 
-      verify(whatsAppService).sendMessageAndLog(
-          eq("+50688887777"), eq("Confirmation message"), eq("reporter1"));
+      verify(whatsAppService).sendConfiguredMessageAndLog(
+          eq("+50688887777"),
+          eq("Confirmation message"),
+          eq("reporter1"),
+          any(),
+          eq(WhatsAppService.TemplateType.REPORT_SUBMITTED),
+          any());
     } finally {
       TransactionSynchronizationManager.clearSynchronization();
     }

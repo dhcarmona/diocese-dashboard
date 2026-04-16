@@ -14,7 +14,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.LinkedHashMap;
 import java.util.Optional;
+import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -111,7 +113,13 @@ public class UserService implements UserDetailsService {
             "reporter.welcome.whatsapp.message",
             new Object[]{fullName, username, appBaseUrl},
             saved.getPreferredLocale());
-        whatsAppService.sendMessageAndLog(phoneNumber, body, username);
+        whatsAppService.sendConfiguredMessageAndLog(
+            phoneNumber,
+            body,
+            username,
+            saved.getPreferredLocale(),
+            WhatsAppService.TemplateType.REPORTER_WELCOME,
+            buildTemplateVariables(fullName, username, appBaseUrl));
       } catch (Exception ex) {
         LOG.log(Level.WARNING,
             "Failed to send welcome WhatsApp to new reporter ''{0}'': {1}",
@@ -191,5 +199,14 @@ public class UserService implements UserDetailsService {
 
   public boolean existsByRole(UserRole role) {
     return userRepository.existsByRole(role);
+  }
+
+  private Map<String, String> buildTemplateVariables(String fullName, String username,
+      String appBaseUrl) {
+    Map<String, String> templateVariables = new LinkedHashMap<>();
+    templateVariables.put("1", fullName == null ? "" : fullName);
+    templateVariables.put("2", username);
+    templateVariables.put("3", appBaseUrl);
+    return templateVariables;
   }
 }

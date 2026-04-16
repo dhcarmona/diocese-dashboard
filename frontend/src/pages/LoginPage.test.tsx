@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import i18n from 'i18next';
 import { MemoryRouter } from 'react-router-dom';
 import { vi } from 'vitest';
-import { requestReporterOtp } from '../api/auth';
+import { requestReporterLoginLink } from '../api/auth';
 import { AuthContext, type AuthContextValue } from '../auth/auth-context';
 import LoginPage from './LoginPage';
 
@@ -11,7 +11,7 @@ vi.mock('../api/auth', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../api/auth')>();
   return {
     ...actual,
-    requestReporterOtp: vi.fn(),
+    requestReporterLoginLink: vi.fn(),
   };
 });
 
@@ -22,6 +22,7 @@ function renderLoginPage(overrides: Partial<AuthContextValue> = {}) {
     authErrorKey: null,
     signIn: vi.fn(),
     reporterSignIn: vi.fn(),
+    redeemToken: vi.fn(),
     signOut: vi.fn(),
     refreshUser: vi.fn(),
     updatePreferredLanguage: vi.fn(),
@@ -39,11 +40,11 @@ function renderLoginPage(overrides: Partial<AuthContextValue> = {}) {
 
 describe('LoginPage', () => {
   const mockedSignIn = vi.fn();
-  const mockedRequestReporterOtp = vi.mocked(requestReporterOtp);
+  const mockedRequestReporterLoginLink = vi.mocked(requestReporterLoginLink);
 
   beforeEach(async () => {
     mockedSignIn.mockReset();
-    mockedRequestReporterOtp.mockReset();
+    mockedRequestReporterLoginLink.mockReset();
     await i18n.changeLanguage('en');
   });
 
@@ -52,9 +53,9 @@ describe('LoginPage', () => {
   });
 
   describe('English', () => {
-    it('renders the Send Code button by default (reporter mode)', () => {
+    it('renders the Send Login Link button by default (reporter mode)', () => {
       renderLoginPage();
-      expect(screen.getByRole('button', { name: /^send code$/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /^send login link$/i })).toBeInTheDocument();
       expect(screen.queryByLabelText(/password/i)).not.toBeInTheDocument();
     });
 
@@ -67,7 +68,7 @@ describe('LoginPage', () => {
     it('renders the app title and subtitle', () => {
       renderLoginPage();
       expect(screen.getByText('Diocese Dashboard')).toBeInTheDocument();
-      expect(screen.getByText('Enter your username to receive a code via WhatsApp.')).toBeInTheDocument();
+      expect(screen.getByText('Enter your username to receive a login link via WhatsApp.')).toBeInTheDocument();
     });
 
     it('switches to admin mode and back when the links are clicked', async () => {
@@ -79,50 +80,51 @@ describe('LoginPage', () => {
       expect(screen.getByLabelText(/password/i)).toBeInTheDocument();
 
       await user.click(screen.getByRole('button', { name: /back to reporter login/i }));
-      expect(screen.getByRole('button', { name: /^send code$/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /^send login link$/i })).toBeInTheDocument();
       expect(screen.queryByLabelText(/password/i)).not.toBeInTheDocument();
     });
 
-    it('always advances to the verify screen after submitting a username', async () => {
+    it('shows link-sent info alert after submitting a username', async () => {
       const user = userEvent.setup();
-      mockedRequestReporterOtp.mockResolvedValueOnce(undefined);
+      mockedRequestReporterLoginLink.mockResolvedValueOnce(undefined);
 
       renderLoginPage();
       await user.type(screen.getByLabelText(/username/i), 'reporter1');
-      await user.click(screen.getByRole('button', { name: /^send code$/i }));
+      await user.click(screen.getByRole('button', { name: /^send login link$/i }));
 
       await waitFor(() => {
-        expect(screen.getByRole('button', { name: /verify code/i })).toBeInTheDocument();
+        expect(
+          screen.getByText(/if reporter1 is a registered reporter account/i),
+        ).toBeInTheDocument();
       });
-      expect(
-        screen.getByText(/if reporter1 is a registered reporter account/i),
-      ).toBeInTheDocument();
     });
 
-    it('advances to the verify screen even if the username does not exist (prevents account enumeration)', async () => {
+    it('shows link-sent info alert even if the username does not exist (prevents account enumeration)', async () => {
       const user = userEvent.setup();
-      mockedRequestReporterOtp.mockRejectedValueOnce({
+      mockedRequestReporterLoginLink.mockRejectedValueOnce({
         response: { status: 401 },
         isAxiosError: true,
       });
 
       renderLoginPage();
       await user.type(screen.getByLabelText(/username/i), 'ghost');
-      await user.click(screen.getByRole('button', { name: /^send code$/i }));
+      await user.click(screen.getByRole('button', { name: /^send login link$/i }));
 
       await waitFor(() => {
-        expect(screen.getByRole('button', { name: /verify code/i })).toBeInTheDocument();
+        expect(
+          screen.getByText(/if ghost is a registered reporter account/i),
+        ).toBeInTheDocument();
       });
       expect(screen.queryByText(/no reporter account/i)).not.toBeInTheDocument();
     });
 
-    it('shows "try a different username" link on verify screen that returns to username form', async () => {
+    it('shows "try a different username" link after link is sent', async () => {
       const user = userEvent.setup();
-      mockedRequestReporterOtp.mockResolvedValueOnce(undefined);
+      mockedRequestReporterLoginLink.mockResolvedValueOnce(undefined);
 
       renderLoginPage();
       await user.type(screen.getByLabelText(/username/i), 'reporter1');
-      await user.click(screen.getByRole('button', { name: /^send code$/i }));
+      await user.click(screen.getByRole('button', { name: /^send login link$/i }));
 
       await waitFor(() => {
         expect(
@@ -131,7 +133,7 @@ describe('LoginPage', () => {
       });
 
       await user.click(screen.getByRole('button', { name: /try a different username/i }));
-      expect(screen.getByRole('button', { name: /^send code$/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /^send login link$/i })).toBeInTheDocument();
     });
 
     it('submits admin credentials and shows an error on bad password', async () => {
@@ -229,22 +231,17 @@ describe('LoginPage', () => {
       ).toBeInTheDocument();
     });
 
-    it('shows reporter OTP lockout time when verification returns 429', async () => {
+    it('shows lockout time when reporter link request returns 429', async () => {
       const user = userEvent.setup();
-      const mockedReporterSignIn = vi.fn().mockRejectedValueOnce({
+      mockedRequestReporterLoginLink.mockRejectedValueOnce({
         response: { status: 429, headers: { 'retry-after': '600' } },
         isAxiosError: true,
       });
 
-      renderLoginPage({ reporterSignIn: mockedReporterSignIn });
+      renderLoginPage();
 
       await user.type(screen.getByLabelText(/username/i), 'reporter1');
-      await user.click(screen.getByRole('button', { name: /^send code$/i }));
-      await waitFor(() => {
-        expect(screen.getByRole('button', { name: /verify code/i })).toBeInTheDocument();
-      });
-      await user.type(screen.getByLabelText(/verification code/i), '123456');
-      await user.click(screen.getByRole('button', { name: /verify code/i }));
+      await user.click(screen.getByRole('button', { name: /^send login link$/i }));
 
       expect(
         await screen.findByText('Too many attempts. Please wait 10 minutes before trying again.'),
@@ -288,14 +285,14 @@ describe('LoginPage', () => {
       await i18n.changeLanguage('es');
     });
 
-    it('renders the Enviar código button by default (reporter mode)', () => {
+    it('renders the Enviar enlace button by default (reporter mode)', () => {
       renderLoginPage();
-      expect(screen.getByRole('button', { name: /^enviar código$/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /^enviar enlace$/i })).toBeInTheDocument();
     });
 
     it('renders the Spanish reporter subtitle by default', () => {
       renderLoginPage();
-      expect(screen.getByText('Ingrese su usuario para recibir un código por WhatsApp.')).toBeInTheDocument();
+      expect(screen.getByText('Ingrese su usuario para recibir un enlace de inicio de sesión por WhatsApp.')).toBeInTheDocument();
     });
 
     it('renders the admin escape-hatch link in Spanish', () => {
@@ -319,3 +316,4 @@ describe('LoginPage', () => {
     });
   });
 });
+

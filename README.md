@@ -68,44 +68,79 @@ Portrait files are resolved by `PortraitService` at runtime using a slug derived
 
 
 
-The application sends WhatsApp messages via the [Twilio API](https://www.twilio.com/en-us/whatsapp).
-Two environment variables are always required, and a third controls which number messages are sent from:
+The application sends WhatsApp messages via the [Meta WhatsApp Cloud API](https://developers.facebook.com/docs/whatsapp/cloud-api).
+Two environment variables are required for delivery, and the remaining variables are optional when
+you want approved WhatsApp templates:
 
 | Variable | Purpose |
 |---|---|
-| `TWILIO_ACCOUNT_SID` | Twilio account SID (found in the Twilio Console) |
-| `TWILIO_AUTH_TOKEN` | Twilio auth token (found in the Twilio Console) |
-| `TWILIO_WHATSAPP_FROM` | Sender number in E.164 format (e.g. `+50600000000`); defaults to the Twilio sandbox number `+14155238886` |
+| `WHATSAPP_ACCESS_TOKEN` | Meta system-user access token with WhatsApp messaging permissions |
+| `WHATSAPP_PHONE_NUMBER_ID` | Meta phone number ID for the WhatsApp business sender |
+| `WHATSAPP_META_API_VERSION` | Optional Graph API version; defaults to `v23.0` |
+| `WHATSAPP_TEMPLATE_LANGUAGE_CODE_EN` | Optional English template language code; defaults to `en` |
+| `WHATSAPP_TEMPLATE_LANGUAGE_CODE_ES` | Optional Spanish template language code; defaults to `es` |
+| `WHATSAPP_TEMPLATE_OTP_AUTHENTICATION` | Optional default Meta template name for reporter login codes |
+| `WHATSAPP_TEMPLATE_OTP_AUTHENTICATION_EN` | Optional English template name for reporter login codes |
+| `WHATSAPP_TEMPLATE_OTP_AUTHENTICATION_ES` | Optional Spanish template name for reporter login codes |
+| `WHATSAPP_TEMPLATE_REPORTER_WELCOME` | Optional default Meta template name for new reporter welcome messages |
+| `WHATSAPP_TEMPLATE_REPORTER_WELCOME_EN` | Optional English template name for new reporter welcome messages |
+| `WHATSAPP_TEMPLATE_REPORTER_WELCOME_ES` | Optional Spanish template name for new reporter welcome messages |
+| `WHATSAPP_TEMPLATE_REPORTER_LINK` | Optional default Meta template name for report-link notifications |
+| `WHATSAPP_TEMPLATE_REPORTER_LINK_EN` | Optional English template name for report-link notifications |
+| `WHATSAPP_TEMPLATE_REPORTER_LINK_ES` | Optional Spanish template name for report-link notifications |
+| `WHATSAPP_TEMPLATE_REPORT_SUBMITTED` | Optional default Meta template name for report-submitted confirmations |
+| `WHATSAPP_TEMPLATE_REPORT_SUBMITTED_EN` | Optional English template name for report-submitted confirmations |
+| `WHATSAPP_TEMPLATE_REPORT_SUBMITTED_ES` | Optional Spanish template name for report-submitted confirmations |
+| `WHATSAPP_TEMPLATE_REPORT_UPDATED` | Optional default Meta template name for report-updated notifications |
+| `WHATSAPP_TEMPLATE_REPORT_UPDATED_EN` | Optional English template name for report-updated notifications |
+| `WHATSAPP_TEMPLATE_REPORT_UPDATED_ES` | Optional Spanish template name for report-updated notifications |
+| `WHATSAPP_TEMPLATE_REPORT_DELETED` | Optional default Meta template name for report-deleted notifications |
+| `WHATSAPP_TEMPLATE_REPORT_DELETED_EN` | Optional English template name for report-deleted notifications |
+| `WHATSAPP_TEMPLATE_REPORT_DELETED_ES` | Optional Spanish template name for report-deleted notifications |
 
-### Development — Twilio Sandbox
+### Meta Cloud API setup
 
-The sandbox lets you test without a verified business number or Meta approval.
+To send WhatsApp messages directly through Meta:
 
-1. [Sign up for a free Twilio account](https://www.twilio.com/try-twilio).
-2. In the Twilio Console, go to **Messaging → Try it out → Send a WhatsApp message**.
-3. Follow the on-screen instructions — each recipient must send a one-time opt-in message (e.g. `join <your-sandbox-keyword>`) to `+1 415 523 8886` on WhatsApp.
-4. Set only the two required variables (the `+14155238886` sandbox default is used automatically):
+1. Create a Meta app with the WhatsApp use case.
+2. Connect or create your WhatsApp Business Account and business phone number.
+3. Create a system-user access token with `business_management`,
+   `whatsapp_business_management`, and `whatsapp_business_messaging`.
+4. Set the required environment variables:
 
     ```bash
-    export TWILIO_ACCOUNT_SID=ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-    export TWILIO_AUTH_TOKEN=your_auth_token
+    export WHATSAPP_ACCESS_TOKEN=EAA...
+    export WHATSAPP_PHONE_NUMBER_ID=123456789012345
     ```
 
-### Production — Your Own Number
+5. If you want business-initiated messages outside the 24-hour customer service window,
+   create and approve the required Meta templates, then set the template-name variables:
 
-Once you have a Meta-verified WhatsApp Business number connected to Twilio:
+   ```bash
+   export WHATSAPP_TEMPLATE_OTP_AUTHENTICATION_EN=reporter_login_code_en
+   export WHATSAPP_TEMPLATE_OTP_AUTHENTICATION_ES=reporter_login_code_es
+   export WHATSAPP_TEMPLATE_REPORTER_WELCOME_EN=reporter_welcome_en
+   export WHATSAPP_TEMPLATE_REPORTER_WELCOME_ES=reporter_welcome_es
+   export WHATSAPP_TEMPLATE_REPORTER_LINK_EN=reporter_link_en
+   export WHATSAPP_TEMPLATE_REPORTER_LINK_ES=reporter_link_es
+   export WHATSAPP_TEMPLATE_REPORT_SUBMITTED_EN=report_submitted_en
+   export WHATSAPP_TEMPLATE_REPORT_SUBMITTED_ES=report_submitted_es
+   export WHATSAPP_TEMPLATE_REPORT_UPDATED_EN=report_updated_en
+   export WHATSAPP_TEMPLATE_REPORT_UPDATED_ES=report_updated_es
+   export WHATSAPP_TEMPLATE_REPORT_DELETED_EN=report_deleted_en
+   export WHATSAPP_TEMPLATE_REPORT_DELETED_ES=report_deleted_es
+   ```
 
-1. In the Twilio Console, go to **Messaging → Senders → WhatsApp senders** and follow the steps to connect your number.
-2. Submit and get approval for any [message templates](https://www.twilio.com/docs/whatsapp/tutorial/send-whatsapp-notification-messages-templates) you intend to send outside a 24-hour customer service window.
-3. Set all three variables:
+If both language-specific template names are configured, the app selects the English or Spanish
+template from the recipient's preferred language. The unsuffixed `WHATSAPP_TEMPLATE_*` variables
+remain as an optional fallback when you only have one approved template or want a temporary
+default.
 
-    ```bash
-    export TWILIO_ACCOUNT_SID=ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-    export TWILIO_AUTH_TOKEN=your_auth_token
-    export TWILIO_WHATSAPP_FROM=+50600000000
-    ```
+If no matching template name is configured, the app falls back to the existing free-form WhatsApp
+body. That still works only inside the 24-hour customer service window.
 
-> **Never commit `TWILIO_ACCOUNT_SID` or `TWILIO_AUTH_TOKEN` to the repository.** Treat them like passwords — use environment variables, a secrets manager, or an `.env` file that is listed in `.gitignore`.
+> **Never commit `WHATSAPP_ACCESS_TOKEN` to the repository.** Treat it like a password — use
+> environment variables, a secrets manager, or an `.env` file that is listed in `.gitignore`.
 
 ---
 

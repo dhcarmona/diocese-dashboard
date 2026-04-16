@@ -9,7 +9,7 @@ import CircularProgress from '@mui/material/CircularProgress';
 import Link from '@mui/material/Link';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
@@ -17,36 +17,55 @@ import {
   isBackendUnavailableError,
   isTooManyRequestsError,
   isUnauthorizedError,
-  requestReporterOtp,
+  requestReporterLoginLink,
 } from '../api/auth';
 import { useAuth } from '../auth/auth-context';
 import LanguageSwitcher from '../components/LanguageSwitcher';
 import AppFooter from '../components/AppFooter';
 
-type LoginMode = 'admin' | 'reporterRequest' | 'reporterVerify';
+type LoginMode = 'admin' | 'reporterRequest';
 
 type LoginErrorKey =
   | 'login.invalidCredentials'
   | 'login.genericError'
-  | 'login.invalidCode'
+  | 'login.tokenInvalid'
   | 'login.lockedOutMinutes'
   | 'login.lockedOutSeconds'
-  | 'login.otpGenericError'
+  | 'login.linkGenericError'
   | 'auth.backendUnavailable';
 
 export default function LoginPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const redirectTo = searchParams.get('redirect');
-  const { t } = useTranslation();
-  const { signIn, reporterSignIn, status, authErrorKey } = useAuth();
+  const token = searchParams.get('token');
+  const { t, i18n } = useTranslation();
+  const { signIn, redeemToken, status, authErrorKey } = useAuth();
   const [loginMode, setLoginMode] = useState<LoginMode>('reporterRequest');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [otpCode, setOtpCode] = useState('');
+  const [linkSent, setLinkSent] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorKey, setErrorKey] = useState<LoginErrorKey | null>(null);
   const [retryAfterValue, setRetryAfterValue] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!token) return;
+    setLoading(true);
+    void redeemToken(token)
+      .then(() => { navigate(redirectTo ?? '/'); })
+      .catch((error) => {
+        if (isUnauthorizedError(error)) {
+          setErrorKey('login.tokenInvalid');
+        } else if (isBackendUnavailableError(error)) {
+          setErrorKey('auth.backendUnavailable');
+        } else {
+          setErrorKey('login.linkGenericError');
+        }
+        setLoading(false);
+      });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   function setLockoutError(error: unknown) {
     const retryAfterSeconds = getRetryAfterSeconds(error) ?? 60;
@@ -62,14 +81,14 @@ export default function LoginPage() {
   function switchToReporter() {
     setLoginMode('reporterRequest');
     setPassword('');
-    setOtpCode('');
+    setLinkSent(false);
     setErrorKey(null);
     setRetryAfterValue(null);
   }
 
   function switchToAdmin() {
     setLoginMode('admin');
-    setOtpCode('');
+    setLinkSent(false);
     setErrorKey(null);
     setRetryAfterValue(null);
   }
@@ -97,51 +116,40 @@ export default function LoginPage() {
     }
   }
 
-  async function handleRequestOtp(e: FormEvent) {
+  async function handleRequestLoginLink(e: FormEvent) {
     e.preventDefault();
     setErrorKey(null);
     setRetryAfterValue(null);
     setLoading(true);
     try {
-      await requestReporterOtp(username);
+      await requestReporterLoginLink(username, i18n.language);
     } catch (error) {
       if (isBackendUnavailableError(error)) {
         setErrorKey('auth.backendUnavailable');
         return;
+      } else if (isTooManyRequestsError(error)) {
+        setLockoutError(error);
+        return;
       } else if (!isUnauthorizedError(error)) {
-        setErrorKey('login.otpGenericError');
+        setErrorKey('login.linkGenericError');
         return;
       }
     } finally {
       setLoading(false);
     }
-    setLoginMode('reporterVerify');
-  }
-
-  async function handleVerifyOtp(e: FormEvent) {
-    e.preventDefault();
-    setErrorKey(null);
-    setRetryAfterValue(null);
-    setLoading(true);
-    try {
-      await reporterSignIn(username, otpCode);
-      navigate(redirectTo ?? '/');
-    } catch (error) {
-      if (isTooManyRequestsError(error)) {
-        setLockoutError(error);
-      } else if (isUnauthorizedError(error)) {
-        setErrorKey('login.invalidCode');
-      } else if (isBackendUnavailableError(error)) {
-        setErrorKey('auth.backendUnavailable');
-      } else {
-        setErrorKey('login.otpGenericError');
-      }
-    } finally {
-      setLoading(false);
-    }
+    setLinkSent(true);
   }
 
   const modeIcon = loginMode === 'admin' ? <LockOutlinedIcon /> : <SendOutlinedIcon />;
+
+  if (token && loading) {
+    return (
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
+        <CircularProgress />
+        <Typography sx={{ ml: 2 }}>{t('login.redeemingToken')}</Typography>
+      </Box>
+    );
+  }
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
@@ -263,9 +271,9 @@ export default function LoginPage() {
               </Alert>
             )}
 
-            {loginMode === 'reporterVerify' && !errorKey && (
+            {loginMode === 'reporterRequest' && linkSent && !errorKey && (
               <Alert severity="info" sx={{ mb: 2 }}>
-                {t('login.codeSent', { username })}
+                {t('login.linkSent', { username })}
               </Alert>
             )}
 
@@ -312,7 +320,7 @@ export default function LoginPage() {
             )}
 
             {loginMode === 'reporterRequest' && (
-              <Box component="form" onSubmit={(e) => void handleRequestOtp(e)} noValidate>
+              <Box component="form" onSubmit={(e) => void handleRequestLoginLink(e)} noValidate>
                 <TextField
                   label={t('login.username')}
                   fullWidth
@@ -334,55 +342,28 @@ export default function LoginPage() {
                 >
                   {loading
                     ? <CircularProgress size={24} color="inherit" />
-                    : t('login.sendCode')}
+                    : t('login.sendLink')}
                 </Button>
-                <Box sx={{ mt: 2, textAlign: 'center' }}>
+                {linkSent && (
+                  <Box sx={{ mt: 2, textAlign: 'center' }}>
+                    <Link
+                      component="button"
+                      type="button"
+                      variant="body2"
+                      onClick={() => {
+                        setUsername('');
+                        setLinkSent(false);
+                        setErrorKey(null);
+                        setRetryAfterValue(null);
+                      }}
+                    >
+                      {t('login.tryDifferentUsername')}
+                    </Link>
+                  </Box>
+                )}
+                <Box sx={{ mt: linkSent ? 1 : 2, textAlign: 'center' }}>
                   <Link component="button" type="button" variant="body2" onClick={switchToAdmin}>
                     {t('login.switchToAdmin')}
-                  </Link>
-                </Box>
-              </Box>
-            )}
-
-            {loginMode === 'reporterVerify' && (
-              <Box component="form" onSubmit={(e) => void handleVerifyOtp(e)} noValidate>
-                <TextField
-                  label={t('login.otpLabel')}
-                  placeholder={t('login.otpPlaceholder')}
-                  fullWidth
-                  required
-                  margin="normal"
-                  autoComplete="one-time-code"
-                  autoFocus
-                  value={otpCode}
-                  onChange={(e) => setOtpCode(e.target.value)}
-                  disabled={loading}
-                />
-                <Button
-                  type="submit"
-                  fullWidth
-                  variant="contained"
-                  size="large"
-                  sx={{ mt: 3 }}
-                  disabled={loading || !otpCode}
-                >
-                  {loading
-                    ? <CircularProgress size={24} color="inherit" />
-                    : t('login.verifyCode')}
-                </Button>
-                <Box sx={{ mt: 2, textAlign: 'center' }}>
-                  <Link
-                    component="button"
-                    type="button"
-                    variant="body2"
-                    onClick={() => {
-                      setLoginMode('reporterRequest');
-                      setOtpCode('');
-                      setErrorKey(null);
-                      setRetryAfterValue(null);
-                    }}
-                  >
-                    {t('login.tryDifferentUsername')}
                   </Link>
                 </Box>
               </Box>
@@ -395,3 +376,4 @@ export default function LoginPage() {
     </Box>
   );
 }
+

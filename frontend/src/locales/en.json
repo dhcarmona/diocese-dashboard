@@ -26,19 +26,17 @@
     "genericError": "We could not sign you in right now. Please try again.",
     "switchToReporter": "Back to reporter login",
     "switchToAdmin": "Admin? Sign in with password",
-    "reporterSubtitle": "Enter your username to receive a code via WhatsApp.",
-    "sendCode": "Send Code",
-    "verifyCode": "Verify Code",
-    "otpLabel": "Verification code",
-    "otpPlaceholder": "6-digit code from WhatsApp",
-    "codeSent": "If {{username}} is a registered reporter account, a code was sent to their WhatsApp.",
+    "reporterSubtitle": "Enter your username to receive a login link via WhatsApp.",
+    "sendLink": "Send Login Link",
+    "linkSent": "If {{username}} is a registered reporter account, a login link was sent to their WhatsApp.",
     "tryDifferentUsername": "Try a different username",
-    "invalidCode": "The code is incorrect or has expired.",
+    "tokenInvalid": "This login link is invalid or has expired. Please request a new one.",
+    "linkGenericError": "We could not send the login link right now. Please try again.",
+    "redeemingToken": "Signing you in...",
     "lockedOutMinutes_one": "Too many attempts. Please wait {{count}} minute before trying again.",
     "lockedOutMinutes_other": "Too many attempts. Please wait {{count}} minutes before trying again.",
     "lockedOutSeconds_one": "Too many attempts. Please wait {{count}} second before trying again.",
-    "lockedOutSeconds_other": "Too many attempts. Please wait {{count}} seconds before trying again.",
-    "otpGenericError": "We could not send the code right now. Please try again."
+    "lockedOutSeconds_other": "Too many attempts. Please wait {{count}} seconds before trying again."
   },
   "navigation": {
     "home": "Home"

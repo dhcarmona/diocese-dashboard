@@ -47,6 +47,7 @@ function makeAuthValue(overrides: Partial<AuthContextValue> = {}): AuthContextVa
     authErrorKey: null,
     signIn: async () => {},
     reporterSignIn: async () => {},
+    redeemToken: async () => {},
     signOut: async () => {},
     refreshUser: async () => null,
     updatePreferredLanguage: async () => {},
