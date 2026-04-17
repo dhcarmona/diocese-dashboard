@@ -3,7 +3,6 @@ package org.iecr.diocesedashboard.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
@@ -67,79 +66,34 @@ public class WhatsAppService {
   private final ObjectMapper objectMapper = new ObjectMapper();
 
   @Autowired
-  public WhatsAppService(
-      @Value("${whatsapp.meta.base-url:https://graph.facebook.com}") String baseUrl,
-      @Value("${whatsapp.meta.api-version:v23.0}") String apiVersion,
-      @Value("${whatsapp.meta.access-token:}") String accessToken,
-      @Value("${whatsapp.meta.phone-number-id:}") String phoneNumberId,
-      @Value("${whatsapp.meta.language-code.en:en}") String englishLanguageCode,
-      @Value("${whatsapp.meta.language-code.es:es}") String spanishLanguageCode,
-      @Value("${whatsapp.meta.templates.otp-authentication:}") String otpAuthenticationTemplateName,
-      @Value("${whatsapp.meta.templates.otp-authentication.en:}") String otpAuthenticationTemplateNameEn,
-      @Value("${whatsapp.meta.templates.otp-authentication.es:}") String otpAuthenticationTemplateNameEs,
-      @Value("${whatsapp.meta.templates.reporter-welcome:}") String reporterWelcomeTemplateName,
-      @Value("${whatsapp.meta.templates.reporter-welcome.en:}") String reporterWelcomeTemplateNameEn,
-      @Value("${whatsapp.meta.templates.reporter-welcome.es:}") String reporterWelcomeTemplateNameEs,
-      @Value("${whatsapp.meta.templates.reporter-link:}") String reporterLinkTemplateName,
-      @Value("${whatsapp.meta.templates.reporter-link.en:}") String reporterLinkTemplateNameEn,
-      @Value("${whatsapp.meta.templates.reporter-link.es:}") String reporterLinkTemplateNameEs,
-      @Value("${whatsapp.meta.templates.report-submitted:}") String reportSubmittedTemplateName,
-      @Value("${whatsapp.meta.templates.report-submitted.en:}") String reportSubmittedTemplateNameEn,
-      @Value("${whatsapp.meta.templates.report-submitted.es:}") String reportSubmittedTemplateNameEs,
-      @Value("${whatsapp.meta.templates.report-updated:}") String reportUpdatedTemplateName,
-      @Value("${whatsapp.meta.templates.report-updated.en:}") String reportUpdatedTemplateNameEn,
-      @Value("${whatsapp.meta.templates.report-updated.es:}") String reportUpdatedTemplateNameEs,
-      @Value("${whatsapp.meta.templates.report-deleted:}") String reportDeletedTemplateName,
-      @Value("${whatsapp.meta.templates.report-deleted.en:}") String reportDeletedTemplateNameEn,
-      @Value("${whatsapp.meta.templates.report-deleted.es:}") String reportDeletedTemplateNameEs,
-      @Value("${whatsapp.meta.templates.reporter-login-link:}") String reporterLoginLinkTemplateName,
-      @Value("${whatsapp.meta.templates.reporter-login-link.en:}") String reporterLoginLinkTemplateNameEn,
-      @Value("${whatsapp.meta.templates.reporter-login-link.es:}") String reporterLoginLinkTemplateNameEs,
-      WhatsAppMessageLogService messageLogService) {
-    this.baseUrl = baseUrl;
-    this.apiVersion = apiVersion;
-    this.accessToken = accessToken;
-    this.phoneNumberId = phoneNumberId;
-    this.englishLanguageCode = englishLanguageCode;
-    this.spanishLanguageCode = spanishLanguageCode;
+  public WhatsAppService(WhatsAppMetaProperties props, WhatsAppMessageLogService messageLogService) {
+    this.baseUrl = props.getBaseUrl();
+    this.apiVersion = props.getApiVersion();
+    this.accessToken = props.getAccessToken();
+    this.phoneNumberId = props.getPhoneNumberId();
+    this.englishLanguageCode = props.getLanguageCode().getEn();
+    this.spanishLanguageCode = props.getLanguageCode().getEs();
     this.templateNameSets = Map.ofEntries(
         Map.entry(TemplateType.OTP_AUTHENTICATION,
-            new TemplateNameSet(
-                otpAuthenticationTemplateName,
-                otpAuthenticationTemplateNameEn,
-                otpAuthenticationTemplateNameEs)),
+            toTemplateNameSet(props.getTemplates().getOtpAuthentication())),
         Map.entry(TemplateType.REPORTER_WELCOME,
-            new TemplateNameSet(
-                reporterWelcomeTemplateName,
-                reporterWelcomeTemplateNameEn,
-                reporterWelcomeTemplateNameEs)),
+            toTemplateNameSet(props.getTemplates().getReporterWelcome())),
         Map.entry(TemplateType.REPORTER_LINK,
-            new TemplateNameSet(
-                reporterLinkTemplateName,
-                reporterLinkTemplateNameEn,
-                reporterLinkTemplateNameEs)),
+            toTemplateNameSet(props.getTemplates().getReporterLink())),
         Map.entry(TemplateType.REPORT_SUBMITTED,
-            new TemplateNameSet(
-                reportSubmittedTemplateName,
-                reportSubmittedTemplateNameEn,
-                reportSubmittedTemplateNameEs)),
+            toTemplateNameSet(props.getTemplates().getReportSubmitted())),
         Map.entry(TemplateType.REPORT_UPDATED,
-            new TemplateNameSet(
-                reportUpdatedTemplateName,
-                reportUpdatedTemplateNameEn,
-                reportUpdatedTemplateNameEs)),
+            toTemplateNameSet(props.getTemplates().getReportUpdated())),
         Map.entry(TemplateType.REPORT_DELETED,
-            new TemplateNameSet(
-                reportDeletedTemplateName,
-                reportDeletedTemplateNameEn,
-                reportDeletedTemplateNameEs)),
+            toTemplateNameSet(props.getTemplates().getReportDeleted())),
         Map.entry(TemplateType.REPORTER_LOGIN_LINK,
-            new TemplateNameSet(
-                reporterLoginLinkTemplateName,
-                reporterLoginLinkTemplateNameEn,
-                reporterLoginLinkTemplateNameEs)));
+            toTemplateNameSet(props.getTemplates().getReporterLoginLink())));
     this.messageLogService = messageLogService;
     this.httpClient = HttpClient.newBuilder().connectTimeout(REQUEST_TIMEOUT).build();
+  }
+
+  private static TemplateNameSet toTemplateNameSet(WhatsAppMetaProperties.TemplateNameSet ss) {
+    return new TemplateNameSet(ss.getFallback(), ss.getEn(), ss.getEs());
   }
 
   /**
@@ -301,7 +255,7 @@ public class WhatsAppService {
     return templatePayload;
   }
 
-  private List<Map<String, Object>> buildComponents(
+  List<Map<String, Object>> buildComponents(
       TemplateType templateType, Map<String, String> templateVariables) {
     if (templateVariables == null || templateVariables.isEmpty()) {
       return List.of();

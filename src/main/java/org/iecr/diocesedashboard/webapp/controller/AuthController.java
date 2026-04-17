@@ -10,6 +10,7 @@ import org.iecr.diocesedashboard.service.ReporterOtpService;
 import org.iecr.diocesedashboard.service.UserService;
 import org.iecr.diocesedashboard.webapp.DashboardUserDetails;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,7 +24,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
@@ -39,13 +39,16 @@ public class AuthController {
   private final UserService userService;
   private final ReporterOtpService reporterOtpService;
   private final ReporterMagicLinkService reporterMagicLinkService;
+  private final String appBaseUrl;
 
   @Autowired
   public AuthController(UserService userService, ReporterOtpService reporterOtpService,
-      ReporterMagicLinkService reporterMagicLinkService) {
+      ReporterMagicLinkService reporterMagicLinkService,
+      @Value("${app.base-url}") String appBaseUrl) {
     this.userService = userService;
     this.reporterOtpService = reporterOtpService;
     this.reporterMagicLinkService = reporterMagicLinkService;
+    this.appBaseUrl = appBaseUrl;
   }
 
   /**
@@ -169,17 +172,13 @@ public class AuthController {
    * Always returns 200 for valid requests to prevent account enumeration.
    *
    * @param request     contains the reporter's username
-   * @param origin      the HTTP Origin header used to build the login URL
    * @return 200 for valid requests; 400 for invalid payloads
    */
   @PostMapping("/reporter/request-login-link")
   public ResponseEntity<Void> requestReporterLoginLink(
-      @RequestBody @Valid ReporterOtpRequest request,
-      @RequestHeader(value = HttpHeaders.ORIGIN, required = false) String origin) {
+      @RequestBody @Valid ReporterOtpRequest request) {
     try {
-      String baseUrl = origin != null && !origin.isBlank()
-          ? origin
-          : "http://localhost:5173";
+      String baseUrl = appBaseUrl;
       Locale localeHint = request.locale() != null && !request.locale().isBlank()
           ? Locale.forLanguageTag(request.locale())
           : null;

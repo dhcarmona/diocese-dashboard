@@ -76,7 +76,8 @@ you want approved WhatsApp templates:
 |---|---|
 | `WHATSAPP_ACCESS_TOKEN` | Meta system-user access token with WhatsApp messaging permissions |
 | `WHATSAPP_PHONE_NUMBER_ID` | Meta phone number ID for the WhatsApp business sender |
-| `WHATSAPP_META_API_VERSION` | Optional Graph API version; defaults to `v23.0` |
+| `WHATSAPP_META_BASE_URL` | Optional Meta Graph API base URL; defaults to `https://graph.facebook.com` |
+| `WHATSAPP_META_API_VERSION` | Optional Graph API version; defaults to `v25.0` |
 | `WHATSAPP_TEMPLATE_LANGUAGE_CODE_EN` | Optional English template language code; defaults to `en` |
 | `WHATSAPP_TEMPLATE_LANGUAGE_CODE_ES` | Optional Spanish template language code; defaults to `es` |
 | `WHATSAPP_TEMPLATE_OTP_AUTHENTICATION` | Optional default Meta template name for reporter login codes |
@@ -97,6 +98,9 @@ you want approved WhatsApp templates:
 | `WHATSAPP_TEMPLATE_REPORT_DELETED` | Optional default Meta template name for report-deleted notifications |
 | `WHATSAPP_TEMPLATE_REPORT_DELETED_EN` | Optional English template name for report-deleted notifications |
 | `WHATSAPP_TEMPLATE_REPORT_DELETED_ES` | Optional Spanish template name for report-deleted notifications |
+| `WHATSAPP_TEMPLATE_REPORTER_LOGIN_LINK` | Optional default Meta template name for reporter magic-link login messages |
+| `WHATSAPP_TEMPLATE_REPORTER_LOGIN_LINK_EN` | Optional English template name for reporter magic-link login messages |
+| `WHATSAPP_TEMPLATE_REPORTER_LOGIN_LINK_ES` | Optional Spanish template name for reporter magic-link login messages |
 
 ### Meta Cloud API setup
 
@@ -129,6 +133,8 @@ To send WhatsApp messages directly through Meta:
    export WHATSAPP_TEMPLATE_REPORT_UPDATED_ES=report_updated_es
    export WHATSAPP_TEMPLATE_REPORT_DELETED_EN=report_deleted_en
    export WHATSAPP_TEMPLATE_REPORT_DELETED_ES=report_deleted_es
+   export WHATSAPP_TEMPLATE_REPORTER_LOGIN_LINK_EN=reporter_login_link_en
+   export WHATSAPP_TEMPLATE_REPORTER_LOGIN_LINK_ES=reporter_login_link_es
    ```
 
 If both language-specific template names are configured, the app selects the English or Spanish
