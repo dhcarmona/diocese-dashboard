@@ -51,10 +51,14 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (!token) return;
+    let cancelled = false;
     setLoading(true);
     void redeemToken(token)
-      .then(() => { navigate(redirectTo ?? '/'); })
+      .then(() => {
+        if (!cancelled) navigate(redirectTo ?? '/');
+      })
       .catch((error) => {
+        if (cancelled) return;
         if (isUnauthorizedError(error)) {
           setErrorKey('login.tokenInvalid');
         } else if (isBackendUnavailableError(error)) {
@@ -64,8 +68,8 @@ export default function LoginPage() {
         }
         setLoading(false);
       });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    return () => { cancelled = true; };
+  }, [token, redeemToken, navigate, redirectTo]);
 
   function setLockoutError(error: unknown) {
     const retryAfterSeconds = getRetryAfterSeconds(error) ?? 60;

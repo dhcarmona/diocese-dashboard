@@ -20,34 +20,74 @@ public class WhatsAppMetaProperties {
   private LanguageCode languageCode = new LanguageCode();
   private Templates templates = new Templates();
 
-  public String getBaseUrl() { return baseUrl; }
-  public void setBaseUrl(String baseUrl) { this.baseUrl = baseUrl; }
+  public String getBaseUrl() {
+    return baseUrl;
+  }
 
-  public String getApiVersion() { return apiVersion; }
-  public void setApiVersion(String apiVersion) { this.apiVersion = apiVersion; }
+  public void setBaseUrl(String baseUrl) {
+    this.baseUrl = baseUrl;
+  }
 
-  public String getAccessToken() { return accessToken; }
-  public void setAccessToken(String accessToken) { this.accessToken = accessToken; }
+  public String getApiVersion() {
+    return apiVersion;
+  }
 
-  public String getPhoneNumberId() { return phoneNumberId; }
-  public void setPhoneNumberId(String phoneNumberId) { this.phoneNumberId = phoneNumberId; }
+  public void setApiVersion(String apiVersion) {
+    this.apiVersion = apiVersion;
+  }
 
-  public LanguageCode getLanguageCode() { return languageCode; }
-  public void setLanguageCode(LanguageCode languageCode) { this.languageCode = languageCode; }
+  public String getAccessToken() {
+    return accessToken;
+  }
 
-  public Templates getTemplates() { return templates; }
-  public void setTemplates(Templates templates) { this.templates = templates; }
+  public void setAccessToken(String accessToken) {
+    this.accessToken = accessToken;
+  }
+
+  public String getPhoneNumberId() {
+    return phoneNumberId;
+  }
+
+  public void setPhoneNumberId(String phoneNumberId) {
+    this.phoneNumberId = phoneNumberId;
+  }
+
+  public LanguageCode getLanguageCode() {
+    return languageCode;
+  }
+
+  public void setLanguageCode(LanguageCode languageCode) {
+    this.languageCode = languageCode;
+  }
+
+  public Templates getTemplates() {
+    return templates;
+  }
+
+  public void setTemplates(Templates templates) {
+    this.templates = templates;
+  }
 
   /** English and Spanish language codes sent to the Meta API with each template request. */
   public static class LanguageCode {
     private String en = "en";
     private String es = "es";
 
-    public String getEn() { return en; }
-    public void setEn(String en) { this.en = en; }
+    public String getEn() {
+      return en;
+    }
 
-    public String getEs() { return es; }
-    public void setEs(String es) { this.es = es; }
+    public void setEn(String en) {
+      this.en = en;
+    }
+
+    public String getEs() {
+      return es;
+    }
+
+    public void setEs(String es) {
+      this.es = es;
+    }
   }
 
   /** Holds locale-specific template names for every supported message type. */
@@ -60,26 +100,61 @@ public class WhatsAppMetaProperties {
     private TemplateNameSet reportDeleted = new TemplateNameSet();
     private TemplateNameSet reporterLoginLink = new TemplateNameSet();
 
-    public TemplateNameSet getOtpAuthentication() { return otpAuthentication; }
-    public void setOtpAuthentication(TemplateNameSet ss) { otpAuthentication = ss; }
+    public TemplateNameSet getOtpAuthentication() {
+      return otpAuthentication;
+    }
 
-    public TemplateNameSet getReporterWelcome() { return reporterWelcome; }
-    public void setReporterWelcome(TemplateNameSet ss) { reporterWelcome = ss; }
+    public void setOtpAuthentication(TemplateNameSet ss) {
+      otpAuthentication = ss;
+    }
 
-    public TemplateNameSet getReporterLink() { return reporterLink; }
-    public void setReporterLink(TemplateNameSet ss) { reporterLink = ss; }
+    public TemplateNameSet getReporterWelcome() {
+      return reporterWelcome;
+    }
 
-    public TemplateNameSet getReportSubmitted() { return reportSubmitted; }
-    public void setReportSubmitted(TemplateNameSet ss) { reportSubmitted = ss; }
+    public void setReporterWelcome(TemplateNameSet ss) {
+      reporterWelcome = ss;
+    }
 
-    public TemplateNameSet getReportUpdated() { return reportUpdated; }
-    public void setReportUpdated(TemplateNameSet ss) { reportUpdated = ss; }
+    public TemplateNameSet getReporterLink() {
+      return reporterLink;
+    }
 
-    public TemplateNameSet getReportDeleted() { return reportDeleted; }
-    public void setReportDeleted(TemplateNameSet ss) { reportDeleted = ss; }
+    public void setReporterLink(TemplateNameSet ss) {
+      reporterLink = ss;
+    }
 
-    public TemplateNameSet getReporterLoginLink() { return reporterLoginLink; }
-    public void setReporterLoginLink(TemplateNameSet ss) { reporterLoginLink = ss; }
+    public TemplateNameSet getReportSubmitted() {
+      return reportSubmitted;
+    }
+
+    public void setReportSubmitted(TemplateNameSet ss) {
+      reportSubmitted = ss;
+    }
+
+    public TemplateNameSet getReportUpdated() {
+      return reportUpdated;
+    }
+
+    public void setReportUpdated(TemplateNameSet ss) {
+      reportUpdated = ss;
+    }
+
+    public TemplateNameSet getReportDeleted() {
+      return reportDeleted;
+    }
+
+    public void setReportDeleted(TemplateNameSet ss) {
+      reportDeleted = ss;
+    }
+
+    public TemplateNameSet getReporterLoginLink() {
+      return reporterLoginLink;
+    }
+
+    public void setReporterLoginLink(TemplateNameSet ss) {
+      reporterLoginLink = ss;
+    }
   }
 
   /** Fallback, English, and Spanish template name variants for a single message type. */
@@ -88,13 +163,28 @@ public class WhatsAppMetaProperties {
     private String en = "";
     private String es = "";
 
-    public String getFallback() { return fallback; }
-    public void setFallback(String fallback) { this.fallback = fallback; }
+    public String getFallback() {
+      return fallback;
+    }
 
-    public String getEn() { return en; }
-    public void setEn(String en) { this.en = en; }
+    public void setFallback(String fallback) {
+      this.fallback = fallback;
+    }
 
-    public String getEs() { return es; }
-    public void setEs(String es) { this.es = es; }
+    public String getEn() {
+      return en;
+    }
+
+    public void setEn(String en) {
+      this.en = en;
+    }
+
+    public String getEs() {
+      return es;
+    }
+
+    public void setEs(String es) {
+      this.es = es;
+    }
   }
 }

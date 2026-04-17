@@ -10,7 +10,7 @@ These `curl` requests create all WhatsApp templates currently used by the app.
 
 - These requests use language codes `en_US` (English) and `es` (Spanish). If you use a different language code (e.g. plain `en`) set `WHATSAPP_TEMPLATE_LANGUAGE_CODE_EN` to match.
 - Every template with variables includes `example.body_text`, because Meta rejects templates without sample values.
-- The current app sends **body variables only**. For that reason, the report link is included in the **body**, not in a CTA button.
+- Utility templates send **body variables only**. Authentication and login-link templates also send a **button parameter** (the OTP code or the token URL suffix), which Meta requires for those template categories.
 - Meta auth templates use a **special schema**: the auth template body is predefined, the footer is configured with `code_expiration_minutes`, and the copy-code button uses lowercase `otp` / `copy_code`.
 - In practice, some WABAs reject the optional `add_security_recommendation` field even though Meta documents it. The requests below omit it and use the smallest accepted payload.
 - The app now supports the extra OTP button parameter Meta requires when sending authentication templates.
@@ -22,7 +22,6 @@ After approval, set these env vars to the template names below:
 ```bash
 WHATSAPP_TEMPLATE_OTP_AUTHENTICATION_EN=reporter_otp_en
 WHATSAPP_TEMPLATE_OTP_AUTHENTICATION_ES=reporter_otp_es
-WHATSAPP_TEMPLATE_REPORTER_WELCOME_EN=reporter_welcome_en
 WHATSAPP_TEMPLATE_REPORTER_WELCOME_ES=reporter_welcome_es
 WHATSAPP_TEMPLATE_REPORTER_LINK_EN=reporter_link_en
 WHATSAPP_TEMPLATE_REPORTER_LINK_ES=reporter_link_es
@@ -254,7 +253,7 @@ curl -X POST \
     "components": [
       {
         "type": "BODY",
-        "text": "Tiene un nuevo enlace para completar el reporte de servicio \"{{1}}\" en {{2}} (fecha: {{3}}). Use este enlace para acceder: {{4}} Por favor, abrala en su navegador.",
+        "text": "Tiene un nuevo enlace para completar el reporte de servicio \"{{1}}\" en {{2}} (fecha: {{3}}). Use este enlace para acceder: {{4}} Por favor, ábrala en su navegador.",
         "example": {
           "body_text": [
             ["Eucaristia Dominical", "Iglesia San Marcos", "2026-04-20", "https://dashboard.example.org/r/abc123"]
@@ -377,7 +376,7 @@ curl -X POST \
     "components": [
       {
         "type": "BODY",
-        "text": "Un administrador ha actualizado su reporte de servicio.\nPlantilla: {{1}}\nIglesia: {{2}}\nFecha: {{3}}\nCambios:\n{{4}}\nPor favor, revise la actualizacion.",
+        "text": "Un administrador ha actualizado su reporte de servicio.\nPlantilla: {{1}}\nIglesia: {{2}}\nFecha: {{3}}\nCambios:\n{{4}}\nPor favor, revise la actualización.",
         "example": {
           "body_text": [
             ["Eucaristia Dominical", "Iglesia San Marcos", "2026-04-20", "Asistencia actualizada a 54"]
