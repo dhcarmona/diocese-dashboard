@@ -9,6 +9,8 @@ import org.iecr.diocesedashboard.service.ReporterMagicLinkService;
 import org.iecr.diocesedashboard.service.ReporterOtpService;
 import org.iecr.diocesedashboard.service.UserService;
 import org.iecr.diocesedashboard.webapp.DashboardUserDetails;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
@@ -35,6 +37,8 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
+
+  private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
 
   private final UserService userService;
   private final ReporterOtpService reporterOtpService;
@@ -183,8 +187,9 @@ public class AuthController {
           ? Locale.forLanguageTag(request.locale())
           : null;
       reporterMagicLinkService.generateAndSendLoginLink(request.username(), baseUrl, localeHint);
-    } catch (Exception ignored) {
+    } catch (Exception ex) {
       // Silently ignored to prevent account enumeration via differing response codes.
+      logger.warn("Login link request failed silently", ex);
     }
     return ResponseEntity.ok().build();
   }

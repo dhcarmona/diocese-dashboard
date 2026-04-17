@@ -121,8 +121,8 @@ To send WhatsApp messages directly through Meta:
    create and approve the required Meta templates, then set the template-name variables:
 
    ```bash
-   export WHATSAPP_TEMPLATE_OTP_AUTHENTICATION_EN=reporter_login_code_en
-   export WHATSAPP_TEMPLATE_OTP_AUTHENTICATION_ES=reporter_login_code_es
+   export WHATSAPP_TEMPLATE_OTP_AUTHENTICATION_EN=reporter_otp_en
+   export WHATSAPP_TEMPLATE_OTP_AUTHENTICATION_ES=reporter_otp_es
    export WHATSAPP_TEMPLATE_REPORTER_WELCOME_EN=reporter_welcome_en
    export WHATSAPP_TEMPLATE_REPORTER_WELCOME_ES=reporter_welcome_es
    export WHATSAPP_TEMPLATE_REPORTER_LINK_EN=reporter_link_en
