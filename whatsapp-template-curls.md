@@ -8,8 +8,7 @@ These `curl` requests create all WhatsApp templates currently used by the app.
 
 ## Notes
 
-- These requests use language codes `en` and `es` to match the app defaults in `application.properties`.
-- If Meta requires `en_US` instead of `en`, recreate the English templates with `language: "en_US"` and set `WHATSAPP_TEMPLATE_LANGUAGE_CODE_EN=en_US`.
+- These requests use language codes `en_US` (English) and `es` (Spanish). If you use a different language code (e.g. plain `en`) set `WHATSAPP_TEMPLATE_LANGUAGE_CODE_EN` to match.
 - Every template with variables includes `example.body_text`, because Meta rejects templates without sample values.
 - The current app sends **body variables only**. For that reason, the report link is included in the **body**, not in a CTA button.
 - Meta auth templates use a **special schema**: the auth template body is predefined, the footer is configured with `code_expiration_minutes`, and the copy-code button uses lowercase `otp` / `copy_code`.
@@ -103,7 +102,7 @@ curl -X POST \
           {
             "type": "otp",
             "otp_type": "copy_code",
-            "text": "Copiar codigo"
+            "text": "Copiar código"
           }
         ]
       }
@@ -193,7 +192,7 @@ curl -X POST \
     "components": [
       {
         "type": "BODY",
-        "text": "Hola {{1}}, su cuenta de reportero de Diocese Dashboard ya esta lista. Usuario: {{2}}. Puede iniciar sesion en {{3}} y solicitar ahi su codigo de acceso.",
+        "text": "Hola {{1}}, su cuenta de reportero de Diocese Dashboard ya está lista. Usuario: {{2}}. Puede iniciar sesión en {{3}} y solicitar ahí su código de acceso.",
         "example": {
           "body_text": [
             ["Maria Perez", "maria.perez", "https://dashboard.example.org"]

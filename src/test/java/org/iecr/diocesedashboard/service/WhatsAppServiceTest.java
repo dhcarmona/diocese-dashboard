@@ -12,7 +12,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -22,37 +21,14 @@ class WhatsAppServiceTest {
 
   private WhatsAppService service;
 
+  private static WhatsAppMetaProperties defaultProps() {
+    WhatsAppMetaProperties props = new WhatsAppMetaProperties();
+    return props;
+  }
+
   @BeforeEach
   void setUp() {
-    service = spy(new WhatsAppService(
-        "https://graph.facebook.com",
-        "v23.0",
-        "test_access_token",
-        "123456789",
-        "en",
-        "es",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        mock(WhatsAppMessageLogService.class)));
+    service = spy(new WhatsAppService(defaultProps(), mock(WhatsAppMessageLogService.class)));
   }
 
   @Test
@@ -69,35 +45,13 @@ class WhatsAppServiceTest {
 
   @Test
   void sendConfiguredMessage_usesLocalizedTemplateWhenConfigured() {
-    WhatsAppService templatedService = spy(new WhatsAppService(
-        "https://graph.facebook.com",
-        "v23.0",
-        "test_access_token",
-        "123456789",
-        "en_US",
-        "es",
-        "",
-        "reporter_login_code_en",
-        "reporter_login_code_es",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        mock(WhatsAppMessageLogService.class)));
+    WhatsAppMetaProperties props = new WhatsAppMetaProperties();
+    props.getLanguageCode().setEn("en_US");
+    props.getTemplates().getOtpAuthentication().setEn("reporter_login_code_en");
+    props.getTemplates().getOtpAuthentication().setEs("reporter_login_code_es");
+
+    WhatsAppService templatedService = spy(
+        new WhatsAppService(props, mock(WhatsAppMessageLogService.class)));
     doNothing().when(templatedService).dispatchTemplateMessage(any(), any(), any(), any(), any());
 
     templatedService.sendConfiguredMessage(
@@ -117,24 +71,11 @@ class WhatsAppServiceTest {
   }
 
   @Test
-  @SuppressWarnings("unchecked")
-  void buildTemplatePayload_addsAuthenticationButtonParametersForOtpTemplates() throws Exception {
-    Method buildTemplatePayload = WhatsAppService.class.getDeclaredMethod(
-        "buildTemplatePayload",
-        WhatsAppService.TemplateType.class,
-        String.class,
-        String.class,
-        Map.class);
-    buildTemplatePayload.setAccessible(true);
-
-    Map<String, Object> payload = (Map<String, Object>) buildTemplatePayload.invoke(
-        service,
+  void buildComponents_addsAuthenticationButtonParametersForOtpTemplates() {
+    List<Map<String, Object>> components = service.buildComponents(
         WhatsAppService.TemplateType.OTP_AUTHENTICATION,
-        "reporter_login_code_en",
-        "en_US",
         Map.of("1", "123456"));
 
-    List<Map<String, Object>> components = (List<Map<String, Object>>) payload.get("components");
     assertEquals(2, components.size());
     assertEquals("body", components.get(0).get("type"));
     assertEquals(
@@ -149,24 +90,11 @@ class WhatsAppServiceTest {
   }
 
   @Test
-  @SuppressWarnings("unchecked")
-  void buildTemplatePayload_keepsUtilityTemplatesAsBodyOnlyParameters() throws Exception {
-    Method buildTemplatePayload = WhatsAppService.class.getDeclaredMethod(
-        "buildTemplatePayload",
-        WhatsAppService.TemplateType.class,
-        String.class,
-        String.class,
-        Map.class);
-    buildTemplatePayload.setAccessible(true);
-
-    Map<String, Object> payload = (Map<String, Object>) buildTemplatePayload.invoke(
-        service,
+  void buildComponents_keepsUtilityTemplatesAsBodyOnlyParameters() {
+    List<Map<String, Object>> components = service.buildComponents(
         WhatsAppService.TemplateType.REPORTER_LINK,
-        "reporter_link_en",
-        "en",
         Map.of("2", "St Mark Church", "1", "Sunday Eucharist"));
 
-    List<Map<String, Object>> components = (List<Map<String, Object>>) payload.get("components");
     assertEquals(1, components.size());
     assertEquals("body", components.get(0).get("type"));
     assertEquals(
