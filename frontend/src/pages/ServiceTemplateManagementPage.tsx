@@ -261,6 +261,8 @@ export default function ServiceTemplateManagementPage() {
     setFormMode('edit');
     setSelectedTemplateId(template.id);
     setFeedback(null);
+    setEditingItemId(null);
+    setInfoItemDraft(defaultInfoItemDraft);
     try {
       const full = await getServiceTemplateById(template.id);
       setSelectedTemplate(full);
@@ -407,6 +409,10 @@ export default function ServiceTemplateManagementPage() {
     try {
       await deleteServiceInfoItem(itemId);
       setInfoItems((prev) => prev.filter((item) => item.id !== itemId));
+      if (itemId === editingItemId) {
+        setEditingItemId(null);
+        setInfoItemDraft(defaultInfoItemDraft);
+      }
       setFeedback({
         severity: 'success',
         message: t('serviceTemplates.feedback.itemRemoved'),
