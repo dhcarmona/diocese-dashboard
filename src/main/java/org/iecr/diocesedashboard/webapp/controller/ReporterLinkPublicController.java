@@ -5,6 +5,7 @@ import org.iecr.diocesedashboard.domain.objects.DashboardUser;
 import org.iecr.diocesedashboard.domain.objects.ReporterLink;
 import org.iecr.diocesedashboard.domain.objects.UserRole;
 import org.iecr.diocesedashboard.service.CelebrantService;
+import org.iecr.diocesedashboard.service.PortraitService;
 import org.iecr.diocesedashboard.service.ReporterLinkFollowUpTokenService;
 import org.iecr.diocesedashboard.service.ReporterLinkPublicSubmissionService;
 import org.iecr.diocesedashboard.service.ReporterLinkService;
@@ -36,18 +37,21 @@ public class ReporterLinkPublicController {
   private final ReporterLinkPublicSubmissionService submissionService;
   private final ReporterLinkFollowUpTokenService followUpTokenService;
   private final UserService userService;
+  private final PortraitService portraitService;
 
   @Autowired
   public ReporterLinkPublicController(ReporterLinkService reporterLinkService,
       CelebrantService celebrantService,
       ReporterLinkPublicSubmissionService submissionService,
       ReporterLinkFollowUpTokenService followUpTokenService,
-      UserService userService) {
+      UserService userService,
+      PortraitService portraitService) {
     this.reporterLinkService = reporterLinkService;
     this.celebrantService = celebrantService;
     this.submissionService = submissionService;
     this.followUpTokenService = followUpTokenService;
     this.userService = userService;
+    this.portraitService = portraitService;
   }
 
   /**
@@ -69,7 +73,9 @@ public class ReporterLinkPublicController {
         : rawItems.stream().map(ServiceInfoItemSummary::from).toList();
     List<CelebrantSummary> celebrants = celebrantService.findAll()
         .stream().map(CelebrantSummary::from).toList();
-    return ResponseEntity.ok(ReporterLinkPublicResponse.from(link, infoItems, celebrants));
+    String bannerUrl = portraitService.buildServiceTemplateBannerUrl(
+        link.getServiceTemplate().getServiceTemplateName());
+    return ResponseEntity.ok(ReporterLinkPublicResponse.from(link, bannerUrl, infoItems, celebrants));
   }
 
   /**

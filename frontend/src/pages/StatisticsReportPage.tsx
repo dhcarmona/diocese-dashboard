@@ -38,9 +38,9 @@ const CHART_COLORS = [
 ];
 
 function formatValue(value: number, type: string): string {
-  if (type === 'DOLLARS') return `$${value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-  if (type === 'COLONES') return `₡${value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-  return value.toLocaleString();
+  if (type === 'DOLLARS') return `$${value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  if (type === 'COLONES') return `₡${value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  return value.toLocaleString('en-US');
 }
 
 interface ItemSectionProps {

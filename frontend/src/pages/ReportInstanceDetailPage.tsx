@@ -27,6 +27,7 @@ import {
 } from '../api/serviceInstances';
 import PageHeader from '../components/PageHeader';
 import { formatDate } from '../utils/dateFormatting';
+import { formatMoneyDisplay, parseMoneyInput } from '../utils/moneyFormatting';
 
 function getAdornment(type: ResponseDetail['serviceInfoItemType']): string | null {
   if (type === 'DOLLARS') return '$';
@@ -57,6 +58,8 @@ export default function ReportInstanceDetailPage() {
 
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState(false);
+
+  const [focusedItemId, setFocusedItemId] = useState<number | null>(null);
 
   // Two-step dialogs
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
@@ -263,21 +266,38 @@ export default function ReportInstanceDetailPage() {
       >
         <Stack spacing={3}>
           {detail.responses.map((r) => {
-            const isNumeric =
-              r.serviceInfoItemType === 'NUMERICAL' ||
-              r.serviceInfoItemType === 'DOLLARS' ||
-              r.serviceInfoItemType === 'COLONES';
+            const isMoney =
+              r.serviceInfoItemType === 'DOLLARS' || r.serviceInfoItemType === 'COLONES';
+            const isNumeric = isMoney || r.serviceInfoItemType === 'NUMERICAL';
             const adornment = getAdornment(r.serviceInfoItemType);
+            const rawValue = responses[r.serviceInfoItemId] ?? '';
             return (
               <TextField
                 key={r.serviceInfoItemId}
                 label={r.serviceInfoItemTitle}
                 helperText={r.serviceInfoItemDescription ?? undefined}
                 required={r.required ?? false}
-                value={responses[r.serviceInfoItemId] ?? ''}
-                onChange={(e) => handleResponseChange(r.serviceInfoItemId, e.target.value)}
-                type={isNumeric ? 'number' : 'text'}
-                inputProps={isNumeric ? { min: 0, step: 'any' } : undefined}
+                value={
+                  isMoney && focusedItemId !== r.serviceInfoItemId
+                    ? formatMoneyDisplay(rawValue)
+                    : rawValue
+                }
+                onChange={(e) =>
+                  handleResponseChange(
+                    r.serviceInfoItemId,
+                    isMoney ? parseMoneyInput(e.target.value) : e.target.value,
+                  )
+                }
+                onFocus={isMoney ? () => setFocusedItemId(r.serviceInfoItemId) : undefined}
+                onBlur={isMoney ? () => setFocusedItemId(null) : undefined}
+                type={isNumeric && !isMoney ? 'number' : 'text'}
+                inputProps={
+                  isMoney
+                    ? { inputMode: 'decimal' }
+                    : isNumeric
+                      ? { min: 0, step: 'any' }
+                      : undefined
+                }
                 InputProps={
                   adornment
                     ? {

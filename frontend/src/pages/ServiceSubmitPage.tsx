@@ -32,6 +32,7 @@ import { useAuth } from '../auth/auth-context';
 import PageHeader from '../components/PageHeader';
 import ReporterLinkFollowUpCard from '../components/ReporterLinkFollowUpCard';
 import { APP_DATE_FORMAT } from '../utils/dateFormatting';
+import { formatMoneyDisplay, parseMoneyInput } from '../utils/moneyFormatting';
 
 function getInputAdornment(type: ServiceInfoItemSummary['serviceInfoItemType']): string | null {
   if (type === 'DOLLARS') return '$';
@@ -59,6 +60,7 @@ export default function ServiceSubmitPage() {
   const [submitError, setSubmitError] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [submissionResult, setSubmissionResult] = useState<ReportSubmissionResponse | null>(null);
+  const [focusedItemId, setFocusedItemId] = useState<number | null>(null);
 
   const availableChurches = useMemo(() => {
     if (!user || user.role === 'ADMIN') {
@@ -307,21 +309,35 @@ export default function ServiceSubmitPage() {
           )}
 
           {(template.serviceInfoItems ?? []).map((item) => {
-            const isNumeric =
-              item.serviceInfoItemType === 'NUMERICAL' ||
+            const isMoney =
               item.serviceInfoItemType === 'DOLLARS' ||
               item.serviceInfoItemType === 'COLONES';
+            const isNumeric = isMoney || item.serviceInfoItemType === 'NUMERICAL';
             const adornment = getInputAdornment(item.serviceInfoItemType);
+            const rawValue = responses[item.id] ?? '';
             return (
               <TextField
                 key={item.id}
                 label={item.title}
                 helperText={item.description ?? undefined}
                 required={item.required}
-                value={responses[item.id] ?? ''}
-                onChange={(e) => handleResponseChange(item.id, e.target.value)}
-                type={isNumeric ? 'number' : 'text'}
-                inputProps={isNumeric ? { min: 0, step: 'any' } : undefined}
+                value={isMoney && focusedItemId !== item.id ? formatMoneyDisplay(rawValue) : rawValue}
+                onChange={(e) =>
+                  handleResponseChange(
+                    item.id,
+                    isMoney ? parseMoneyInput(e.target.value) : e.target.value,
+                  )
+                }
+                onFocus={isMoney ? () => setFocusedItemId(item.id) : undefined}
+                onBlur={isMoney ? () => setFocusedItemId(null) : undefined}
+                type={isNumeric && !isMoney ? 'number' : 'text'}
+                inputProps={
+                  isMoney
+                    ? { inputMode: 'decimal' }
+                    : isNumeric
+                      ? { min: 0, step: 'any' }
+                      : undefined
+                }
                 InputProps={
                   adornment
                     ? {

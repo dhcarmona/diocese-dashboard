@@ -123,6 +123,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/auth/me").hasAnyRole("ADMIN", "REPORTER")
                 .requestMatchers(HttpMethod.PUT, "/api/auth/me/language")
                 .hasAnyRole("ADMIN", "REPORTER")
+                .requestMatchers(HttpMethod.GET, "/api/portraits/service-templates").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/portraits/**").hasAnyRole("ADMIN", "REPORTER")
                 .requestMatchers(HttpMethod.GET, "/api/churches").hasAnyRole("ADMIN", "REPORTER")
                 .requestMatchers(HttpMethod.GET, "/api/celebrants").hasAnyRole("ADMIN", "REPORTER")
