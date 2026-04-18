@@ -46,9 +46,9 @@ class TemplateItemsControllerTest {
   @WithMockUser(roles = "ADMIN")
   void reorder_asAdmin_returns204() throws Exception {
     mockMvc.perform(put("/api/template-items/reorder")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(validRequest()))
-            .with(csrf()))
+        .contentType(MediaType.APPLICATION_JSON)
+        .content(objectMapper.writeValueAsString(validRequest()))
+        .with(csrf()))
         .andExpect(status().isNoContent());
   }
 
@@ -58,9 +58,9 @@ class TemplateItemsControllerTest {
     String body = "{\"items\":[{\"id\":10,\"kind\":\"INFO_ITEM\"}]}";
 
     mockMvc.perform(put("/api/template-items/reorder")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(body)
-            .with(csrf()))
+        .contentType(MediaType.APPLICATION_JSON)
+        .content(body)
+        .with(csrf()))
         .andExpect(status().isBadRequest());
   }
 
@@ -70,9 +70,9 @@ class TemplateItemsControllerTest {
     String body = "{\"templateId\":1,\"items\":[]}";
 
     mockMvc.perform(put("/api/template-items/reorder")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(body)
-            .with(csrf()))
+        .contentType(MediaType.APPLICATION_JSON)
+        .content(body)
+        .with(csrf()))
         .andExpect(status().isBadRequest());
   }
 
@@ -80,18 +80,18 @@ class TemplateItemsControllerTest {
   @WithMockUser(roles = "USER")
   void reorder_asUser_returns403() throws Exception {
     mockMvc.perform(put("/api/template-items/reorder")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(validRequest()))
-            .with(csrf()))
+        .contentType(MediaType.APPLICATION_JSON)
+        .content(objectMapper.writeValueAsString(validRequest()))
+        .with(csrf()))
         .andExpect(status().isForbidden());
   }
 
   @Test
   void reorder_unauthenticated_returns401() throws Exception {
     mockMvc.perform(put("/api/template-items/reorder")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(validRequest()))
-            .with(csrf()))
+        .contentType(MediaType.APPLICATION_JSON)
+        .content(objectMapper.writeValueAsString(validRequest()))
+        .with(csrf()))
         .andExpect(status().isUnauthorized());
   }
 }
