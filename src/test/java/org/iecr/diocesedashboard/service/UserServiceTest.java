@@ -138,7 +138,6 @@ class UserServiceTest {
         eq("+50688888888"),
         eq("Welcome message"),
         eq("rep"),
-        any(),
         eq(WhatsAppService.TemplateType.REPORTER_WELCOME),
         any());
   }

@@ -72,7 +72,7 @@ class ReporterMagicLinkServiceTest {
     verify(tokenService).save(argThat(tt -> "reporter1".equals(tt.getUsername())
         && tt.getExpiresAt().equals(FIXED_NOW.plusSeconds(600))));
     verify(whatsAppService).sendConfiguredMessageAndLog(
-        eq("+50688888888"), any(), any(), eq("reporter1"), any(Locale.class),
+        eq("+50688888888"), any(), any(), eq("reporter1"),
         eq(WhatsAppService.TemplateType.REPORTER_LOGIN_LINK), any());
   }
 
@@ -84,7 +84,7 @@ class ReporterMagicLinkServiceTest {
 
     verify(userService, never()).findByUsername(any());
     verify(whatsAppService, never()).sendConfiguredMessageAndLog(
-        any(), any(), any(), any(), any(), any(), any());
+        any(), any(), any(), any(), any(), any());
   }
 
   @Test
@@ -95,7 +95,7 @@ class ReporterMagicLinkServiceTest {
     service.generateAndSendLoginLink("unknown", "http://localhost:5173", null);
 
     verify(whatsAppService, never()).sendConfiguredMessageAndLog(
-        any(), any(), any(), any(), any(), any(), any());
+        any(), any(), any(), any(), any(), any());
   }
 
   @Test
@@ -108,7 +108,7 @@ class ReporterMagicLinkServiceTest {
     service.generateAndSendLoginLink("disabled1", "http://localhost:5173", null);
 
     verify(whatsAppService, never()).sendConfiguredMessageAndLog(
-        any(), any(), any(), any(), any(), any(), any());
+        any(), any(), any(), any(), any(), any());
   }
 
   @Test
@@ -121,7 +121,7 @@ class ReporterMagicLinkServiceTest {
     service.generateAndSendLoginLink("admin1", "http://localhost:5173", null);
 
     verify(whatsAppService, never()).sendConfiguredMessageAndLog(
-        any(), any(), any(), any(), any(), any(), any());
+        any(), any(), any(), any(), any(), any());
   }
 
   @Test
@@ -134,11 +134,11 @@ class ReporterMagicLinkServiceTest {
     service.generateAndSendLoginLink("nophone", "http://localhost:5173", null);
 
     verify(whatsAppService, never()).sendConfiguredMessageAndLog(
-        any(), any(), any(), any(), any(), any(), any());
+        any(), any(), any(), any(), any(), any());
   }
 
   @Test
-  void generateAndSendLoginLink_usesLocaleHintOverDbPreference() {
+  void generateAndSendLoginLink_withLocaleHint_sendsLoginLinkTemplate() {
     DashboardUser user = activeReporter("reporter1");
     when(tokenService.existsByUsernameAndCreatedAtAfter(any(), any())).thenReturn(false);
     when(userService.findByUsername("reporter1")).thenReturn(Optional.of(user));
@@ -148,8 +148,7 @@ class ReporterMagicLinkServiceTest {
 
     verify(whatsAppService).sendConfiguredMessageAndLog(
         any(), any(), any(), any(),
-        argThat(locale -> "en".equals(locale.getLanguage())),
-        any(), any());
+        eq(WhatsAppService.TemplateType.REPORTER_LOGIN_LINK), any());
   }
 
   @Test

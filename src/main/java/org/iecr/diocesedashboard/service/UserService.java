@@ -117,12 +117,11 @@ public class UserService implements UserDetailsService {
             phoneNumber,
             body,
             username,
-            saved.getPreferredLocale(),
             WhatsAppService.TemplateType.REPORTER_WELCOME,
             buildTemplateVariables(fullName, username, appBaseUrl));
       } catch (Exception ex) {
-        LOG.warn("Failed to send welcome WhatsApp to new reporter '{}': {}",
-            username, ex.getMessage());
+        LOG.warn("Failed to send welcome WhatsApp to new reporter '{}'",
+            username, ex);
       }
     }
     return saved;

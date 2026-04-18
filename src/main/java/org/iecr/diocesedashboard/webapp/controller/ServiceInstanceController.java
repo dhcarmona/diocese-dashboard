@@ -285,7 +285,6 @@ public class ServiceInstanceController {
         reporter.getPhoneNumber(),
         body,
         reporter.getUsername(),
-        reporter.getPreferredLocale(),
         WhatsAppService.TemplateType.REPORT_UPDATED,
         buildTemplateVariables(templateName, church, date, changeList));
   }
@@ -313,7 +312,6 @@ public class ServiceInstanceController {
         reporter.getPhoneNumber(),
         body,
         reporter.getUsername(),
-        reporter.getPreferredLocale(),
         WhatsAppService.TemplateType.REPORT_DELETED,
         buildTemplateVariables(templateName, church, date));
   }
