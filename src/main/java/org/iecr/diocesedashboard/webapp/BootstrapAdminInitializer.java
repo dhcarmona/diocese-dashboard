@@ -2,20 +2,20 @@ package org.iecr.diocesedashboard.webapp;
 
 import org.iecr.diocesedashboard.domain.objects.UserRole;
 import org.iecr.diocesedashboard.service.UserService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import java.util.Set;
-import java.util.logging.Logger;
 
 /** Creates the first ADMIN account on startup when explicitly configured. */
 @Component
 public class BootstrapAdminInitializer implements ApplicationRunner {
 
-  private static final Logger LOG =
-      Logger.getLogger(BootstrapAdminInitializer.class.getName());
+  private static final Logger LOG = LoggerFactory.getLogger(BootstrapAdminInitializer.class);
 
   private final BootstrapAdminProperties properties;
   private final UserService userService;
@@ -48,7 +48,7 @@ public class BootstrapAdminInitializer implements ApplicationRunner {
     }
     userService.createUser(
         properties.getUsername(), properties.getPassword(), UserRole.ADMIN, Set.of());
-    LOG.info("Created the bootstrap ADMIN user: " + properties.getUsername());
+    LOG.info("Created the bootstrap ADMIN user: {}", properties.getUsername());
   }
 
   private void validateConfiguration() {

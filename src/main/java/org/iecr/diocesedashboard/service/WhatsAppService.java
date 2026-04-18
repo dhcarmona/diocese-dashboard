@@ -2,6 +2,8 @@ package org.iecr.diocesedashboard.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -18,7 +20,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.logging.Logger;
 
 /**
  * Service for sending WhatsApp messages via the Meta Cloud API.
@@ -38,9 +39,8 @@ import java.util.logging.Logger;
 @Service
 public class WhatsAppService {
 
-  private static final Logger LOG = Logger.getLogger(WhatsAppService.class.getName());
-  private static final String ENGLISH_LANGUAGE = "en";
-  private static final String SPANISH_LANGUAGE = "es";
+  private static final Logger LOG = LoggerFactory.getLogger(WhatsAppService.class);
+  private static final String SPANISH_LANGUAGE_CODE = "es";
   private static final Duration REQUEST_TIMEOUT = Duration.ofSeconds(30);
 
   /** Supported outbound WhatsApp template types. */
@@ -58,8 +58,6 @@ public class WhatsAppService {
   private final String apiVersion;
   private final String accessToken;
   private final String phoneNumberId;
-  private final String englishLanguageCode;
-  private final String spanishLanguageCode;
   private final Map<TemplateType, TemplateNameSet> templateNameSets;
   private final WhatsAppMessageLogService messageLogService;
   private final HttpClient httpClient;
@@ -71,8 +69,6 @@ public class WhatsAppService {
     this.apiVersion = props.getApiVersion();
     this.accessToken = props.getAccessToken();
     this.phoneNumberId = props.getPhoneNumberId();
-    this.englishLanguageCode = props.getLanguageCode().getEn();
-    this.spanishLanguageCode = props.getLanguageCode().getEs();
     this.templateNameSets = Map.ofEntries(
         Map.entry(TemplateType.OTP_AUTHENTICATION,
             toTemplateNameSet(props.getTemplates().getOtpAuthentication())),
@@ -93,7 +89,7 @@ public class WhatsAppService {
   }
 
   private static TemplateNameSet toTemplateNameSet(WhatsAppMetaProperties.TemplateNameSet ss) {
-    return new TemplateNameSet(ss.getFallback(), ss.getEn(), ss.getEs());
+    return new TemplateNameSet(ss.getFallback(), ss.getEs());
   }
 
   /**
@@ -205,8 +201,7 @@ public class WhatsAppService {
     try {
       messageLogService.logMessage(recipientUsername, body);
     } catch (Exception ex) {
-      LOG.warning("Failed to log WhatsApp message for "
-          + recipientUsername + ": " + ex.getMessage());
+      LOG.warn("Failed to log WhatsApp message for {}: {}", recipientUsername, ex.getMessage());
     }
   }
 
@@ -214,12 +209,13 @@ public class WhatsAppService {
     try {
       messageLogService.logOtp(recipientUsername);
     } catch (Exception ex) {
-      LOG.warning("Failed to log WhatsApp OTP for " + recipientUsername + ": " + ex.getMessage());
+      LOG.warn("Failed to log WhatsApp OTP for {}: {}", recipientUsername, ex.getMessage());
     }
   }
 
   /** Dispatches a free-form text message via the Meta Cloud API; package-private for tests. */
   void dispatchTextMessage(String normalizedTo, String body) {
+    LOG.debug("Sending WhatsApp free-form text message to {}", normalizedTo);
     Map<String, Object> payload = new LinkedHashMap<>();
     payload.put("messaging_product", "whatsapp");
     payload.put("recipient_type", "individual");
@@ -232,6 +228,8 @@ public class WhatsAppService {
   /** Dispatches a template message via the Meta Cloud API; package-private for tests. */
   void dispatchTemplateMessage(String normalizedTo, String templateName, String languageCode,
       TemplateType templateType, Map<String, String> templateVariables) {
+    LOG.debug("Sending WhatsApp template message to {} using template '{}' (type={}, lang={})",
+        normalizedTo, templateName, templateType, languageCode);
     Map<String, Object> payload = new LinkedHashMap<>();
     payload.put("messaging_product", "whatsapp");
     payload.put("recipient_type", "individual");
@@ -347,19 +345,13 @@ public class WhatsAppService {
     if (templateNameSet == null) {
       return null;
     }
-    String normalizedLanguage = normalizeLanguage(preferredLocale);
-    if (ENGLISH_LANGUAGE.equals(normalizedLanguage) && hasText(templateNameSet.english())) {
-      return new TemplateRequest(templateNameSet.english(), englishLanguageCode);
-    }
-    if (SPANISH_LANGUAGE.equals(normalizedLanguage) && hasText(templateNameSet.spanish())) {
-      return new TemplateRequest(templateNameSet.spanish(), spanishLanguageCode);
+    if (hasText(templateNameSet.spanish())) {
+      return new TemplateRequest(templateNameSet.spanish(), SPANISH_LANGUAGE_CODE);
     }
     if (!hasText(templateNameSet.fallback())) {
       return null;
     }
-    return new TemplateRequest(
-        templateNameSet.fallback(),
-        ENGLISH_LANGUAGE.equals(normalizedLanguage) ? englishLanguageCode : spanishLanguageCode);
+    return new TemplateRequest(templateNameSet.fallback(), SPANISH_LANGUAGE_CODE);
   }
 
   private String serializePayload(Map<String, Object> payload) {
@@ -380,13 +372,6 @@ public class WhatsAppService {
 
   private boolean hasText(String value) {
     return value != null && !value.isBlank();
-  }
-
-  private String normalizeLanguage(Locale preferredLocale) {
-    if (preferredLocale != null && ENGLISH_LANGUAGE.equalsIgnoreCase(preferredLocale.getLanguage())) {
-      return ENGLISH_LANGUAGE;
-    }
-    return SPANISH_LANGUAGE;
   }
 
   private String trimTrailingSlash(String value) {
@@ -411,7 +396,7 @@ public class WhatsAppService {
     return value.substring(start, end);
   }
 
-  private record TemplateNameSet(String fallback, String english, String spanish) {
+  private record TemplateNameSet(String fallback, String spanish) {
   }
 
   private record TemplateRequest(String templateName, String languageCode) {

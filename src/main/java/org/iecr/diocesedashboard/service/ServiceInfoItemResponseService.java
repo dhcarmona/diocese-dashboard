@@ -5,6 +5,7 @@ import org.iecr.diocesedashboard.domain.objects.ServiceInstance;
 import org.iecr.diocesedashboard.domain.repositories.ServiceInfoItemResponseRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -36,6 +37,7 @@ public class ServiceInfoItemResponseService {
     return serviceInfoItemResponseRepository.save(serviceInfoItemResponse);
   }
 
+  @Transactional
   public void deleteByServiceInstance(ServiceInstance instance) {
     serviceInfoItemResponseRepository.deleteByServiceInstance(instance);
   }

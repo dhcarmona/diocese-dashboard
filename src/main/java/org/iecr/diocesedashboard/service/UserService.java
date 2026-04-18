@@ -5,6 +5,8 @@ import org.iecr.diocesedashboard.domain.objects.DashboardUser;
 import org.iecr.diocesedashboard.domain.objects.UserRole;
 import org.iecr.diocesedashboard.domain.repositories.UserRepository;
 import org.iecr.diocesedashboard.webapp.DashboardUserDetails;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -18,14 +20,12 @@ import java.util.LinkedHashMap;
 import java.util.Optional;
 import java.util.Map;
 import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /** Service for managing dashboard user accounts and Spring Security authentication. */
 @Service
 public class UserService implements UserDetailsService {
 
-  private static final Logger LOG = Logger.getLogger(UserService.class.getName());
+  private static final Logger LOG = LoggerFactory.getLogger(UserService.class);
 
   private final UserRepository userRepository;
   private final PasswordEncoder passwordEncoder;
@@ -121,9 +121,8 @@ public class UserService implements UserDetailsService {
             WhatsAppService.TemplateType.REPORTER_WELCOME,
             buildTemplateVariables(fullName, username, appBaseUrl));
       } catch (Exception ex) {
-        LOG.log(Level.WARNING,
-            "Failed to send welcome WhatsApp to new reporter ''{0}'': {1}",
-            new Object[]{username, ex.getMessage()});
+        LOG.warn("Failed to send welcome WhatsApp to new reporter '{}': {}",
+            username, ex.getMessage());
       }
     }
     return saved;

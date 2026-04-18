@@ -44,10 +44,8 @@ class WhatsAppServiceTest {
   }
 
   @Test
-  void sendConfiguredMessage_usesLocalizedTemplateWhenConfigured() {
+  void sendConfiguredMessage_usesSpanishTemplateRegardlessOfLocale() {
     WhatsAppMetaProperties props = new WhatsAppMetaProperties();
-    props.getLanguageCode().setEn("en_US");
-    props.getTemplates().getOtpAuthentication().setEn("reporter_login_code_en");
     props.getTemplates().getOtpAuthentication().setEs("reporter_login_code_es");
 
     WhatsAppService templatedService = spy(
@@ -63,8 +61,8 @@ class WhatsAppServiceTest {
 
     verify(templatedService).dispatchTemplateMessage(
         "50688888888",
-        "reporter_login_code_en",
-        "en_US",
+        "reporter_login_code_es",
+        "es",
         WhatsAppService.TemplateType.OTP_AUTHENTICATION,
         Map.of("1", "123456")
     );
