@@ -130,7 +130,6 @@ public class ReporterMagicLinkService {
         body,
         logSummary,
         username,
-        effectiveLocale,
         WhatsAppService.TemplateType.REPORTER_LOGIN_LINK,
         Map.of("1", tokenValue));
   }

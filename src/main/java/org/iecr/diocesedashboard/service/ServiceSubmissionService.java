@@ -145,7 +145,6 @@ public class ServiceSubmissionService {
             phone,
             body,
             username,
-            submittedBy.getPreferredLocale(),
             WhatsAppService.TemplateType.REPORT_SUBMITTED,
             buildTemplateVariables(templateName, churchName, serviceDate));
       } catch (Exception ex) {

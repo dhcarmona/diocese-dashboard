@@ -13,7 +13,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 
 @ExtendWith(MockitoExtension.class)
@@ -55,7 +54,6 @@ class WhatsAppServiceTest {
     templatedService.sendConfiguredMessage(
         "+50688888888",
         "fallback body",
-        Locale.ENGLISH,
         WhatsAppService.TemplateType.OTP_AUTHENTICATION,
         Map.of("1", "123456"));
 

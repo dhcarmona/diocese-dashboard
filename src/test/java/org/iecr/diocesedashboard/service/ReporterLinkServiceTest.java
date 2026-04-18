@@ -199,7 +199,6 @@ class ReporterLinkServiceTest {
         eq("link message"),
         contains("Sunday Mass"),
         eq("reporter1"),
-        any(),
         eq(WhatsAppService.TemplateType.REPORTER_LINK),
         any());
     verify(messageSource).getMessage(
@@ -224,7 +223,7 @@ class ReporterLinkServiceTest {
         List.of(buildChurch()), buildTemplate(), LocalDate.now(), "http://testserver");
 
     verify(whatsAppService, never()).sendConfiguredMessageAndLog(any(), any(), any(), any(),
-        any(), any(), any());
+        any(), any());
   }
 
   @Test
@@ -237,7 +236,7 @@ class ReporterLinkServiceTest {
     when(messageSource.getMessage(any(), any(), any(Locale.class))).thenReturn("msg");
     Mockito.doThrow(new RuntimeException("network error"))
         .when(whatsAppService).sendConfiguredMessageAndLog(any(), any(), any(), any(), any(),
-        any(), any());
+        any());
 
     ReporterLinkService.BulkCreateResult result = reporterLinkService.createLinksForChurches(
         List.of(buildChurch()), buildTemplate(), LocalDate.now(), "http://testserver");

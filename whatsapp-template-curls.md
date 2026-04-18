@@ -21,7 +21,7 @@ After approval, set these env vars to the template names below:
 
 ```bash
 WHATSAPP_TEMPLATE_OTP_AUTHENTICATION_ES=reporter_otp_es
-WHATSAPP_TEMPLATE_REPORTER_WELCOME_ES=reporter_welcome_es
+WHATSAPP_TEMPLATE_REPORTER_WELCOME_ES=reporter_welcome_es_v2
 WHATSAPP_TEMPLATE_REPORTER_LINK_ES=reporter_link_es
 WHATSAPP_TEMPLATE_REPORT_SUBMITTED_ES=report_submitted_es
 WHATSAPP_TEMPLATE_REPORT_UPDATED_ES=report_updated_es

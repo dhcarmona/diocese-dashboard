@@ -160,7 +160,6 @@ public class ReporterLinkService {
           message,
           "Link for \"" + templateName + "\" sent.",
           reporter.getUsername(),
-          reporter.getPreferredLocale(),
           WhatsAppService.TemplateType.REPORTER_LINK,
           buildTemplateVariables(templateName, churchName, activeDate.toString(), linkUrl));
     } catch (Exception ex) {

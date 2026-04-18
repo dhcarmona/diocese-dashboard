@@ -219,7 +219,6 @@ class ServiceSubmissionServiceTest {
         eq("+50688887777"),
         eq("Confirmation message"),
         eq("reporter1"),
-        any(),
         eq(WhatsAppService.TemplateType.REPORT_SUBMITTED),
         any());
   }
@@ -260,7 +259,7 @@ class ServiceSubmissionServiceTest {
     serviceSubmissionService.submit(1L, request, reporter);
 
     verify(whatsAppService, never()).sendConfiguredMessageAndLog(
-        any(), any(), any(String.class), any(), any(), any());
+        any(), any(), any(String.class), any(), any());
   }
 
   @Test
@@ -282,7 +281,7 @@ class ServiceSubmissionServiceTest {
       serviceSubmissionService.submit(1L, request, reporter);
 
       verify(whatsAppService, never()).sendConfiguredMessageAndLog(
-          any(), any(), any(String.class), any(), any(), any());
+          any(), any(), any(String.class), any(), any());
 
       TransactionSynchronizationManager.getSynchronizations()
           .forEach(TransactionSynchronization::afterCommit);
@@ -291,7 +290,6 @@ class ServiceSubmissionServiceTest {
           eq("+50688887777"),
           eq("Confirmation message"),
           eq("reporter1"),
-          any(),
           eq(WhatsAppService.TemplateType.REPORT_SUBMITTED),
           any());
     } finally {

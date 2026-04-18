@@ -129,7 +129,7 @@ public class ReporterOtpService {
         new Object[]{code},
         "Tu código de verificación es " + code + ".",
         user.getPreferredLocale());
-    whatsAppService.sendOtpAndLog(phoneNumber, body, code, username, user.getPreferredLocale());
+    whatsAppService.sendOtpAndLog(phoneNumber, body, code, username);
   }
 
   /**

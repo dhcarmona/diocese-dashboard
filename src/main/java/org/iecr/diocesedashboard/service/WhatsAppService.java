@@ -18,7 +18,6 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 
 /**
@@ -40,7 +39,6 @@ import java.util.Map;
 public class WhatsAppService {
 
   private static final Logger LOG = LoggerFactory.getLogger(WhatsAppService.class);
-  private static final String SPANISH_LANGUAGE_CODE = "es";
   private static final Duration REQUEST_TIMEOUT = Duration.ofSeconds(30);
 
   /** Supported outbound WhatsApp template types. */
@@ -58,6 +56,7 @@ public class WhatsAppService {
   private final String apiVersion;
   private final String accessToken;
   private final String phoneNumberId;
+  private final String spanishLanguageCode;
   private final Map<TemplateType, TemplateNameSet> templateNameSets;
   private final WhatsAppMessageLogService messageLogService;
   private final HttpClient httpClient;
@@ -69,6 +68,7 @@ public class WhatsAppService {
     this.apiVersion = props.getApiVersion();
     this.accessToken = props.getAccessToken();
     this.phoneNumberId = props.getPhoneNumberId();
+    this.spanishLanguageCode = props.getLanguageCode().getEs();
     this.templateNameSets = Map.ofEntries(
         Map.entry(TemplateType.OTP_AUTHENTICATION,
             toTemplateNameSet(props.getTemplates().getOtpAuthentication())),
@@ -107,13 +107,12 @@ public class WhatsAppService {
    *
    * @param to                recipient phone number in E.164 format
    * @param body              fallback message body used when no template name is configured
-   * @param preferredLocale   recipient preferred language used to select a template name
    * @param templateType      the logical template to use when configured
    * @param templateVariables placeholder values keyed by WhatsApp variable number
    */
-  public void sendConfiguredMessage(String to, String body, Locale preferredLocale,
+  public void sendConfiguredMessage(String to, String body,
       TemplateType templateType, Map<String, String> templateVariables) {
-    TemplateRequest templateRequest = getTemplateRequest(templateType, preferredLocale);
+    TemplateRequest templateRequest = getTemplateRequest(templateType);
     if (templateRequest != null) {
       dispatchTemplateMessage(
           normalizeRecipient(to),
@@ -132,18 +131,16 @@ public class WhatsAppService {
    * @param to                recipient phone number in E.164 format
    * @param body              the message body or fallback free-form text
    * @param recipientUsername the dashboard username of the recipient
-   * @param preferredLocale   recipient preferred language used to select a template name
    * @param templateType      the logical template to use when configured
    * @param templateVariables placeholder values keyed by WhatsApp variable number
    */
   public void sendConfiguredMessageAndLog(String to, String body, String recipientUsername,
-      Locale preferredLocale, TemplateType templateType, Map<String, String> templateVariables) {
+      TemplateType templateType, Map<String, String> templateVariables) {
     sendConfiguredMessageAndLog(
         to,
         body,
         body,
         recipientUsername,
-        preferredLocale,
         templateType,
         templateVariables);
   }
@@ -157,14 +154,13 @@ public class WhatsAppService {
    * @param body              the message body or fallback free-form text
    * @param logSummary        the redacted summary to store in the log
    * @param recipientUsername the dashboard username of the recipient
-   * @param preferredLocale   recipient preferred language used to select a template name
    * @param templateType      the logical template to use when configured
    * @param templateVariables placeholder values keyed by WhatsApp variable number
    */
   public void sendConfiguredMessageAndLog(String to, String body, String logSummary,
-      String recipientUsername, Locale preferredLocale, TemplateType templateType,
+      String recipientUsername, TemplateType templateType,
       Map<String, String> templateVariables) {
-    sendConfiguredMessage(to, body, preferredLocale, templateType, templateVariables);
+    sendConfiguredMessage(to, body, templateType, templateVariables);
     tryLogMessage(recipientUsername, logSummary);
   }
 
@@ -188,12 +184,9 @@ public class WhatsAppService {
    * @param body              the fallback OTP message text (not persisted)
    * @param code              the one-time passcode sent to the reporter
    * @param recipientUsername the dashboard username of the recipient
-   * @param preferredLocale   recipient preferred language used to select a template name
    */
-  public void sendOtpAndLog(String to, String body, String code, String recipientUsername,
-      Locale preferredLocale) {
-    sendConfiguredMessage(
-        to, body, preferredLocale, TemplateType.OTP_AUTHENTICATION, Map.of("1", code));
+  public void sendOtpAndLog(String to, String body, String code, String recipientUsername) {
+    sendConfiguredMessage(to, body, TemplateType.OTP_AUTHENTICATION, Map.of("1", code));
     tryLogOtp(recipientUsername);
   }
 
@@ -201,7 +194,7 @@ public class WhatsAppService {
     try {
       messageLogService.logMessage(recipientUsername, body);
     } catch (Exception ex) {
-      LOG.warn("Failed to log WhatsApp message for {}: {}", recipientUsername, ex.getMessage());
+      LOG.warn("Failed to log WhatsApp message for {}", recipientUsername, ex);
     }
   }
 
@@ -209,7 +202,7 @@ public class WhatsAppService {
     try {
       messageLogService.logOtp(recipientUsername);
     } catch (Exception ex) {
-      LOG.warn("Failed to log WhatsApp OTP for {}: {}", recipientUsername, ex.getMessage());
+      LOG.warn("Failed to log WhatsApp OTP for {}", recipientUsername, ex);
     }
   }
 
@@ -340,18 +333,18 @@ public class WhatsAppService {
         normalizedBaseUrl + "/" + normalizedVersion + "/" + normalizedPhoneNumberId + "/messages");
   }
 
-  private TemplateRequest getTemplateRequest(TemplateType templateType, Locale preferredLocale) {
+  private TemplateRequest getTemplateRequest(TemplateType templateType) {
     TemplateNameSet templateNameSet = templateNameSets.get(templateType);
     if (templateNameSet == null) {
       return null;
     }
     if (hasText(templateNameSet.spanish())) {
-      return new TemplateRequest(templateNameSet.spanish(), SPANISH_LANGUAGE_CODE);
+      return new TemplateRequest(templateNameSet.spanish(), spanishLanguageCode);
     }
     if (!hasText(templateNameSet.fallback())) {
       return null;
     }
-    return new TemplateRequest(templateNameSet.fallback(), SPANISH_LANGUAGE_CODE);
+    return new TemplateRequest(templateNameSet.fallback(), spanishLanguageCode);
   }
 
   private String serializePayload(Map<String, Object> payload) {

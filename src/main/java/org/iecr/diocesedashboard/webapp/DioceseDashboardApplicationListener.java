@@ -10,7 +10,8 @@ import org.springframework.stereotype.Component;
 public class DioceseDashboardApplicationListener implements
     ApplicationListener<ContextRefreshedEvent> {
 
-  private static final Logger LOG = LoggerFactory.getLogger(DioceseDashboardApplicationListener.class);
+  private static final Logger LOG =
+      LoggerFactory.getLogger(DioceseDashboardApplicationListener.class);
 
   @Override
   public void onApplicationEvent(ContextRefreshedEvent event) {
