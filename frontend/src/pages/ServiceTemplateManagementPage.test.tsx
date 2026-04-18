@@ -337,10 +337,13 @@ describe('ServiceTemplateManagementPage', () => {
     });
 
     await waitFor(() => {
-      expect(mockedReorderTemplateItems).toHaveBeenCalledWith([
-        { id: 20, kind: 'INFO_ITEM' },
-        { id: 10, kind: 'INFO_ITEM' },
-      ]);
+      expect(mockedReorderTemplateItems).toHaveBeenCalledWith(
+        1,
+        [
+          { id: 20, kind: 'INFO_ITEM' },
+          { id: 10, kind: 'INFO_ITEM' },
+        ],
+      );
     });
   });
 
