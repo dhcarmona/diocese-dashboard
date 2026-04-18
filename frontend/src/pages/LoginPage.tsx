@@ -156,7 +156,7 @@ export default function LoginPage() {
   }
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100dvh' }}>
       <Box sx={{ display: 'flex', flex: 1 }}>
 
       {/* ── Left branding panel ── */}
@@ -223,7 +223,7 @@ export default function LoginPage() {
           justifyContent: 'center',
           bgcolor: 'background.default',
           px: { xs: 2, sm: 4 },
-          py: 6,
+          py: { xs: 3, sm: 4, md: 6 },
           position: 'relative',
         }}
       >
@@ -232,7 +232,7 @@ export default function LoginPage() {
         </Box>
 
         {/* Mobile-only logo strip */}
-        <Box sx={{ display: { xs: 'flex', md: 'none' }, alignItems: 'center', gap: 1.5, mb: 4 }}>
+        <Box sx={{ display: { xs: 'flex', md: 'none' }, alignItems: 'center', gap: 1.5, mb: { xs: 2, sm: 4 } }}>
           <Box
             component="img"
             src="/logo.png"
