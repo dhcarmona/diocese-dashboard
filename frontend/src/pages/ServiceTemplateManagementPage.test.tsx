@@ -12,6 +12,7 @@ import {
 } from '../api/serviceTemplates';
 import {
   createServiceInfoItem,
+  deleteServiceInfoItem,
   reorderServiceInfoItems,
   updateServiceInfoItem,
 } from '../api/serviceInfoItems';
@@ -217,6 +218,81 @@ describe('ServiceTemplateManagementPage', () => {
 
     expect(screen.queryByRole('button', { name: /sunday mass/i })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: /vespers/i })).toBeInTheDocument();
+  });
+
+  it('adds a new info item and shows success feedback', async () => {
+    const user = userEvent.setup();
+    mockedGetServiceTemplates.mockResolvedValueOnce([sampleTemplate]);
+    mockedGetServiceTemplateById.mockResolvedValueOnce(sampleTemplate);
+    mockedCreateServiceInfoItem.mockResolvedValueOnce({
+      id: 30,
+      title: 'Communion Count',
+      required: false,
+      serviceInfoItemType: 'NUMERICAL',
+    });
+
+    renderPage();
+    await user.click(await screen.findByRole('button', { name: /sunday mass/i }));
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: 'Edit Service Template' })).toBeInTheDocument();
+    });
+
+    await user.type(screen.getByLabelText(/item title/i), 'Communion Count');
+    await user.click(screen.getByRole('button', { name: /add info item/i }));
+
+    await screen.findByText('Info item added.');
+    expect(mockedCreateServiceInfoItem).toHaveBeenCalledWith(
+      sampleTemplate.id,
+      expect.objectContaining({ title: 'Communion Count' }),
+    );
+    expect(screen.getByText('Communion Count')).toBeInTheDocument();
+  });
+
+  it('clears edit state when switching to a different template', async () => {
+    const user = userEvent.setup();
+    const secondTemplate = { id: 2, serviceTemplateName: 'Vespers', serviceInfoItems: [], bannerUrl: undefined };
+    mockedGetServiceTemplates.mockResolvedValueOnce([sampleTemplateWithItems, secondTemplate]);
+    mockedGetServiceTemplateById
+      .mockResolvedValueOnce(sampleTemplateWithItems)
+      .mockResolvedValueOnce(secondTemplate);
+
+    renderPage();
+    await user.click(await screen.findByRole('button', { name: /sunday mass/i }));
+    await screen.findByText('Attendance');
+
+    // Enter edit mode for the first item
+    const editButtons = screen.getAllByRole('button', { name: /^edit$/i });
+    await user.click(editButtons[0]);
+    expect(screen.getByRole('button', { name: /update item/i })).toBeInTheDocument();
+
+    // Switch templates
+    await user.click(screen.getByRole('button', { name: /vespers/i }));
+    await waitFor(() => {
+      expect(screen.queryByRole('button', { name: /update item/i })).not.toBeInTheDocument();
+    });
+  });
+
+  it('cancels edit mode when the item being edited is removed', async () => {
+    const user = userEvent.setup();
+    mockedGetServiceTemplates.mockResolvedValueOnce([sampleTemplateWithItems]);
+    mockedGetServiceTemplateById.mockResolvedValueOnce(sampleTemplateWithItems);
+    vi.mocked(deleteServiceInfoItem).mockResolvedValueOnce(undefined);
+
+    renderPage();
+    await user.click(await screen.findByRole('button', { name: /sunday mass/i }));
+    await screen.findByText('Attendance');
+
+    const editButtons = screen.getAllByRole('button', { name: /^edit$/i });
+    await user.click(editButtons[0]);
+    expect(screen.getByRole('button', { name: /update item/i })).toBeInTheDocument();
+
+    const removeButtons = screen.getAllByRole('button', { name: /remove/i });
+    await user.click(removeButtons[0]);
+
+    await waitFor(() => {
+      expect(screen.queryByRole('button', { name: /update item/i })).not.toBeInTheDocument();
+    });
+    expect(screen.getByRole('button', { name: /add info item/i })).toBeInTheDocument();
   });
 
   it('calls reorderServiceInfoItems with the new order after a drag', async () => {
