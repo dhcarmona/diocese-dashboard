@@ -127,12 +127,15 @@ class ReporterLinkPublicControllerTest {
         Optional.of(buildLink(TOKEN, 5L, "Trinity")));
     when(celebrantService.findAll()).thenReturn(
         List.of(buildCelebrant(1L, "Fr. Smith"), buildCelebrant(2L, "Fr. Jones")));
+    when(portraitService.buildServiceTemplateBannerUrl("Sunday Mass"))
+        .thenReturn("/api/portraits/service-templates?name=Sunday+Mass");
 
     mockMvc.perform(get("/api/reporter-links/public/" + TOKEN))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.token").value(TOKEN))
         .andExpect(jsonPath("$.churchName").value("Trinity"))
         .andExpect(jsonPath("$.serviceTemplateName").value("Sunday Mass"))
+        .andExpect(jsonPath("$.bannerUrl").value("/api/portraits/service-templates?name=Sunday+Mass"))
         .andExpect(jsonPath("$.celebrants.length()").value(2))
         .andExpect(jsonPath("$.celebrants[0].name").value("Fr. Smith"));
   }

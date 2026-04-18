@@ -22,6 +22,10 @@ describe('formatMoneyDisplay', () => {
     expect(formatMoneyDisplay('abc')).toBe('abc');
   });
 
+  it('returns the original string for partially numeric input like "123abc"', () => {
+    expect(formatMoneyDisplay('123abc')).toBe('123abc');
+  });
+
   it('formats zero correctly', () => {
     expect(formatMoneyDisplay('0')).toBe('0.00');
   });
@@ -42,5 +46,17 @@ describe('parseMoneyInput', () => {
 
   it('handles empty string', () => {
     expect(parseMoneyInput('')).toBe('');
+  });
+
+  it('strips dollar sign and whitespace from pasted values', () => {
+    expect(parseMoneyInput(' $1,500.00 ')).toBe('1500.00');
+  });
+
+  it('strips colones sign', () => {
+    expect(parseMoneyInput('₡2,000.00')).toBe('2000.00');
+  });
+
+  it('returns empty string for invalid input after stripping', () => {
+    expect(parseMoneyInput('abc')).toBe('');
   });
 });
