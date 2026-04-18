@@ -49,6 +49,7 @@ import {
   createServiceInfoItem,
   deleteServiceInfoItem,
   reorderServiceInfoItems,
+  updateServiceInfoItem,
   type ServiceInfoItemDraft,
 } from '../api/serviceInfoItems';
 import {
@@ -94,10 +95,19 @@ interface SortableInfoItemRowProps {
   item: ServiceInfoItemSummary;
   index: number;
   submitting: boolean;
+  isEditing: boolean;
+  onEdit: (item: ServiceInfoItemSummary) => void;
   onRemove: (id: number) => void;
 }
 
-function SortableInfoItemRow({ item, index, submitting, onRemove }: SortableInfoItemRowProps) {
+function SortableInfoItemRow({
+  item,
+  index,
+  submitting,
+  isEditing,
+  onEdit,
+  onRemove,
+}: SortableInfoItemRowProps) {
   const { t } = useTranslation();
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: item.id,
@@ -138,15 +148,26 @@ function SortableInfoItemRow({ item, index, submitting, onRemove }: SortableInfo
             </Typography>
           )}
         </Box>
-        <Button
-          variant="outlined"
-          color="error"
-          size="small"
-          disabled={submitting}
-          onClick={() => onRemove(item.id)}
-        >
-          {t('serviceTemplates.actions.removeItem')}
-        </Button>
+        <Stack direction="row" spacing={1}>
+          <Button
+            variant="outlined"
+            size="small"
+            disabled={submitting}
+            color={isEditing ? 'primary' : 'inherit'}
+            onClick={() => onEdit(item)}
+          >
+            {t('serviceTemplates.actions.editItem')}
+          </Button>
+          <Button
+            variant="outlined"
+            color="error"
+            size="small"
+            disabled={submitting}
+            onClick={() => onRemove(item.id)}
+          >
+            {t('serviceTemplates.actions.removeItem')}
+          </Button>
+        </Stack>
       </Box>
     </Box>
   );
@@ -172,6 +193,7 @@ export default function ServiceTemplateManagementPage() {
   const [draftName, setDraftName] = useState('');
   const [infoItems, setInfoItems] = useState<ServiceInfoItemSummary[]>([]);
   const [infoItemDraft, setInfoItemDraft] = useState<InfoItemDraft>(defaultInfoItemDraft);
+  const [editingItemId, setEditingItemId] = useState<number | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [feedback, setFeedback] = useState<FeedbackState | null>(null);
 
@@ -227,6 +249,7 @@ export default function ServiceTemplateManagementPage() {
     setDraftName('');
     setInfoItems([]);
     setInfoItemDraft(defaultInfoItemDraft);
+    setEditingItemId(null);
   }
 
   function handleCreateMode() {
@@ -318,6 +341,21 @@ export default function ServiceTemplateManagementPage() {
     }
   }
 
+  function handleEditInfoItem(item: ServiceInfoItemSummary) {
+    setEditingItemId(item.id);
+    setInfoItemDraft({
+      title: item.title,
+      description: item.description ?? '',
+      required: item.required,
+      serviceInfoItemType: item.serviceInfoItemType,
+    });
+  }
+
+  function handleCancelEditInfoItem() {
+    setEditingItemId(null);
+    setInfoItemDraft(defaultInfoItemDraft);
+  }
+
   async function handleAddInfoItem() {
     if (!selectedTemplate) return;
     const trimmedTitle = infoItemDraft.title.trim();
@@ -338,13 +376,24 @@ export default function ServiceTemplateManagementPage() {
       serviceInfoItemType: infoItemDraft.serviceInfoItemType,
     };
     try {
-      const created = await createServiceInfoItem(selectedTemplate.id, itemDraft);
-      setInfoItems((prev) => [...prev, created]);
-      setInfoItemDraft(defaultInfoItemDraft);
-      setFeedback({
-        severity: 'success',
-        message: t('serviceTemplates.feedback.itemAdded'),
-      });
+      if (editingItemId !== null) {
+        const updated = await updateServiceInfoItem(editingItemId, selectedTemplate.id, itemDraft);
+        setInfoItems((prev) => prev.map((it) => (it.id === updated.id ? updated : it)));
+        setEditingItemId(null);
+        setInfoItemDraft(defaultInfoItemDraft);
+        setFeedback({
+          severity: 'success',
+          message: t('serviceTemplates.feedback.itemUpdated'),
+        });
+      } else {
+        const created = await createServiceInfoItem(selectedTemplate.id, itemDraft);
+        setInfoItems((prev) => [...prev, created]);
+        setInfoItemDraft(defaultInfoItemDraft);
+        setFeedback({
+          severity: 'success',
+          message: t('serviceTemplates.feedback.itemAdded'),
+        });
+      }
     } catch {
       setFeedback({ severity: 'error', message: t('serviceTemplates.feedback.itemError') });
     } finally {
@@ -508,6 +557,8 @@ export default function ServiceTemplateManagementPage() {
                             item={item}
                             index={index}
                             submitting={submitting}
+                            isEditing={item.id === editingItemId}
+                            onEdit={handleEditInfoItem}
                             onRemove={(id) => void handleRemoveInfoItem(id)}
                           />
                         ))}
@@ -570,16 +621,33 @@ export default function ServiceTemplateManagementPage() {
                     }
                     label={t('serviceTemplates.form.itemRequiredLabel')}
                   />
-                  <Button
-                    variant="outlined"
-                    size="large"
-                    disabled={submitting}
-                    startIcon={<AddOutlinedIcon />}
-                    onClick={() => void handleAddInfoItem()}
-                    sx={{ alignSelf: 'flex-start' }}
-                  >
-                    {t('serviceTemplates.actions.addItem')}
-                  </Button>
+                  <Stack direction="row" spacing={1.5}>
+                    <Button
+                      variant="outlined"
+                      size="large"
+                      disabled={submitting}
+                      startIcon={editingItemId !== null ? <EditOutlinedIcon /> : <AddOutlinedIcon />}
+                      onClick={() => void handleAddInfoItem()}
+                      sx={{ alignSelf: 'flex-start' }}
+                    >
+                      {t(
+                        editingItemId !== null
+                          ? 'serviceTemplates.actions.saveItem'
+                          : 'serviceTemplates.actions.addItem',
+                      )}
+                    </Button>
+                    {editingItemId !== null && (
+                      <Button
+                        variant="text"
+                        size="large"
+                        disabled={submitting}
+                        onClick={handleCancelEditInfoItem}
+                        sx={{ alignSelf: 'flex-start' }}
+                      >
+                        {t('serviceTemplates.actions.cancelEditItem')}
+                      </Button>
+                    )}
+                  </Stack>
                 </Stack>
               </Stack>
             </CardContent>

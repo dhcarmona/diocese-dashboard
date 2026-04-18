@@ -10,7 +10,11 @@ import {
   getServiceTemplates,
   updateServiceTemplate,
 } from '../api/serviceTemplates';
-import { reorderServiceInfoItems } from '../api/serviceInfoItems';
+import {
+  createServiceInfoItem,
+  reorderServiceInfoItems,
+  updateServiceInfoItem,
+} from '../api/serviceInfoItems';
 import ServiceTemplateManagementPage from './ServiceTemplateManagementPage';
 
 // Capture the DragEnd callback so tests can simulate drag events.
@@ -64,6 +68,7 @@ vi.mock('../api/serviceTemplates', () => ({
 
 vi.mock('../api/serviceInfoItems', () => ({
   createServiceInfoItem: vi.fn(),
+  updateServiceInfoItem: vi.fn(),
   deleteServiceInfoItem: vi.fn(),
   reorderServiceInfoItems: vi.fn(),
 }));
@@ -75,6 +80,8 @@ describe('ServiceTemplateManagementPage', () => {
   const mockedUpdateServiceTemplate = vi.mocked(updateServiceTemplate);
   const mockedDeleteServiceTemplate = vi.mocked(deleteServiceTemplate);
   const mockedReorderServiceInfoItems = vi.mocked(reorderServiceInfoItems);
+  const mockedUpdateServiceInfoItem = vi.mocked(updateServiceInfoItem);
+  const mockedCreateServiceInfoItem = vi.mocked(createServiceInfoItem);
 
   const sampleTemplate = {
     id: 1,
@@ -98,6 +105,8 @@ describe('ServiceTemplateManagementPage', () => {
     mockedUpdateServiceTemplate.mockReset();
     mockedDeleteServiceTemplate.mockReset();
     mockedReorderServiceInfoItems.mockReset();
+    mockedUpdateServiceInfoItem.mockReset();
+    mockedCreateServiceInfoItem.mockReset();
     dndState.onDragEnd = null;
     await i18n.changeLanguage('en');
   });
@@ -252,5 +261,93 @@ describe('ServiceTemplateManagementPage', () => {
     expect(
       attendanceEl.compareDocumentPosition(offeringEl) & Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
+  });
+
+  it('clicking Edit on an info item populates the form and switches to update mode', async () => {
+    const user = userEvent.setup();
+    mockedGetServiceTemplates.mockResolvedValueOnce([sampleTemplateWithItems]);
+    mockedGetServiceTemplateById.mockResolvedValueOnce(sampleTemplateWithItems);
+
+    renderPage();
+    await user.click(await screen.findByRole('button', { name: /sunday mass/i }));
+    await screen.findByText('Attendance');
+
+    const editButtons = screen.getAllByRole('button', { name: /^edit$/i });
+    await user.click(editButtons[0]);
+
+    expect(screen.getByDisplayValue('Attendance')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /update item/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /cancel/i })).toBeInTheDocument();
+  });
+
+  it('saves an edited info item and shows success feedback', async () => {
+    const user = userEvent.setup();
+    mockedGetServiceTemplates.mockResolvedValueOnce([sampleTemplateWithItems]);
+    mockedGetServiceTemplateById.mockResolvedValueOnce(sampleTemplateWithItems);
+    mockedUpdateServiceInfoItem.mockResolvedValueOnce({
+      id: 10,
+      title: 'Attendance Updated',
+      required: true,
+      serviceInfoItemType: 'NUMERICAL',
+    });
+
+    renderPage();
+    await user.click(await screen.findByRole('button', { name: /sunday mass/i }));
+    await screen.findByText('Attendance');
+
+    const editButtons = screen.getAllByRole('button', { name: /^edit$/i });
+    await user.click(editButtons[0]);
+
+    const titleField = screen.getByDisplayValue('Attendance');
+    await user.clear(titleField);
+    await user.type(titleField, 'Attendance Updated');
+
+    await user.click(screen.getByRole('button', { name: /update item/i }));
+
+    await screen.findByText('Info item updated.');
+    expect(mockedUpdateServiceInfoItem).toHaveBeenCalledWith(
+      10,
+      sampleTemplateWithItems.id,
+      expect.objectContaining({ title: 'Attendance Updated' }),
+    );
+    expect(screen.getByText('Attendance Updated')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /add info item/i })).toBeInTheDocument();
+  });
+
+  it('cancelling edit resets the form to add mode', async () => {
+    const user = userEvent.setup();
+    mockedGetServiceTemplates.mockResolvedValueOnce([sampleTemplateWithItems]);
+    mockedGetServiceTemplateById.mockResolvedValueOnce(sampleTemplateWithItems);
+
+    renderPage();
+    await user.click(await screen.findByRole('button', { name: /sunday mass/i }));
+    await screen.findByText('Attendance');
+
+    const editButtons = screen.getAllByRole('button', { name: /^edit$/i });
+    await user.click(editButtons[0]);
+    expect(screen.getByRole('button', { name: /update item/i })).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /cancel/i }));
+
+    expect(screen.queryByRole('button', { name: /update item/i })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /add info item/i })).toBeInTheDocument();
+  });
+
+  it('shows error feedback when updating an info item fails', async () => {
+    const user = userEvent.setup();
+    mockedGetServiceTemplates.mockResolvedValueOnce([sampleTemplateWithItems]);
+    mockedGetServiceTemplateById.mockResolvedValueOnce(sampleTemplateWithItems);
+    mockedUpdateServiceInfoItem.mockRejectedValueOnce(new Error('network error'));
+
+    renderPage();
+    await user.click(await screen.findByRole('button', { name: /sunday mass/i }));
+    await screen.findByText('Attendance');
+
+    const editButtons = screen.getAllByRole('button', { name: /^edit$/i });
+    await user.click(editButtons[0]);
+    await user.click(screen.getByRole('button', { name: /update item/i }));
+
+    await screen.findByText('We could not save the info item right now.');
+    expect(mockedUpdateServiceInfoItem).toHaveBeenCalled();
   });
 });
