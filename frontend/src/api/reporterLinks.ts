@@ -26,6 +26,7 @@ export interface ReporterLinkPublicData {
   churchName: string;
   serviceTemplateId: number;
   serviceTemplateName: string;
+  bannerUrl?: string;
   activeDate: string;
   serviceInfoItems: ServiceInfoItemSummary[];
   celebrants: Celebrant[];

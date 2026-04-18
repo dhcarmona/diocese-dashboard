@@ -35,7 +35,9 @@ import { useAuth } from '../auth/auth-context';
 import AppShell from '../components/AppShell';
 import PageHeader from '../components/PageHeader';
 import ReporterLinkFollowUpCard from '../components/ReporterLinkFollowUpCard';
+import ServiceTemplateBanner from '../components/ServiceTemplateBanner';
 import { formatDate } from '../utils/dateFormatting';
+import { formatMoneyDisplay, parseMoneyInput } from '../utils/moneyFormatting';
 
 function getInputAdornment(type: ServiceInfoItemSummary['serviceInfoItemType']): string | null {
   if (type === 'DOLLARS') return '$';
@@ -51,6 +53,7 @@ export default function ReporterLinkPage() {
   const navigate = useNavigate();
 
   const [link, setLink] = useState<ReporterLink | null>(null);
+  const [bannerUrl, setBannerUrl] = useState<string | undefined>(undefined);
   const [infoItems, setInfoItems] = useState<ServiceInfoItemSummary[]>([]);
   const [allCelebrants, setAllCelebrants] = useState<Celebrant[]>([]);
   const [loading, setLoading] = useState(true);
@@ -62,6 +65,7 @@ export default function ReporterLinkPage() {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(false);
   const [submissionResult, setSubmissionResult] = useState<ReportSubmissionResponse | null>(null);
+  const [focusedItemId, setFocusedItemId] = useState<number | null>(null);
   const [openingNextPendingLink, setOpeningNextPendingLink] = useState(false);
   const [openNextPendingLinkError, setOpenNextPendingLinkError] = useState(false);
   const showHomeButton = status === 'authenticated';
@@ -97,6 +101,7 @@ export default function ReporterLinkPage() {
           if (!active) return;
 
           setLink(loadedLink);
+          setBannerUrl(loadedTemplate.bannerUrl);
           setInfoItems(loadedTemplate.serviceInfoItems ?? []);
           setAllCelebrants(loadedCelebrants);
         } else {
@@ -115,6 +120,7 @@ export default function ReporterLinkPage() {
             serviceTemplateName: publicData.serviceTemplateName,
             activeDate: publicData.activeDate,
           });
+          setBannerUrl(publicData.bannerUrl);
           setInfoItems(publicData.serviceInfoItems);
           setAllCelebrants(publicData.celebrants);
         }
@@ -347,6 +353,11 @@ export default function ReporterLinkPage() {
     <AppShell>
       <PageHeader title={link.serviceTemplateName} subtitle={link.churchName} />
 
+      <ServiceTemplateBanner
+        template={{ id: link.serviceTemplateId, serviceTemplateName: link.serviceTemplateName, bannerUrl }}
+        sx={{ mb: 2 }}
+      />
+
       <Box
         component="form"
         noValidate
@@ -400,23 +411,35 @@ export default function ReporterLinkPage() {
           )}
 
           {infoItems.map((item) => {
-            const isNumeric =
-              item.serviceInfoItemType === 'NUMERICAL' ||
+            const isMoney =
               item.serviceInfoItemType === 'DOLLARS' ||
               item.serviceInfoItemType === 'COLONES';
+            const isNumeric = isMoney || item.serviceInfoItemType === 'NUMERICAL';
             const adornment = getInputAdornment(item.serviceInfoItemType);
+            const rawValue = responses[item.id] ?? '';
             return (
               <TextField
                 key={item.id}
                 label={item.title}
                 helperText={item.description ?? undefined}
                 required={item.required}
-                value={responses[item.id] ?? ''}
+                value={isMoney && focusedItemId !== item.id ? formatMoneyDisplay(rawValue) : rawValue}
                 onChange={(e) =>
-                  setResponses((prev) => ({ ...prev, [item.id]: e.target.value }))
+                  setResponses((prev) => ({
+                    ...prev,
+                    [item.id]: isMoney ? parseMoneyInput(e.target.value) : e.target.value,
+                  }))
                 }
-                type={isNumeric ? 'number' : 'text'}
-                inputProps={isNumeric ? { min: 0, step: 'any' } : undefined}
+                onFocus={isMoney ? () => setFocusedItemId(item.id) : undefined}
+                onBlur={isMoney ? () => setFocusedItemId(null) : undefined}
+                type={isNumeric && !isMoney ? 'number' : 'text'}
+                inputProps={
+                  isMoney
+                    ? { inputMode: 'decimal' }
+                    : isNumeric
+                      ? { min: 0, step: 'any' }
+                      : undefined
+                }
                 InputProps={
                   adornment
                     ? {

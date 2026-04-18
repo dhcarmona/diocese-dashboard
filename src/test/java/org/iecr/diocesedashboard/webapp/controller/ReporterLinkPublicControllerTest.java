@@ -20,6 +20,7 @@ import org.iecr.diocesedashboard.domain.objects.ServiceInstance;
 import org.iecr.diocesedashboard.domain.objects.ServiceTemplate;
 import org.iecr.diocesedashboard.domain.objects.UserRole;
 import org.iecr.diocesedashboard.service.CelebrantService;
+import org.iecr.diocesedashboard.service.PortraitService;
 import org.iecr.diocesedashboard.service.ReporterLinkFollowUpTokenService;
 import org.iecr.diocesedashboard.service.ReporterLinkPublicSubmissionService;
 import org.iecr.diocesedashboard.service.ReporterLinkService;
@@ -66,6 +67,9 @@ class ReporterLinkPublicControllerTest {
 
   @MockBean
   private UserService userService;
+
+  @MockBean
+  private PortraitService portraitService;
 
   private static final String TOKEN = "public-test-token-uuid";
 
