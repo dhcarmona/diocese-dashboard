@@ -19,21 +19,24 @@ String serviceTemplateName,
 String bannerUrl,
 LocalDate activeDate,
 List<ServiceInfoItemSummary> serviceInfoItems,
+List<SectionHeaderSummary> sectionHeaders,
 List<CelebrantSummary> celebrants) {
 
   /**
    * Creates a public response DTO from a {@link ReporterLink} and associated form data.
    *
-   * @param link        the persisted reporter link
-   * @param bannerUrl   the internal banner URL for the link's service template
-   * @param infoItems   the ordered service info item summaries for the link's template
-   * @param celebrants  all available celebrant summaries
+   * @param link           the persisted reporter link
+   * @param bannerUrl      the internal banner URL for the link's service template
+   * @param infoItems      the ordered service info item summaries for the link's template
+   * @param sectionHeaders the ordered section header summaries for the link's template
+   * @param celebrants     all available celebrant summaries
    * @return the public response payload
    */
   public static ReporterLinkPublicResponse from(
       ReporterLink link,
       String bannerUrl,
       List<ServiceInfoItemSummary> infoItems,
+      List<SectionHeaderSummary> sectionHeaders,
       List<CelebrantSummary> celebrants) {
     return new ReporterLinkPublicResponse(
         link.getId(),
@@ -44,6 +47,7 @@ List<CelebrantSummary> celebrants) {
         bannerUrl,
         link.getActiveDate(),
         infoItems,
+        sectionHeaders,
         celebrants);
   }
 }

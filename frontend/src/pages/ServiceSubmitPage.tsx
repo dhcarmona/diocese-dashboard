@@ -23,6 +23,7 @@ import type { ReportSubmissionResponse } from '../api/reportSubmissions';
 import { type Celebrant, getCelebrants } from '../api/celebrants';
 import { type Church, getChurches } from '../api/churches';
 import {
+  type SectionHeaderSummary,
   type ServiceInfoItemSummary,
   type ServiceTemplate,
   getServiceTemplateById,
@@ -38,6 +39,27 @@ function getInputAdornment(type: ServiceInfoItemSummary['serviceInfoItemType']):
   if (type === 'DOLLARS') return '$';
   if (type === 'COLONES') return '₡';
   return null;
+}
+
+interface InfoTemplateItem extends ServiceInfoItemSummary {
+  kind: 'INFO_ITEM';
+}
+
+interface SectionHeaderTemplateItem extends SectionHeaderSummary {
+  kind: 'SECTION_HEADER';
+}
+
+type TemplateItem = InfoTemplateItem | SectionHeaderTemplateItem;
+
+function buildTemplateItems(
+  infoItems: ServiceInfoItemSummary[],
+  sectionHeaders: SectionHeaderSummary[],
+): TemplateItem[] {
+  const all: TemplateItem[] = [
+    ...infoItems.map((item) => ({ ...item, kind: 'INFO_ITEM' as const })),
+    ...sectionHeaders.map((h) => ({ ...h, kind: 'SECTION_HEADER' as const })),
+  ];
+  return all.sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
 }
 
 export default function ServiceSubmitPage() {
@@ -122,8 +144,14 @@ export default function ServiceSubmitPage() {
 
     setSubmitError(false);
 
-    const serviceInfoItems = template.serviceInfoItems ?? [];
-    const hasMissingRequired = serviceInfoItems.some((item) => {
+    const templateItems = buildTemplateItems(
+      template.serviceInfoItems ?? [],
+      template.sectionHeaders ?? [],
+    );
+    const infoItems = templateItems.filter(
+      (item): item is InfoTemplateItem => item.kind === 'INFO_ITEM',
+    );
+    const hasMissingRequired = infoItems.some((item) => {
       const value = responses[item.id]?.trim() ?? '';
       return item.required && value === '';
     });
@@ -135,7 +163,7 @@ export default function ServiceSubmitPage() {
 
     setSubmitting(true);
 
-    const responseEntries = serviceInfoItems
+    const responseEntries = infoItems
       .map((item) => ({
         serviceInfoItemId: item.id,
         responseValue: responses[item.id]?.trim() ?? '',
@@ -308,7 +336,23 @@ export default function ServiceSubmitPage() {
             </>
           )}
 
-          {(template.serviceInfoItems ?? []).map((item) => {
+          {buildTemplateItems(
+            template.serviceInfoItems ?? [],
+            template.sectionHeaders ?? [],
+          ).map((item) => {
+            if (item.kind === 'SECTION_HEADER') {
+              return (
+                <Typography
+                  key={`h${item.id}`}
+                  variant="overline"
+                  fontWeight={700}
+                  color="text.secondary"
+                  sx={{ display: 'block', mt: 1, letterSpacing: 1.2 }}
+                >
+                  {item.title}
+                </Typography>
+              );
+            }
             const isMoney =
               item.serviceInfoItemType === 'DOLLARS' ||
               item.serviceInfoItemType === 'COLONES';
@@ -317,7 +361,7 @@ export default function ServiceSubmitPage() {
             const rawValue = responses[item.id] ?? '';
             return (
               <TextField
-                key={item.id}
+                key={`i${item.id}`}
                 label={item.title}
                 helperText={item.description ?? undefined}
                 required={item.required}

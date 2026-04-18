@@ -116,17 +116,4 @@ public class ServiceInfoItemController {
     serviceInfoItemService.deleteById(id);
     return ResponseEntity.noContent().build();
   }
-
-  /**
-   * Reorders service info items within a template.
-   * The items are assigned sortOrder values matching the position in {@code request.orderedIds()}.
-   *
-   * @param request the reorder request containing the item IDs in the desired order
-   * @return 204 on success
-   */
-  @PutMapping("/reorder")
-  public ResponseEntity<Void> reorder(@RequestBody @Valid ReorderRequest request) {
-    serviceInfoItemService.reorder(request.orderedIds());
-    return ResponseEntity.noContent().build();
-  }
 }

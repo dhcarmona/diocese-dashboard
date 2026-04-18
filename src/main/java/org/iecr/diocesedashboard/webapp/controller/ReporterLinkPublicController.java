@@ -71,11 +71,17 @@ public class ReporterLinkPublicController {
     infoItems = rawItems == null
         ? List.of()
         : rawItems.stream().map(ServiceInfoItemSummary::from).toList();
+    List<SectionHeaderSummary> sectionHeaders;
+    var rawHeaders = link.getServiceTemplate().getSectionHeaders();
+    sectionHeaders = rawHeaders == null
+        ? List.of()
+        : rawHeaders.stream().map(SectionHeaderSummary::from).toList();
     List<CelebrantSummary> celebrants = celebrantService.findAll()
         .stream().map(CelebrantSummary::from).toList();
     String bannerUrl = portraitService.buildServiceTemplateBannerUrl(
         link.getServiceTemplate().getServiceTemplateName());
-    return ResponseEntity.ok(ReporterLinkPublicResponse.from(link, bannerUrl, infoItems, celebrants));
+    return ResponseEntity.ok(
+        ReporterLinkPublicResponse.from(link, bannerUrl, infoItems, sectionHeaders, celebrants));
   }
 
   /**

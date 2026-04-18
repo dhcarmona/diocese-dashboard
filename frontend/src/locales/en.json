@@ -396,7 +396,9 @@
       "saveItem": "Update Item",
       "cancelEditItem": "Cancel",
       "removeItem": "Remove",
-      "dragHandle": "Drag to reorder"
+      "dragHandle": "Drag to reorder",
+      "addHeader": "Add Header",
+      "saveHeader": "Update Header"
     },
     "search": {
       "label": "Search templates",
@@ -416,12 +418,16 @@
       "nameLabel": "Template name",
       "namePlaceholder": "Enter the template name",
       "infoItemsTitle": "Service Info Items",
+      "addInfoItemTitle": "Add an info item",
+      "addSectionHeaderTitle": "Add a section header",
       "itemTitleLabel": "Item title",
       "itemTitlePlaceholder": "e.g. Number of attendants",
       "itemDescLabel": "Description (optional)",
       "itemDescPlaceholder": "Brief description of this field",
       "itemTypeLabel": "Type",
-      "itemRequiredLabel": "Required"
+      "itemRequiredLabel": "Required",
+      "headerTitleLabel": "Header title",
+      "headerTitlePlaceholder": "e.g. Finance"
     },
     "feedback": {
       "created": "\"{{name}}\" was created.",
@@ -433,12 +439,16 @@
       "itemUpdated": "Info item updated.",
       "itemRemoved": "Info item removed.",
       "itemError": "We could not save the info item right now.",
-      "reorderError": "We could not save the new item order right now."
+      "reorderError": "We could not save the new item order right now.",
+      "headerAdded": "Section header added.",
+      "headerUpdated": "Section header updated.",
+      "headerRemoved": "Section header removed."
     },
     "validation": {
       "nameRequired": "Enter a template name before saving.",
       "itemTitleRequired": "Enter a title for the info item.",
-      "itemTypeRequired": "Select a type for the info item."
+      "itemTypeRequired": "Select a type for the info item.",
+      "headerTitleRequired": "Enter a title for the section header."
     }
   },
   "serviceInfoItemType": {

@@ -13,14 +13,15 @@ import {
 import {
   createServiceInfoItem,
   deleteServiceInfoItem,
-  reorderServiceInfoItems,
+  reorderTemplateItems,
   updateServiceInfoItem,
 } from '../api/serviceInfoItems';
+import { createSectionHeader, deleteSectionHeader, updateSectionHeader } from '../api/sectionHeaders';
 import ServiceTemplateManagementPage from './ServiceTemplateManagementPage';
 
 // Capture the DragEnd callback so tests can simulate drag events.
 const dndState = vi.hoisted(() => ({
-  onDragEnd: null as ((event: { active: { id: number }; over: { id: number } | null }) => void) | null,
+  onDragEnd: null as ((event: { active: { id: string }; over: { id: string } | null }) => void) | null,
 }));
 
 vi.mock('@dnd-kit/core', () => ({
@@ -71,7 +72,13 @@ vi.mock('../api/serviceInfoItems', () => ({
   createServiceInfoItem: vi.fn(),
   updateServiceInfoItem: vi.fn(),
   deleteServiceInfoItem: vi.fn(),
-  reorderServiceInfoItems: vi.fn(),
+  reorderTemplateItems: vi.fn(),
+}));
+
+vi.mock('../api/sectionHeaders', () => ({
+  createSectionHeader: vi.fn(),
+  updateSectionHeader: vi.fn(),
+  deleteSectionHeader: vi.fn(),
 }));
 
 describe('ServiceTemplateManagementPage', () => {
@@ -80,23 +87,40 @@ describe('ServiceTemplateManagementPage', () => {
   const mockedCreateServiceTemplate = vi.mocked(createServiceTemplate);
   const mockedUpdateServiceTemplate = vi.mocked(updateServiceTemplate);
   const mockedDeleteServiceTemplate = vi.mocked(deleteServiceTemplate);
-  const mockedReorderServiceInfoItems = vi.mocked(reorderServiceInfoItems);
+  const mockedReorderTemplateItems = vi.mocked(reorderTemplateItems);
   const mockedUpdateServiceInfoItem = vi.mocked(updateServiceInfoItem);
   const mockedCreateServiceInfoItem = vi.mocked(createServiceInfoItem);
+  const mockedCreateSectionHeader = vi.mocked(createSectionHeader);
+  const mockedDeleteSectionHeader = vi.mocked(deleteSectionHeader);
+  const mockedUpdateSectionHeader = vi.mocked(updateSectionHeader);
 
   const sampleTemplate = {
     id: 1,
     serviceTemplateName: 'Sunday Mass',
     serviceInfoItems: [],
+    sectionHeaders: [],
     bannerUrl: undefined,
   };
 
   const sampleTemplateWithItems = {
     ...sampleTemplate,
     serviceInfoItems: [
-      { id: 10, title: 'Attendance', required: true, serviceInfoItemType: 'NUMERICAL' as const },
-      { id: 20, title: 'Offering', required: false, serviceInfoItemType: 'DOLLARS' as const },
+      {
+        id: 10,
+        title: 'Attendance',
+        required: true,
+        serviceInfoItemType: 'NUMERICAL' as const,
+        sortOrder: 0,
+      },
+      {
+        id: 20,
+        title: 'Offering',
+        required: false,
+        serviceInfoItemType: 'DOLLARS' as const,
+        sortOrder: 1,
+      },
     ],
+    sectionHeaders: [],
   };
 
   beforeEach(async () => {
@@ -105,9 +129,12 @@ describe('ServiceTemplateManagementPage', () => {
     mockedCreateServiceTemplate.mockReset();
     mockedUpdateServiceTemplate.mockReset();
     mockedDeleteServiceTemplate.mockReset();
-    mockedReorderServiceInfoItems.mockReset();
+    mockedReorderTemplateItems.mockReset();
     mockedUpdateServiceInfoItem.mockReset();
     mockedCreateServiceInfoItem.mockReset();
+    mockedCreateSectionHeader.mockReset();
+    mockedDeleteSectionHeader.mockReset();
+    mockedUpdateSectionHeader.mockReset();
     dndState.onDragEnd = null;
     await i18n.changeLanguage('en');
   });
@@ -295,22 +322,25 @@ describe('ServiceTemplateManagementPage', () => {
     expect(screen.getByRole('button', { name: /add info item/i })).toBeInTheDocument();
   });
 
-  it('calls reorderServiceInfoItems with the new order after a drag', async () => {
+  it('calls reorderTemplateItems with the new order after a drag', async () => {
     const user = userEvent.setup();
     mockedGetServiceTemplates.mockResolvedValueOnce([sampleTemplateWithItems]);
     mockedGetServiceTemplateById.mockResolvedValueOnce(sampleTemplateWithItems);
-    mockedReorderServiceInfoItems.mockResolvedValueOnce(undefined);
+    mockedReorderTemplateItems.mockResolvedValueOnce(undefined);
 
     renderPage();
     await user.click(await screen.findByRole('button', { name: /sunday mass/i }));
     await screen.findByText('Attendance');
 
     await act(async () => {
-      dndState.onDragEnd?.({ active: { id: 10 }, over: { id: 20 } });
+      dndState.onDragEnd?.({ active: { id: 'i10' }, over: { id: 'i20' } });
     });
 
     await waitFor(() => {
-      expect(mockedReorderServiceInfoItems).toHaveBeenCalledWith([20, 10]);
+      expect(mockedReorderTemplateItems).toHaveBeenCalledWith([
+        { id: 20, kind: 'INFO_ITEM' },
+        { id: 10, kind: 'INFO_ITEM' },
+      ]);
     });
   });
 
@@ -318,14 +348,14 @@ describe('ServiceTemplateManagementPage', () => {
     const user = userEvent.setup();
     mockedGetServiceTemplates.mockResolvedValueOnce([sampleTemplateWithItems]);
     mockedGetServiceTemplateById.mockResolvedValueOnce(sampleTemplateWithItems);
-    mockedReorderServiceInfoItems.mockRejectedValueOnce(new Error('network error'));
+    mockedReorderTemplateItems.mockRejectedValueOnce(new Error('network error'));
 
     renderPage();
     await user.click(await screen.findByRole('button', { name: /sunday mass/i }));
     await screen.findByText('Attendance');
 
     await act(async () => {
-      dndState.onDragEnd?.({ active: { id: 10 }, over: { id: 20 } });
+      dndState.onDragEnd?.({ active: { id: 'i10' }, over: { id: 'i20' } });
     });
 
     await screen.findByText('We could not save the new item order right now.');

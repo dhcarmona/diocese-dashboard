@@ -45,6 +45,10 @@ public class ServiceTemplate {
   @OrderBy("sortOrder ASC")
   private List<ServiceInfoItem> serviceInfoItems;
 
+  @OneToMany(mappedBy = "serviceTemplate")
+  @OrderBy("sortOrder ASC")
+  private List<SectionHeader> sectionHeaders;
+
   public ServiceTemplate() {
   }
 
@@ -94,6 +98,14 @@ public class ServiceTemplate {
 
   public void setServiceInfoItems(List<ServiceInfoItem> serviceInfoItems) {
     this.serviceInfoItems = serviceInfoItems;
+  }
+
+  public List<SectionHeader> getSectionHeaders() {
+    return sectionHeaders;
+  }
+
+  public void setSectionHeaders(List<SectionHeader> sectionHeaders) {
+    this.sectionHeaders = sectionHeaders;
   }
 
   @Override

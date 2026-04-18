@@ -94,6 +94,7 @@ describe('ReporterLinkPage', () => {
       serviceTemplateName: 'Sunday Eucharist',
       activeDate: '2024-04-14',
       serviceInfoItems: [],
+      sectionHeaders: [],
       celebrants: [],
     });
     mockedSubmitViaReporterLinkPublic.mockResolvedValue({
@@ -127,6 +128,7 @@ describe('ReporterLinkPage', () => {
       serviceTemplateName: 'Sunday Eucharist',
       activeDate: '2024-04-14',
       serviceInfoItems: [],
+      sectionHeaders: [],
       celebrants: [],
     });
     mockedSubmitViaReporterLinkPublic.mockResolvedValue({
@@ -162,6 +164,7 @@ describe('ReporterLinkPage', () => {
         serviceTemplateName: 'Sunday Eucharist',
         activeDate: '2024-04-14',
         serviceInfoItems: [],
+      sectionHeaders: [],
         celebrants: [],
       })
       .mockResolvedValueOnce({
@@ -172,6 +175,7 @@ describe('ReporterLinkPage', () => {
         serviceTemplateName: 'Evening Prayer',
         activeDate: '2024-04-15',
         serviceInfoItems: [],
+      sectionHeaders: [],
         celebrants: [],
       });
     mockedSubmitViaReporterLinkPublic.mockResolvedValue({
@@ -215,6 +219,7 @@ describe('ReporterLinkPage', () => {
       serviceTemplateName: 'Sunday Eucharist',
       activeDate: '2024-04-14',
       serviceInfoItems: [],
+      sectionHeaders: [],
       celebrants: [],
     });
 
@@ -236,6 +241,7 @@ describe('ReporterLinkPage', () => {
       serviceTemplateName: 'Sunday Eucharist',
       activeDate: '2024-04-14',
       serviceInfoItems: [],
+      sectionHeaders: [],
       celebrants: [],
     });
     mockedSubmitViaReporterLinkPublic.mockResolvedValue({

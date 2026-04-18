@@ -47,10 +47,17 @@ export async function deleteServiceInfoItem(id: number): Promise<void> {
   });
 }
 
-export async function reorderServiceInfoItems(orderedIds: number[]): Promise<void> {
+export type TemplateItemKind = 'INFO_ITEM' | 'SECTION_HEADER';
+
+export interface TemplateItemRef {
+  id: number;
+  kind: TemplateItemKind;
+}
+
+export async function reorderTemplateItems(items: TemplateItemRef[]): Promise<void> {
   await api.put(
-    '/api/service-info-items/reorder',
-    { orderedIds },
+    '/api/template-items/reorder',
+    { items },
     { headers: await getCsrfHeaders() },
   );
 }

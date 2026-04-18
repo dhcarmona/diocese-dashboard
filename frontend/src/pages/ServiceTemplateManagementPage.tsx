@@ -46,9 +46,14 @@ import Typography from '@mui/material/Typography';
 import { type FormEvent, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
+  createSectionHeader,
+  deleteSectionHeader,
+  updateSectionHeader,
+} from '../api/sectionHeaders';
+import {
   createServiceInfoItem,
   deleteServiceInfoItem,
-  reorderServiceInfoItems,
+  reorderTemplateItems,
   updateServiceInfoItem,
   type ServiceInfoItemDraft,
 } from '../api/serviceInfoItems';
@@ -91,6 +96,34 @@ const defaultInfoItemDraft: InfoItemDraft = {
   serviceInfoItemType: 'NUMERICAL',
 };
 
+interface InfoTemplateItem extends ServiceInfoItemSummary {
+  kind: 'INFO_ITEM';
+}
+
+interface SectionHeaderTemplateItem {
+  kind: 'SECTION_HEADER';
+  id: number;
+  title: string;
+  sortOrder?: number;
+}
+
+type TemplateItem = InfoTemplateItem | SectionHeaderTemplateItem;
+
+function dndId(item: TemplateItem): string {
+  return item.kind === 'INFO_ITEM' ? `i${item.id}` : `h${item.id}`;
+}
+
+function buildTemplateItems(
+  infoItems: ServiceInfoItemSummary[],
+  sectionHeaders: { id: number; title: string; sortOrder?: number }[],
+): TemplateItem[] {
+  const all: TemplateItem[] = [
+    ...infoItems.map((item) => ({ ...item, kind: 'INFO_ITEM' as const })),
+    ...sectionHeaders.map((h) => ({ ...h, kind: 'SECTION_HEADER' as const })),
+  ];
+  return all.sort((aa, bb) => (aa.sortOrder ?? 0) - (bb.sortOrder ?? 0));
+}
+
 interface SortableInfoItemRowProps {
   item: ServiceInfoItemSummary;
   index: number;
@@ -110,7 +143,7 @@ function SortableInfoItemRow({
 }: SortableInfoItemRowProps) {
   const { t } = useTranslation();
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
-    id: item.id,
+    id: `i${item.id}`,
     disabled: submitting,
   });
   const style = { transform: CSS.Transform.toString(transform), transition };
@@ -173,6 +206,91 @@ function SortableInfoItemRow({
   );
 }
 
+interface SortableSectionHeaderRowProps {
+  item: SectionHeaderTemplateItem;
+  index: number;
+  submitting: boolean;
+  isEditing: boolean;
+  onEdit: (item: SectionHeaderTemplateItem) => void;
+  onRemove: (id: number) => void;
+}
+
+function SortableSectionHeaderRow({
+  item,
+  index,
+  submitting,
+  isEditing,
+  onEdit,
+  onRemove,
+}: SortableSectionHeaderRowProps) {
+  const { t } = useTranslation();
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: `h${item.id}`,
+    disabled: submitting,
+  });
+  const style = { transform: CSS.Transform.toString(transform), transition };
+
+  return (
+    <Box ref={setNodeRef} style={style}>
+      {index > 0 && <Divider />}
+      <Box
+        sx={{
+          py: 1.5,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 1,
+          bgcolor: 'action.hover',
+          borderRadius: 1,
+          px: 1,
+        }}
+      >
+        <IconButton
+          {...attributes}
+          {...listeners}
+          aria-label={t('serviceTemplates.actions.dragHandle')}
+          size="small"
+          disabled={submitting}
+          sx={{
+            cursor: submitting ? 'default' : 'grab',
+            color: isDragging ? 'primary.main' : 'action.active',
+            flexShrink: 0,
+          }}
+        >
+          <DragIndicatorIcon fontSize="small" />
+        </IconButton>
+        <Typography
+          variant="overline"
+          fontWeight={700}
+          color="text.secondary"
+          sx={{ flex: 1, letterSpacing: 1.2 }}
+        >
+          {item.title}
+        </Typography>
+        <Stack direction="row" spacing={1}>
+          <Button
+            variant="outlined"
+            size="small"
+            disabled={submitting}
+            color={isEditing ? 'primary' : 'inherit'}
+            onClick={() => onEdit(item)}
+          >
+            {t('serviceTemplates.actions.editItem')}
+          </Button>
+          <Button
+            variant="outlined"
+            color="error"
+            size="small"
+            disabled={submitting}
+            onClick={() => onRemove(item.id)}
+          >
+            {t('serviceTemplates.actions.removeItem')}
+          </Button>
+        </Stack>
+      </Box>
+    </Box>
+  );
+}
+
 function sortTemplates(templates: ServiceTemplate[]): ServiceTemplate[] {
   return [...templates].sort((left, right) =>
     left.serviceTemplateName.localeCompare(right.serviceTemplateName, undefined, {
@@ -191,9 +309,11 @@ export default function ServiceTemplateManagementPage() {
   const [selectedTemplate, setSelectedTemplate] = useState<ServiceTemplate | null>(null);
   const [formMode, setFormMode] = useState<FormMode>('create');
   const [draftName, setDraftName] = useState('');
-  const [infoItems, setInfoItems] = useState<ServiceInfoItemSummary[]>([]);
+  const [templateItems, setTemplateItems] = useState<TemplateItem[]>([]);
   const [infoItemDraft, setInfoItemDraft] = useState<InfoItemDraft>(defaultInfoItemDraft);
   const [editingItemId, setEditingItemId] = useState<number | null>(null);
+  const [headerDraft, setHeaderDraft] = useState('');
+  const [editingHeaderId, setEditingHeaderId] = useState<number | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [feedback, setFeedback] = useState<FeedbackState | null>(null);
 
@@ -247,9 +367,11 @@ export default function ServiceTemplateManagementPage() {
     setSelectedTemplateId(null);
     setSelectedTemplate(null);
     setDraftName('');
-    setInfoItems([]);
+    setTemplateItems([]);
     setInfoItemDraft(defaultInfoItemDraft);
     setEditingItemId(null);
+    setHeaderDraft('');
+    setEditingHeaderId(null);
   }
 
   function handleCreateMode() {
@@ -263,11 +385,13 @@ export default function ServiceTemplateManagementPage() {
     setFeedback(null);
     setEditingItemId(null);
     setInfoItemDraft(defaultInfoItemDraft);
+    setHeaderDraft('');
+    setEditingHeaderId(null);
     try {
       const full = await getServiceTemplateById(template.id);
       setSelectedTemplate(full);
       setDraftName(full.serviceTemplateName);
-      setInfoItems(full.serviceInfoItems ?? []);
+      setTemplateItems(buildTemplateItems(full.serviceInfoItems ?? [], full.sectionHeaders ?? []));
     } catch {
       setFeedback({ severity: 'error', message: t('serviceTemplates.list.loadError') });
     }
@@ -345,6 +469,8 @@ export default function ServiceTemplateManagementPage() {
 
   function handleEditInfoItem(item: ServiceInfoItemSummary) {
     setEditingItemId(item.id);
+    setEditingHeaderId(null);
+    setHeaderDraft('');
     setInfoItemDraft({
       title: item.title,
       description: item.description ?? '',
@@ -380,7 +506,13 @@ export default function ServiceTemplateManagementPage() {
     try {
       if (editingItemId !== null) {
         const updated = await updateServiceInfoItem(editingItemId, selectedTemplate.id, itemDraft);
-        setInfoItems((prev) => prev.map((it) => (it.id === updated.id ? updated : it)));
+        setTemplateItems((prev) =>
+          prev.map((it) =>
+            it.kind === 'INFO_ITEM' && it.id === updated.id
+              ? { ...updated, kind: 'INFO_ITEM' as const }
+              : it,
+          ),
+        );
         setEditingItemId(null);
         setInfoItemDraft(defaultInfoItemDraft);
         setFeedback({
@@ -389,7 +521,7 @@ export default function ServiceTemplateManagementPage() {
         });
       } else {
         const created = await createServiceInfoItem(selectedTemplate.id, itemDraft);
-        setInfoItems((prev) => [...prev, created]);
+        setTemplateItems((prev) => [...prev, { ...created, kind: 'INFO_ITEM' as const }]);
         setInfoItemDraft(defaultInfoItemDraft);
         setFeedback({
           severity: 'success',
@@ -408,7 +540,7 @@ export default function ServiceTemplateManagementPage() {
     setFeedback(null);
     try {
       await deleteServiceInfoItem(itemId);
-      setInfoItems((prev) => prev.filter((item) => item.id !== itemId));
+      setTemplateItems((prev) => prev.filter((it) => !(it.kind === 'INFO_ITEM' && it.id === itemId)));
       if (itemId === editingItemId) {
         setEditingItemId(null);
         setInfoItemDraft(defaultInfoItemDraft);
@@ -424,20 +556,100 @@ export default function ServiceTemplateManagementPage() {
     }
   }
 
+  function handleEditSectionHeader(item: SectionHeaderTemplateItem) {
+    setEditingHeaderId(item.id);
+    setEditingItemId(null);
+    setInfoItemDraft(defaultInfoItemDraft);
+    setHeaderDraft(item.title);
+  }
+
+  function handleCancelEditSectionHeader() {
+    setEditingHeaderId(null);
+    setHeaderDraft('');
+  }
+
+  async function handleSaveSectionHeader() {
+    if (!selectedTemplate) return;
+    const trimmedTitle = headerDraft.trim();
+    if (!trimmedTitle) {
+      setFeedback({
+        severity: 'error',
+        message: t('serviceTemplates.validation.headerTitleRequired'),
+      });
+      return;
+    }
+
+    setSubmitting(true);
+    setFeedback(null);
+    try {
+      if (editingHeaderId !== null) {
+        const updated = await updateSectionHeader(editingHeaderId, { title: trimmedTitle });
+        setTemplateItems((prev) =>
+          prev.map((it) =>
+            it.kind === 'SECTION_HEADER' && it.id === updated.id
+              ? { ...it, title: updated.title }
+              : it,
+          ),
+        );
+        setEditingHeaderId(null);
+        setHeaderDraft('');
+        setFeedback({
+          severity: 'success',
+          message: t('serviceTemplates.feedback.headerUpdated'),
+        });
+      } else {
+        const created = await createSectionHeader(selectedTemplate.id, { title: trimmedTitle });
+        setTemplateItems((prev) => [...prev, { ...created, kind: 'SECTION_HEADER' as const }]);
+        setHeaderDraft('');
+        setFeedback({
+          severity: 'success',
+          message: t('serviceTemplates.feedback.headerAdded'),
+        });
+      }
+    } catch {
+      setFeedback({ severity: 'error', message: t('serviceTemplates.feedback.itemError') });
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  async function handleRemoveSectionHeader(headerId: number) {
+    setSubmitting(true);
+    setFeedback(null);
+    try {
+      await deleteSectionHeader(headerId);
+      setTemplateItems((prev) =>
+        prev.filter((it) => !(it.kind === 'SECTION_HEADER' && it.id === headerId)),
+      );
+      if (headerId === editingHeaderId) {
+        setEditingHeaderId(null);
+        setHeaderDraft('');
+      }
+      setFeedback({
+        severity: 'success',
+        message: t('serviceTemplates.feedback.headerRemoved'),
+      });
+    } catch {
+      setFeedback({ severity: 'error', message: t('serviceTemplates.feedback.itemError') });
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
   async function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
 
-    const oldIndex = infoItems.findIndex((item) => item.id === active.id);
-    const newIndex = infoItems.findIndex((item) => item.id === over.id);
-    const reordered = arrayMove(infoItems, oldIndex, newIndex);
-    const previous = infoItems;
-    setInfoItems(reordered);
+    const oldIndex = templateItems.findIndex((item) => dndId(item) === active.id);
+    const newIndex = templateItems.findIndex((item) => dndId(item) === over.id);
+    const reordered = arrayMove(templateItems, oldIndex, newIndex);
+    const previous = templateItems;
+    setTemplateItems(reordered);
 
     try {
-      await reorderServiceInfoItems(reordered.map((item) => item.id));
+      await reorderTemplateItems(reordered.map((item) => ({ id: item.id, kind: item.kind })));
     } catch {
-      setInfoItems(previous);
+      setTemplateItems(previous);
       setFeedback({
         severity: 'error',
         message: t('serviceTemplates.feedback.reorderError'),
@@ -546,28 +758,40 @@ export default function ServiceTemplateManagementPage() {
               </Typography>
 
               <Stack spacing={2}>
-                {infoItems.length > 0 && (
+                {templateItems.length > 0 && (
                   <DndContext
                     sensors={sensors}
                     collisionDetection={closestCenter}
                     onDragEnd={(event) => void handleDragEnd(event)}
                   >
                     <SortableContext
-                      items={infoItems.map((item) => item.id)}
+                      items={templateItems.map(dndId)}
                       strategy={verticalListSortingStrategy}
                     >
                       <List disablePadding>
-                        {infoItems.map((item, index) => (
-                          <SortableInfoItemRow
-                            key={item.id}
-                            item={item}
-                            index={index}
-                            submitting={submitting}
-                            isEditing={item.id === editingItemId}
-                            onEdit={handleEditInfoItem}
-                            onRemove={(id) => void handleRemoveInfoItem(id)}
-                          />
-                        ))}
+                        {templateItems.map((item, index) =>
+                          item.kind === 'SECTION_HEADER' ? (
+                            <SortableSectionHeaderRow
+                              key={`h${item.id}`}
+                              item={item}
+                              index={index}
+                              submitting={submitting}
+                              isEditing={item.id === editingHeaderId}
+                              onEdit={handleEditSectionHeader}
+                              onRemove={(id) => void handleRemoveSectionHeader(id)}
+                            />
+                          ) : (
+                            <SortableInfoItemRow
+                              key={`i${item.id}`}
+                              item={item}
+                              index={index}
+                              submitting={submitting}
+                              isEditing={item.id === editingItemId}
+                              onEdit={handleEditInfoItem}
+                              onRemove={(id) => void handleRemoveInfoItem(id)}
+                            />
+                          ),
+                        )}
                       </List>
                     </SortableContext>
                   </DndContext>
@@ -576,6 +800,9 @@ export default function ServiceTemplateManagementPage() {
                 <Divider />
 
                 <Stack spacing={2}>
+                  <Typography variant="subtitle2" color="text.secondary">
+                    {t('serviceTemplates.form.addInfoItemTitle')}
+                  </Typography>
                   <TextField
                     label={t('serviceTemplates.form.itemTitleLabel')}
                     placeholder={t('serviceTemplates.form.itemTitlePlaceholder')}
@@ -648,6 +875,51 @@ export default function ServiceTemplateManagementPage() {
                         size="large"
                         disabled={submitting}
                         onClick={handleCancelEditInfoItem}
+                        sx={{ alignSelf: 'flex-start' }}
+                      >
+                        {t('serviceTemplates.actions.cancelEditItem')}
+                      </Button>
+                    )}
+                  </Stack>
+                </Stack>
+
+                <Divider />
+
+                <Stack spacing={2}>
+                  <Typography variant="subtitle2" color="text.secondary">
+                    {t('serviceTemplates.form.addSectionHeaderTitle')}
+                  </Typography>
+                  <TextField
+                    label={t('serviceTemplates.form.headerTitleLabel')}
+                    placeholder={t('serviceTemplates.form.headerTitlePlaceholder')}
+                    value={headerDraft}
+                    onChange={(e) => setHeaderDraft(e.target.value)}
+                    disabled={submitting}
+                    fullWidth
+                  />
+                  <Stack direction="row" spacing={1.5}>
+                    <Button
+                      variant="outlined"
+                      size="large"
+                      disabled={submitting}
+                      startIcon={
+                        editingHeaderId !== null ? <EditOutlinedIcon /> : <AddOutlinedIcon />
+                      }
+                      onClick={() => void handleSaveSectionHeader()}
+                      sx={{ alignSelf: 'flex-start' }}
+                    >
+                      {t(
+                        editingHeaderId !== null
+                          ? 'serviceTemplates.actions.saveHeader'
+                          : 'serviceTemplates.actions.addHeader',
+                      )}
+                    </Button>
+                    {editingHeaderId !== null && (
+                      <Button
+                        variant="text"
+                        size="large"
+                        disabled={submitting}
+                        onClick={handleCancelEditSectionHeader}
                         sx={{ alignSelf: 'flex-start' }}
                       >
                         {t('serviceTemplates.actions.cancelEditItem')}

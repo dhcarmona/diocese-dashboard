@@ -30,7 +30,11 @@ import {
   submitViaReporterLinkPublic,
   type ReporterLink,
 } from '../api/reporterLinks';
-import { type ServiceInfoItemSummary, getServiceTemplateById } from '../api/serviceTemplates';
+import {
+  type SectionHeaderSummary,
+  type ServiceInfoItemSummary,
+  getServiceTemplateById,
+} from '../api/serviceTemplates';
 import { useAuth } from '../auth/auth-context';
 import AppShell from '../components/AppShell';
 import PageHeader from '../components/PageHeader';
@@ -45,6 +49,27 @@ function getInputAdornment(type: ServiceInfoItemSummary['serviceInfoItemType']):
   return null;
 }
 
+interface InfoTemplateItem extends ServiceInfoItemSummary {
+  kind: 'INFO_ITEM';
+}
+
+interface SectionHeaderTemplateItem extends SectionHeaderSummary {
+  kind: 'SECTION_HEADER';
+}
+
+type TemplateItem = InfoTemplateItem | SectionHeaderTemplateItem;
+
+function buildTemplateItems(
+  infoItems: ServiceInfoItemSummary[],
+  sectionHeaders: SectionHeaderSummary[],
+): TemplateItem[] {
+  const all: TemplateItem[] = [
+    ...infoItems.map((item) => ({ ...item, kind: 'INFO_ITEM' as const })),
+    ...sectionHeaders.map((h) => ({ ...h, kind: 'SECTION_HEADER' as const })),
+  ];
+  return all.sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
+}
+
 export default function ReporterLinkPage() {
   const { token } = useParams<{ token: string }>();
   const { t, i18n } = useTranslation();
@@ -54,7 +79,7 @@ export default function ReporterLinkPage() {
 
   const [link, setLink] = useState<ReporterLink | null>(null);
   const [bannerUrl, setBannerUrl] = useState<string | undefined>(undefined);
-  const [infoItems, setInfoItems] = useState<ServiceInfoItemSummary[]>([]);
+  const [templateItems, setTemplateItems] = useState<TemplateItem[]>([]);
   const [allCelebrants, setAllCelebrants] = useState<Celebrant[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<'notFound' | 'wrongUser' | 'generic' | null>(null);
@@ -102,7 +127,10 @@ export default function ReporterLinkPage() {
 
           setLink(loadedLink);
           setBannerUrl(loadedTemplate.bannerUrl);
-          setInfoItems(loadedTemplate.serviceInfoItems ?? []);
+          setTemplateItems(buildTemplateItems(
+            loadedTemplate.serviceInfoItems ?? [],
+            loadedTemplate.sectionHeaders ?? [],
+          ));
           setAllCelebrants(loadedCelebrants);
         } else {
           // Unauthenticated: use the public endpoint; the token is the credential.
@@ -121,7 +149,7 @@ export default function ReporterLinkPage() {
             activeDate: publicData.activeDate,
           });
           setBannerUrl(publicData.bannerUrl);
-          setInfoItems(publicData.serviceInfoItems);
+          setTemplateItems(buildTemplateItems(publicData.serviceInfoItems, publicData.sectionHeaders ?? []));
           setAllCelebrants(publicData.celebrants);
         }
       } catch (err: unknown) {
@@ -308,6 +336,10 @@ export default function ReporterLinkPage() {
     e.preventDefault();
     if (!link) return;
 
+    const infoItems = templateItems.filter(
+      (item): item is InfoTemplateItem => item.kind === 'INFO_ITEM',
+    );
+
     const hasMissingRequired = infoItems.some((item) => {
       const value = responses[item.id]?.trim() ?? '';
       return item.required && value === '';
@@ -401,7 +433,7 @@ export default function ReporterLinkPage() {
             )}
           />
 
-          {infoItems.length > 0 && (
+          {templateItems.some((item) => item.kind === 'INFO_ITEM') && (
             <>
               <Divider />
               <Typography variant="subtitle1" fontWeight={600}>
@@ -410,7 +442,20 @@ export default function ReporterLinkPage() {
             </>
           )}
 
-          {infoItems.map((item) => {
+          {templateItems.map((item) => {
+            if (item.kind === 'SECTION_HEADER') {
+              return (
+                <Typography
+                  key={`h${item.id}`}
+                  variant="overline"
+                  fontWeight={700}
+                  color="text.secondary"
+                  sx={{ display: 'block', mt: 1, letterSpacing: 1.2 }}
+                >
+                  {item.title}
+                </Typography>
+              );
+            }
             const isMoney =
               item.serviceInfoItemType === 'DOLLARS' ||
               item.serviceInfoItemType === 'COLONES';
@@ -419,7 +464,7 @@ export default function ReporterLinkPage() {
             const rawValue = responses[item.id] ?? '';
             return (
               <TextField
-                key={item.id}
+                key={`i${item.id}`}
                 label={item.title}
                 helperText={item.description ?? undefined}
                 required={item.required}
