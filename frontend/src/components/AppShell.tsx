@@ -15,7 +15,8 @@ import LanguageSwitcher from './LanguageSwitcher';
 export default function AppShell({ children }: Readonly<{ children: ReactNode }>) {
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const { signOut, user } = useAuth();
+  const { signOut, user, status } = useAuth();
+  const isAuthenticated = status === 'authenticated';
 
   async function handleSignOut() {
     await signOut();
@@ -45,35 +46,41 @@ export default function AppShell({ children }: Readonly<{ children: ReactNode }>
                 sx={{ lineHeight: 1.2 }}>
                 {t('common.appName')}
               </Typography>
-              <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.65)', lineHeight: 1 }}>
-                {t('shell.signedInAs', { username: user?.username ?? '' })}
-              </Typography>
+              {isAuthenticated && (
+                <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.65)', lineHeight: 1 }}>
+                  {t('shell.signedInAs', { username: user?.username ?? '' })}
+                </Typography>
+              )}
             </Box>
           </Box>
           <LanguageSwitcher placement="static" />
-          <Button
-            component={RouterLink}
-            to="/"
-            variant="outlined"
-            size="small"
-            startIcon={<HomeOutlinedIcon />}
-            sx={{
-              color: 'primary.contrastText',
-              borderColor: 'rgba(255,255,255,0.4)',
-              '&:hover': { borderColor: 'primary.contrastText', bgcolor: 'rgba(255,255,255,0.08)' },
-            }}
-          >
-            {t('navigation.home')}
-          </Button>
-          <Button
-            onClick={() => void handleSignOut()}
-            variant="contained"
-            color="secondary"
-            size="small"
-            startIcon={<LogoutOutlinedIcon />}
-          >
-            {t('common.signOut')}
-          </Button>
+          {isAuthenticated && (
+            <Button
+              component={RouterLink}
+              to="/"
+              variant="outlined"
+              size="small"
+              startIcon={<HomeOutlinedIcon />}
+              sx={{
+                color: 'primary.contrastText',
+                borderColor: 'rgba(255,255,255,0.4)',
+                '&:hover': { borderColor: 'primary.contrastText', bgcolor: 'rgba(255,255,255,0.08)' },
+              }}
+            >
+              {t('navigation.home')}
+            </Button>
+          )}
+          {isAuthenticated && (
+            <Button
+              onClick={() => void handleSignOut()}
+              variant="contained"
+              color="secondary"
+              size="small"
+              startIcon={<LogoutOutlinedIcon />}
+            >
+              {t('common.signOut')}
+            </Button>
+          )}
         </Toolbar>
       </AppBar>
       <Box component="main" sx={{ flex: 1, maxWidth: 1200, mx: 'auto', px: { xs: 2, md: 4 }, py: 4 }}>
