@@ -148,7 +148,7 @@ export default function LoginPage() {
 
   if (token && loading) {
     return (
-      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', '@supports (height: 100dvh)': { minHeight: '100dvh' } }}>
         <CircularProgress />
         <Typography sx={{ ml: 2 }}>{t('login.redeemingToken')}</Typography>
       </Box>
@@ -156,7 +156,7 @@ export default function LoginPage() {
   }
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100dvh' }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', '@supports (height: 100dvh)': { minHeight: '100dvh' } }}>
       <Box sx={{ display: 'flex', flex: 1 }}>
 
       {/* ── Left branding panel ── */}
