@@ -14,6 +14,8 @@ import org.iecr.diocesedashboard.service.ServiceInstanceService;
 import org.iecr.diocesedashboard.service.ServiceTemplateService;
 import org.iecr.diocesedashboard.service.WhatsAppService;
 import org.iecr.diocesedashboard.webapp.DashboardUserDetails;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.http.HttpStatus;
@@ -44,6 +46,8 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/service-instances")
 public class ServiceInstanceController {
+
+  private static final Logger logger = LoggerFactory.getLogger(ServiceInstanceController.class);
 
   private final ServiceInstanceService serviceInstanceService;
   private final ServiceInfoItemResponseService responseService;
@@ -252,7 +256,8 @@ public class ServiceInstanceController {
       try {
         sendDeleteNotification(instance);
       } catch (Exception ex) {
-        // Notification failure is non-fatal; deletion will still proceed
+        logger.warn("Delete notification failed for service instance {}: {}", id, ex.getMessage(),
+            ex);
       }
     }
     responseService.deleteByServiceInstance(instance);
@@ -289,8 +294,12 @@ public class ServiceInstanceController {
     DashboardUser reporter = instance.getSubmittedBy();
     if (reporter == null || reporter.getPhoneNumber() == null
         || reporter.getPhoneNumber().isBlank()) {
+      logger.debug("Skipping delete notification for instance {}: reporter has no phone number",
+          instance.getId());
       return;
     }
+    logger.debug("Sending delete notification for instance {} to reporter {}",
+        instance.getId(), reporter.getUsername());
     String templateName = instance.getServiceTemplate() != null
         ? instance.getServiceTemplate().getServiceTemplateName() : "";
     String church = instance.getChurch() != null ? instance.getChurch().getName() : "";

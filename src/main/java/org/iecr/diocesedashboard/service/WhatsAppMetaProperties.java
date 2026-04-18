@@ -68,18 +68,9 @@ public class WhatsAppMetaProperties {
     this.templates = templates;
   }
 
-  /** English and Spanish language codes sent to the Meta API with each template request. */
+  /** Spanish language code sent to the Meta API with each template request. */
   public static class LanguageCode {
-    private String en = "en";
     private String es = "es";
-
-    public String getEn() {
-      return en;
-    }
-
-    public void setEn(String en) {
-      this.en = en;
-    }
 
     public String getEs() {
       return es;
@@ -157,10 +148,9 @@ public class WhatsAppMetaProperties {
     }
   }
 
-  /** Fallback, English, and Spanish template name variants for a single message type. */
+  /** Fallback and Spanish template name variants for a single message type. */
   public static class TemplateNameSet {
     private String fallback = "";
-    private String en = "";
     private String es = "";
 
     public String getFallback() {
@@ -169,14 +159,6 @@ public class WhatsAppMetaProperties {
 
     public void setFallback(String fallback) {
       this.fallback = fallback;
-    }
-
-    public String getEn() {
-      return en;
-    }
-
-    public void setEn(String en) {
-      this.en = en;
     }
 
     public String getEs() {
