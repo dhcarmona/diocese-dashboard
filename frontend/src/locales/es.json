@@ -392,6 +392,9 @@
       "reset": "Empezar de nuevo",
       "delete": "Eliminar plantilla",
       "addItem": "Agregar ítem",
+      "editItem": "Editar",
+      "saveItem": "Actualizar ítem",
+      "cancelEditItem": "Cancelar",
       "removeItem": "Eliminar",
       "dragHandle": "Arrastrar para reordenar"
     },
@@ -427,6 +430,7 @@
       "saveError": "No se pudo guardar la plantilla en este momento.",
       "deleteError": "No se pudo eliminar la plantilla en este momento.",
       "itemAdded": "Ítem agregado.",
+      "itemUpdated": "Ítem actualizado.",
       "itemRemoved": "Ítem eliminado.",
       "itemError": "No se pudo guardar el ítem en este momento.",
       "reorderError": "No se pudo guardar el nuevo orden en este momento."

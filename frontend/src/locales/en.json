@@ -392,6 +392,9 @@
       "reset": "Start New",
       "delete": "Delete Template",
       "addItem": "Add Info Item",
+      "editItem": "Edit",
+      "saveItem": "Update Item",
+      "cancelEditItem": "Cancel",
       "removeItem": "Remove",
       "dragHandle": "Drag to reorder"
     },
@@ -427,6 +430,7 @@
       "saveError": "We could not save the template right now.",
       "deleteError": "We could not delete the template right now.",
       "itemAdded": "Info item added.",
+      "itemUpdated": "Info item updated.",
       "itemRemoved": "Info item removed.",
       "itemError": "We could not save the info item right now.",
       "reorderError": "We could not save the new item order right now."
