@@ -67,10 +67,10 @@ class SectionHeaderControllerTest {
 
     SectionHeader body = buildHeader(null, "Finance");
     mockMvc.perform(post("/api/section-headers")
-            .param("templateId", "1")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(body))
-            .with(csrf()))
+        .param("templateId", "1")
+        .contentType(MediaType.APPLICATION_JSON)
+        .content(objectMapper.writeValueAsString(body))
+        .with(csrf()))
         .andExpect(status().isCreated())
         .andExpect(jsonPath("$.title").value("Finance"));
   }
@@ -82,10 +82,10 @@ class SectionHeaderControllerTest {
 
     SectionHeader body = buildHeader(null, "Finance");
     mockMvc.perform(post("/api/section-headers")
-            .param("templateId", "99")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(body))
-            .with(csrf()))
+        .param("templateId", "99")
+        .contentType(MediaType.APPLICATION_JSON)
+        .content(objectMapper.writeValueAsString(body))
+        .with(csrf()))
         .andExpect(status().isNotFound());
   }
 
@@ -94,10 +94,10 @@ class SectionHeaderControllerTest {
   void create_withBlankTitle_returns400() throws Exception {
     SectionHeader body = buildHeader(null, "  ");
     mockMvc.perform(post("/api/section-headers")
-            .param("templateId", "1")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(body))
-            .with(csrf()))
+        .param("templateId", "1")
+        .contentType(MediaType.APPLICATION_JSON)
+        .content(objectMapper.writeValueAsString(body))
+        .with(csrf()))
         .andExpect(status().isBadRequest());
   }
 
@@ -106,10 +106,10 @@ class SectionHeaderControllerTest {
   void create_asUser_returns403() throws Exception {
     SectionHeader body = buildHeader(null, "Finance");
     mockMvc.perform(post("/api/section-headers")
-            .param("templateId", "1")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(body))
-            .with(csrf()))
+        .param("templateId", "1")
+        .contentType(MediaType.APPLICATION_JSON)
+        .content(objectMapper.writeValueAsString(body))
+        .with(csrf()))
         .andExpect(status().isForbidden());
   }
 
@@ -117,10 +117,10 @@ class SectionHeaderControllerTest {
   void create_unauthenticated_returns401() throws Exception {
     SectionHeader body = buildHeader(null, "Finance");
     mockMvc.perform(post("/api/section-headers")
-            .param("templateId", "1")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(body))
-            .with(csrf()))
+        .param("templateId", "1")
+        .contentType(MediaType.APPLICATION_JSON)
+        .content(objectMapper.writeValueAsString(body))
+        .with(csrf()))
         .andExpect(status().isUnauthorized());
   }
 
@@ -137,9 +137,9 @@ class SectionHeaderControllerTest {
 
     SectionHeader body = buildHeader(null, "Finance");
     mockMvc.perform(put("/api/section-headers/10")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(body))
-            .with(csrf()))
+        .contentType(MediaType.APPLICATION_JSON)
+        .content(objectMapper.writeValueAsString(body))
+        .with(csrf()))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.title").value("Finance"));
   }
@@ -151,9 +151,9 @@ class SectionHeaderControllerTest {
 
     SectionHeader body = buildHeader(null, "Finance");
     mockMvc.perform(put("/api/section-headers/99")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(body))
-            .with(csrf()))
+        .contentType(MediaType.APPLICATION_JSON)
+        .content(objectMapper.writeValueAsString(body))
+        .with(csrf()))
         .andExpect(status().isNotFound());
   }
 
@@ -162,9 +162,9 @@ class SectionHeaderControllerTest {
   void update_asUser_returns403() throws Exception {
     SectionHeader body = buildHeader(null, "Finance");
     mockMvc.perform(put("/api/section-headers/10")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(body))
-            .with(csrf()))
+        .contentType(MediaType.APPLICATION_JSON)
+        .content(objectMapper.writeValueAsString(body))
+        .with(csrf()))
         .andExpect(status().isForbidden());
   }
 
@@ -172,9 +172,9 @@ class SectionHeaderControllerTest {
   void update_unauthenticated_returns401() throws Exception {
     SectionHeader body = buildHeader(null, "Finance");
     mockMvc.perform(put("/api/section-headers/10")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(body))
-            .with(csrf()))
+        .contentType(MediaType.APPLICATION_JSON)
+        .content(objectMapper.writeValueAsString(body))
+        .with(csrf()))
         .andExpect(status().isUnauthorized());
   }
 
@@ -186,7 +186,7 @@ class SectionHeaderControllerTest {
     when(sectionHeaderService.existsById(10L)).thenReturn(true);
 
     mockMvc.perform(delete("/api/section-headers/10")
-            .with(csrf()))
+        .with(csrf()))
         .andExpect(status().isNoContent());
   }
 
@@ -196,7 +196,7 @@ class SectionHeaderControllerTest {
     when(sectionHeaderService.existsById(99L)).thenReturn(false);
 
     mockMvc.perform(delete("/api/section-headers/99")
-            .with(csrf()))
+        .with(csrf()))
         .andExpect(status().isNotFound());
   }
 
@@ -204,14 +204,14 @@ class SectionHeaderControllerTest {
   @WithMockUser(roles = "USER")
   void delete_asUser_returns403() throws Exception {
     mockMvc.perform(delete("/api/section-headers/10")
-            .with(csrf()))
+        .with(csrf()))
         .andExpect(status().isForbidden());
   }
 
   @Test
   void delete_unauthenticated_returns401() throws Exception {
     mockMvc.perform(delete("/api/section-headers/10")
-            .with(csrf()))
+        .with(csrf()))
         .andExpect(status().isUnauthorized());
   }
 }
