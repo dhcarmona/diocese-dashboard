@@ -647,7 +647,10 @@ export default function ServiceTemplateManagementPage() {
     setTemplateItems(reordered);
 
     try {
-      await reorderTemplateItems(reordered.map((item) => ({ id: item.id, kind: item.kind })));
+      await reorderTemplateItems(
+        selectedTemplate!.id,
+        reordered.map((item) => ({ id: item.id, kind: item.kind })),
+      );
     } catch {
       setTemplateItems(previous);
       setFeedback({

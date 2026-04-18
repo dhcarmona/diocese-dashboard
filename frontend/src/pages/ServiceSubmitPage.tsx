@@ -92,6 +92,11 @@ export default function ServiceSubmitPage() {
     return allChurches.filter((c) => assignedSet.has(c.name));
   }, [allChurches, user]);
 
+  const templateItems = useMemo(
+    () => buildTemplateItems(template?.serviceInfoItems ?? [], template?.sectionHeaders ?? []),
+    [template],
+  );
+
   useEffect(() => {
     setLoading(true);
     setLoadError(false);
@@ -144,10 +149,6 @@ export default function ServiceSubmitPage() {
 
     setSubmitError(false);
 
-    const templateItems = buildTemplateItems(
-      template.serviceInfoItems ?? [],
-      template.sectionHeaders ?? [],
-    );
     const infoItems = templateItems.filter(
       (item): item is InfoTemplateItem => item.kind === 'INFO_ITEM',
     );
@@ -336,10 +337,7 @@ export default function ServiceSubmitPage() {
             </>
           )}
 
-          {buildTemplateItems(
-            template.serviceInfoItems ?? [],
-            template.sectionHeaders ?? [],
-          ).map((item) => {
+          {templateItems.map((item) => {
             if (item.kind === 'SECTION_HEADER') {
               return (
                 <Typography

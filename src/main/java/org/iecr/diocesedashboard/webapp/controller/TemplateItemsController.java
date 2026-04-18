@@ -34,7 +34,7 @@ public class TemplateItemsController {
    */
   @PutMapping("/reorder")
   public ResponseEntity<Void> reorder(@RequestBody @Valid TemplateItemReorderRequest request) {
-    templateItemOrderService.reorder(request.items());
+    templateItemOrderService.reorder(request.templateId(), request.items());
     return ResponseEntity.noContent().build();
   }
 }

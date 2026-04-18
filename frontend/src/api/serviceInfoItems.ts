@@ -54,10 +54,13 @@ export interface TemplateItemRef {
   kind: TemplateItemKind;
 }
 
-export async function reorderTemplateItems(items: TemplateItemRef[]): Promise<void> {
+export async function reorderTemplateItems(
+  templateId: number,
+  items: TemplateItemRef[],
+): Promise<void> {
   await api.put(
     '/api/template-items/reorder',
-    { items },
+    { templateId, items },
     { headers: await getCsrfHeaders() },
   );
 }
