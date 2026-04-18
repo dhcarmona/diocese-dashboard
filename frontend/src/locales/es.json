@@ -396,7 +396,9 @@
       "saveItem": "Actualizar ítem",
       "cancelEditItem": "Cancelar",
       "removeItem": "Eliminar",
-      "dragHandle": "Arrastrar para reordenar"
+      "dragHandle": "Arrastrar para reordenar",
+      "addHeader": "Agregar encabezado",
+      "saveHeader": "Actualizar encabezado"
     },
     "search": {
       "label": "Buscar plantillas",
@@ -416,12 +418,16 @@
       "nameLabel": "Nombre de la plantilla",
       "namePlaceholder": "Ingrese el nombre de la plantilla",
       "infoItemsTitle": "Ítems de información del servicio",
+      "addInfoItemTitle": "Agregar un ítem de información",
+      "addSectionHeaderTitle": "Agregar un encabezado de sección",
       "itemTitleLabel": "Título del ítem",
       "itemTitlePlaceholder": "Ej. Número de asistentes",
       "itemDescLabel": "Descripción (opcional)",
       "itemDescPlaceholder": "Descripción breve de este campo",
       "itemTypeLabel": "Tipo",
-      "itemRequiredLabel": "Obligatorio"
+      "itemRequiredLabel": "Obligatorio",
+      "headerTitleLabel": "Título del encabezado",
+      "headerTitlePlaceholder": "Ej. Finanzas"
     },
     "feedback": {
       "created": "Se creó \"{{name}}\".",
@@ -433,12 +439,16 @@
       "itemUpdated": "Ítem actualizado.",
       "itemRemoved": "Ítem eliminado.",
       "itemError": "No se pudo guardar el ítem en este momento.",
-      "reorderError": "No se pudo guardar el nuevo orden en este momento."
+      "reorderError": "No se pudo guardar el nuevo orden en este momento.",
+      "headerAdded": "Encabezado de sección agregado.",
+      "headerUpdated": "Encabezado de sección actualizado.",
+      "headerRemoved": "Encabezado de sección eliminado."
     },
     "validation": {
       "nameRequired": "Ingrese un nombre de plantilla antes de guardar.",
       "itemTitleRequired": "Ingrese un título para el ítem.",
-      "itemTypeRequired": "Seleccione un tipo para el ítem."
+      "itemTypeRequired": "Seleccione un tipo para el ítem.",
+      "headerTitleRequired": "Ingrese un título para el encabezado de sección."
     }
   },
   "serviceInfoItemType": {

@@ -22,6 +22,9 @@ class ServiceInfoItemServiceTest {
   @Mock
   private ServiceInfoItemRepository serviceInfoItemRepository;
 
+  @Mock
+  private TemplateItemOrderService templateItemOrderService;
+
   @InjectMocks
   private ServiceInfoItemService serviceInfoItemService;
 
@@ -95,7 +98,7 @@ class ServiceInfoItemServiceTest {
     template.setId(1L);
     ServiceInfoItem item = new ServiceInfoItem();
     item.setServiceTemplate(template);
-    when(serviceInfoItemRepository.findMaxSortOrderByTemplateId(1L)).thenReturn(2);
+    when(templateItemOrderService.getNextSortOrder(1L)).thenReturn(3);
     when(serviceInfoItemRepository.save(item)).thenReturn(item);
 
     ServiceInfoItem result = serviceInfoItemService.createItem(item);
@@ -110,23 +113,12 @@ class ServiceInfoItemServiceTest {
     template.setId(2L);
     ServiceInfoItem item = new ServiceInfoItem();
     item.setServiceTemplate(template);
-    when(serviceInfoItemRepository.findMaxSortOrderByTemplateId(2L)).thenReturn(-1);
+    when(templateItemOrderService.getNextSortOrder(2L)).thenReturn(0);
     when(serviceInfoItemRepository.save(item)).thenReturn(item);
 
     ServiceInfoItem result = serviceInfoItemService.createItem(item);
 
     assertThat(result.getSortOrder()).isEqualTo(0);
     verify(serviceInfoItemRepository).save(item);
-  }
-
-  @Test
-  void reorder_updatesEachItemWithItsPosition() {
-    List<Long> orderedIds = List.of(3L, 1L, 2L);
-
-    serviceInfoItemService.reorder(orderedIds);
-
-    verify(serviceInfoItemRepository).updateSortOrder(3L, 0);
-    verify(serviceInfoItemRepository).updateSortOrder(1L, 1);
-    verify(serviceInfoItemRepository).updateSortOrder(2L, 2);
   }
 }

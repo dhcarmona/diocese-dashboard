@@ -1,7 +1,7 @@
 import { api, getCsrfHeaders } from './auth';
 import type { ReportSubmissionResponse } from './reportSubmissions';
 import type { Celebrant } from './celebrants';
-import type { ServiceInfoItemSummary } from './serviceTemplates';
+import type { SectionHeaderSummary, ServiceInfoItemSummary } from './serviceTemplates';
 
 export interface ReporterLink {
   id: number;
@@ -29,6 +29,7 @@ export interface ReporterLinkPublicData {
   bannerUrl?: string;
   activeDate: string;
   serviceInfoItems: ServiceInfoItemSummary[];
+  sectionHeaders: SectionHeaderSummary[];
   celebrants: Celebrant[];
 }
 

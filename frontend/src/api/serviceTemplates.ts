@@ -9,6 +9,13 @@ export interface ServiceInfoItemSummary {
   description?: string | null;
   required: boolean;
   serviceInfoItemType: ServiceInfoItemType;
+  sortOrder?: number;
+}
+
+export interface SectionHeaderSummary {
+  id: number;
+  title: string;
+  sortOrder?: number;
 }
 
 export interface ServiceTemplate {
@@ -16,6 +23,7 @@ export interface ServiceTemplate {
   serviceTemplateName: string;
   templateType?: ServiceTemplateType;
   serviceInfoItems?: ServiceInfoItemSummary[];
+  sectionHeaders?: SectionHeaderSummary[];
   bannerUrl?: string;
 }
 
