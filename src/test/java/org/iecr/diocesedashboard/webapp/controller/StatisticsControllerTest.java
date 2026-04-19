@@ -190,4 +190,38 @@ class StatisticsControllerTest {
         .param("endDate", "2024-12-31"))
         .andExpect(status().isUnauthorized());
   }
+
+  @Test
+  @WithMockDashboardUser(role = UserRole.REPORTER)
+  void getTemplatesForStatistics_reporter_includesLinkOnlyTemplates() throws Exception {
+    ServiceTemplate linkOnlyTemplate = new ServiceTemplate();
+    linkOnlyTemplate.setId(2L);
+    linkOnlyTemplate.setServiceTemplateName("Link Only Service");
+    linkOnlyTemplate.setLinkOnly(true);
+
+    when(serviceTemplateService.findAll()).thenReturn(List.of(template, linkOnlyTemplate));
+
+    mockMvc.perform(get("/api/statistics/templates"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.length()").value(2))
+        .andExpect(jsonPath("$[0].serviceTemplateName").value("Sunday Mass"))
+        .andExpect(jsonPath("$[1].serviceTemplateName").value("Link Only Service"))
+        .andExpect(jsonPath("$[1].linkOnly").value(true));
+  }
+
+  @Test
+  @WithMockDashboardUser(role = UserRole.ADMIN)
+  void getTemplatesForStatistics_admin_returnsAllTemplates() throws Exception {
+    when(serviceTemplateService.findAll()).thenReturn(List.of(template));
+
+    mockMvc.perform(get("/api/statistics/templates"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.length()").value(1));
+  }
+
+  @Test
+  void getTemplatesForStatistics_unauthenticated_returns401() throws Exception {
+    mockMvc.perform(get("/api/statistics/templates"))
+        .andExpect(status().isUnauthorized());
+  }
 }

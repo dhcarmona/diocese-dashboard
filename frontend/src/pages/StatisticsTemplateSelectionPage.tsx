@@ -4,7 +4,8 @@ import CircularProgress from '@mui/material/CircularProgress';
 import Typography from '@mui/material/Typography';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { getServiceTemplates, type ServiceTemplateSummary } from '../api/serviceTemplates';
+import { getStatisticsTemplates } from '../api/statistics';
+import type { ServiceTemplateSummary } from '../api/serviceTemplates';
 import ActionTile from '../components/ActionTile';
 import PageHeader from '../components/PageHeader';
 import TileGrid from '../components/TileGrid';
@@ -23,7 +24,7 @@ export default function StatisticsTemplateSelectionPage() {
       setLoading(true);
       setHasError(false);
       try {
-        const loaded = await getServiceTemplates();
+        const loaded = await getStatisticsTemplates();
         if (active) setTemplates(loaded);
       } catch {
         if (active) setHasError(true);

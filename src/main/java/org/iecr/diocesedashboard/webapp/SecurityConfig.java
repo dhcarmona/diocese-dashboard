@@ -112,7 +112,8 @@ public class SecurityConfig {
                 .permitAll()
                 .requestMatchers(HttpMethod.POST,
                     "/api/reporter-links/public/*/submit").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/statistics").hasAnyRole("ADMIN", "REPORTER")
+                .requestMatchers(HttpMethod.GET, "/api/statistics", "/api/statistics/templates")
+                .hasAnyRole("ADMIN", "REPORTER")
                 .requestMatchers(HttpMethod.GET, "/api/auth/csrf").permitAll()
                 .requestMatchers("/api/auth/login", "/api/auth/logout").permitAll()
                 .requestMatchers(HttpMethod.POST,
