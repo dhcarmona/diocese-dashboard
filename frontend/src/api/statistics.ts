@@ -1,5 +1,5 @@
 import { api } from './auth';
-import type { ServiceTemplate } from './serviceTemplates';
+import type { ServiceTemplateSummary } from './serviceTemplates';
 
 export interface CelebrantStat {
   celebrantId: number;
@@ -49,8 +49,8 @@ export interface StatisticsParams {
   endDate: string;
 }
 
-export async function getStatisticsTemplates(): Promise<ServiceTemplate[]> {
-  const response = await api.get<ServiceTemplate[]>('/api/statistics/templates');
+export async function getStatisticsTemplates(): Promise<ServiceTemplateSummary[]> {
+  const response = await api.get<ServiceTemplateSummary[]>('/api/statistics/templates');
   return response.data;
 }
 
