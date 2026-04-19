@@ -257,6 +257,9 @@ public class WhatsAppService {
     if (templateType == TemplateType.REPORTER_LOGIN_LINK) {
       return buildLoginLinkComponents(templateVariables);
     }
+    if (templateType == TemplateType.REPORTER_LINK) {
+      return buildReporterLinkButtonComponents(templateVariables);
+    }
     List<Map<String, Object>> parameters = new ArrayList<>();
     templateVariables.entrySet().stream()
         .sorted(Map.Entry.comparingByKey())
@@ -279,6 +282,29 @@ public class WhatsAppService {
             "sub_type", "url",
             "index", "0",
             "parameters", List.of(parameter)));
+  }
+
+  private List<Map<String, Object>> buildReporterLinkButtonComponents(
+      Map<String, String> templateVariables) {
+    String token = templateVariables.get("4");
+    if (!hasText(token)) {
+      throw new IllegalArgumentException(
+          "WhatsApp reporter link button templates require template variable 4 for the token.");
+    }
+    List<Map<String, Object>> bodyParameters = List.of(
+        Map.of("type", "text", "parameter_name", "template_name",
+            "text", templateVariables.getOrDefault("1", "")),
+        Map.of("type", "text", "parameter_name", "church_name",
+            "text", templateVariables.getOrDefault("2", "")),
+        Map.of("type", "text", "parameter_name", "date",
+            "text", templateVariables.getOrDefault("3", "")));
+    return List.of(
+        Map.of("type", "body", "parameters", bodyParameters),
+        Map.of(
+            "type", "button",
+            "sub_type", "url",
+            "index", "0",
+            "parameters", List.of(Map.of("type", "text", "text", token))));
   }
 
   private List<Map<String, Object>> buildLoginLinkComponents(
