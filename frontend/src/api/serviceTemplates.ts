@@ -22,6 +22,7 @@ export interface ServiceTemplate {
   id: number;
   serviceTemplateName: string;
   templateType?: ServiceTemplateType;
+  linkOnly: boolean;
   serviceInfoItems?: ServiceInfoItemSummary[];
   sectionHeaders?: SectionHeaderSummary[];
   bannerUrl?: string;
@@ -31,11 +32,13 @@ export interface ServiceTemplateSummary {
   id: number;
   serviceTemplateName: string;
   templateType?: ServiceTemplateType;
+  linkOnly: boolean;
   bannerUrl?: string;
 }
 
 export interface ServiceTemplateDraft {
   serviceTemplateName: string;
+  linkOnly: boolean;
 }
 
 export async function getServiceTemplates(): Promise<ServiceTemplate[]> {

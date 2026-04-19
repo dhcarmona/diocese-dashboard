@@ -31,8 +31,8 @@ describe('AdminReportTemplateSelectionPage', () => {
 
   it('renders a tile for each template after loading', async () => {
     mockedGetServiceTemplates.mockResolvedValueOnce([
-      { id: 1, serviceTemplateName: 'Sunday Eucharist' },
-      { id: 2, serviceTemplateName: 'Morning Prayer' },
+      { id: 1, serviceTemplateName: 'Sunday Eucharist', linkOnly: false },
+      { id: 2, serviceTemplateName: 'Morning Prayer', linkOnly: false },
     ]);
 
     render(

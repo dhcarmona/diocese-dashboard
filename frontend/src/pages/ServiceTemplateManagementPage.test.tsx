@@ -97,6 +97,7 @@ describe('ServiceTemplateManagementPage', () => {
   const sampleTemplate = {
     id: 1,
     serviceTemplateName: 'Sunday Mass',
+    linkOnly: false,
     serviceInfoItems: [],
     sectionHeaders: [],
     bannerUrl: undefined,
@@ -277,7 +278,7 @@ describe('ServiceTemplateManagementPage', () => {
 
   it('clears edit state when switching to a different template', async () => {
     const user = userEvent.setup();
-    const secondTemplate = { id: 2, serviceTemplateName: 'Vespers', serviceInfoItems: [], bannerUrl: undefined };
+    const secondTemplate = { id: 2, serviceTemplateName: 'Vespers', linkOnly: false, serviceInfoItems: [], bannerUrl: undefined };
     mockedGetServiceTemplates.mockResolvedValueOnce([sampleTemplateWithItems, secondTemplate]);
     mockedGetServiceTemplateById
       .mockResolvedValueOnce(sampleTemplateWithItems)
@@ -458,5 +459,49 @@ describe('ServiceTemplateManagementPage', () => {
 
     await screen.findByText('We could not save the info item right now.');
     expect(mockedUpdateServiceInfoItem).toHaveBeenCalled();
+  });
+
+  it('includes linkOnly=false in create request when toggle is off', async () => {
+    const user = userEvent.setup();
+    mockedGetServiceTemplates.mockResolvedValueOnce([]);
+    mockedCreateServiceTemplate.mockResolvedValueOnce({ ...sampleTemplate, id: 99, serviceTemplateName: 'New Template' });
+
+    renderPage();
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole('heading', { name: 'Add Service Template' }),
+      ).toBeInTheDocument();
+    });
+
+    await user.type(screen.getByLabelText(/template name/i), 'New Template');
+    await user.click(screen.getByRole('button', { name: /create template/i }));
+
+    await screen.findByText(/"New Template" was created\./);
+    expect(mockedCreateServiceTemplate).toHaveBeenCalledWith(
+      expect.objectContaining({ serviceTemplateName: 'New Template', linkOnly: false }),
+    );
+  });
+
+  it('includes linkOnly=true in update request when toggle is on', async () => {
+    const user = userEvent.setup();
+    mockedGetServiceTemplates.mockResolvedValueOnce([sampleTemplate]);
+    mockedGetServiceTemplateById.mockResolvedValueOnce(sampleTemplate);
+    mockedUpdateServiceTemplate.mockResolvedValueOnce({ ...sampleTemplate, linkOnly: true });
+
+    renderPage();
+    await user.click(await screen.findByRole('button', { name: /sunday mass/i }));
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: 'Edit Service Template' })).toBeInTheDocument();
+    });
+
+    await user.click(screen.getByRole('switch', { name: /link only/i }));
+    await user.click(screen.getByRole('button', { name: /save changes/i }));
+
+    await screen.findByText(/"Sunday Mass" was updated\./);
+    expect(mockedUpdateServiceTemplate).toHaveBeenCalledWith(
+      sampleTemplate.id,
+      expect.objectContaining({ linkOnly: true }),
+    );
   });
 });

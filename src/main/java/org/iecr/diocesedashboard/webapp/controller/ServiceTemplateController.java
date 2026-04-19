@@ -45,12 +45,18 @@ public class ServiceTemplateController {
   }
 
   /**
-   * Returns all service templates.
+   * Returns all service templates. Admins receive the full list; reporters receive only
+   * templates that are not marked as link-only.
    *
-   * @return list of all service templates
+   * @param auth the current authentication
+   * @return list of service templates visible to the caller
    */
   @GetMapping
-  public List<ServiceTemplate> getAll() {
+  public List<ServiceTemplate> getAll(Authentication auth) {
+    DashboardUser user = ((DashboardUserDetails) auth.getPrincipal()).getDashboardUser();
+    if (user.getRole() == UserRole.REPORTER) {
+      return serviceTemplateService.findAllForReporter();
+    }
     return serviceTemplateService.findAll();
   }
 
@@ -96,6 +102,7 @@ public class ServiceTemplateController {
       return ResponseEntity.notFound().build();
     }
     template.setServiceTemplateName(request.serviceTemplateName());
+    template.setLinkOnly(request.linkOnly());
     return ResponseEntity.ok(serviceTemplateService.save(template));
   }
 
@@ -133,6 +140,14 @@ public class ServiceTemplateController {
       throw new ResponseStatusException(HttpStatus.FORBIDDEN,
           "Reporters may only submit for their assigned churches");
     }
+    if (user.getRole() == UserRole.REPORTER) {
+      ServiceTemplate template = serviceTemplateService.findById(id)
+          .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+      if (template.isLinkOnly()) {
+        throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+            "This template is only accessible via a reporter link");
+      }
+    }
     ServiceInstance created = serviceSubmissionService.submit(id, request, user);
     return ResponseEntity.status(HttpStatus.CREATED)
         .body(ReportSubmissionResponse.fromAuthenticated(
@@ -145,6 +160,7 @@ public class ServiceTemplateController {
   private ServiceTemplate buildTemplateFromRequest(ServiceTemplateRequest request) {
     ServiceTemplate template = new ServiceTemplate();
     template.setServiceTemplateName(request.serviceTemplateName());
+    template.setLinkOnly(request.linkOnly());
     return template;
   }
 }

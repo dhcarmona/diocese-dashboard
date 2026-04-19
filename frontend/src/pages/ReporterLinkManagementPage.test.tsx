@@ -39,7 +39,7 @@ const mockedDeleteLinkSchedule = vi.mocked(deleteLinkSchedule);
 const mockedGetReporterLinks = vi.mocked(getReporterLinks);
 const mockedGetServiceTemplates = vi.mocked(getServiceTemplates);
 
-const TEMPLATE = { id: 1, serviceTemplateName: 'Sunday Eucharist' };
+const TEMPLATE = { id: 1, serviceTemplateName: 'Sunday Eucharist', linkOnly: false };
 
 const CHURCH_A = { name: 'Church A', location: 'San José', mainCelebrant: null, portraitUrl: '' };
 const CHURCH_B = { name: 'Church B', location: 'Heredia', mainCelebrant: null, portraitUrl: '' };
