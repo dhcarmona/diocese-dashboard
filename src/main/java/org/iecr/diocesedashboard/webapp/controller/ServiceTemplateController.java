@@ -142,7 +142,8 @@ public class ServiceTemplateController {
     }
     if (user.getRole() == UserRole.REPORTER) {
       ServiceTemplate template = serviceTemplateService.findById(id)
-          .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+          .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+              "Template not found"));
       if (template.isLinkOnly()) {
         throw new ResponseStatusException(HttpStatus.FORBIDDEN,
             "This template is only accessible via a reporter link");
