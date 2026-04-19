@@ -88,7 +88,7 @@ class WhatsAppServiceTest {
   @Test
   void buildComponents_keepsUtilityTemplatesAsBodyOnlyParameters() {
     List<Map<String, Object>> components = service.buildComponents(
-        WhatsAppService.TemplateType.REPORTER_LINK,
+        WhatsAppService.TemplateType.REPORTER_WELCOME,
         Map.of("2", "St Mark Church", "1", "Sunday Eucharist"));
 
     assertEquals(1, components.size());
@@ -98,5 +98,27 @@ class WhatsAppServiceTest {
             Map.of("type", "text", "text", "Sunday Eucharist"),
             Map.of("type", "text", "text", "St Mark Church")),
         components.get(0).get("parameters"));
+  }
+
+  @Test
+  void buildComponents_addsButtonParameterForReporterLinkTemplates() {
+    List<Map<String, Object>> components = service.buildComponents(
+        WhatsAppService.TemplateType.REPORTER_LINK,
+        Map.of("1", "Sunday Mass", "2", "Trinity", "3", "2025-04-20", "4", "abc-token-123"));
+
+    assertEquals(2, components.size());
+    assertEquals("body", components.get(0).get("type"));
+    assertEquals(
+        List.of(
+            Map.of("type", "text", "parameter_name", "template_name", "text", "Sunday Mass"),
+            Map.of("type", "text", "parameter_name", "church_name", "text", "Trinity"),
+            Map.of("type", "text", "parameter_name", "date", "text", "2025-04-20")),
+        components.get(0).get("parameters"));
+    assertEquals("button", components.get(1).get("type"));
+    assertEquals("url", components.get(1).get("sub_type"));
+    assertEquals("0", components.get(1).get("index"));
+    assertEquals(
+        List.of(Map.of("type", "text", "text", "abc-token-123")),
+        components.get(1).get("parameters"));
   }
 }

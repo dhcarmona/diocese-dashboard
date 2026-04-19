@@ -161,7 +161,7 @@ public class ReporterLinkService {
           "Link for \"" + templateName + "\" sent.",
           reporter.getUsername(),
           WhatsAppService.TemplateType.REPORTER_LINK,
-          buildTemplateVariables(templateName, churchName, activeDate.toString(), linkUrl));
+          buildTemplateVariables(templateName, churchName, activeDate.toString(), token));
     } catch (Exception ex) {
       logger.warn("WhatsApp delivery failed for reporter {} ({}): {}",
           reporter.getId(), reporter.getUsername(), ex.getMessage());
@@ -182,12 +182,12 @@ public class ReporterLinkService {
   }
 
   private Map<String, String> buildTemplateVariables(String templateName, String churchName,
-      String activeDate, String linkUrl) {
+      String activeDate, String token) {
     Map<String, String> templateVariables = new LinkedHashMap<>();
     templateVariables.put("1", templateName);
     templateVariables.put("2", churchName);
     templateVariables.put("3", activeDate);
-    templateVariables.put("4", linkUrl);
+    templateVariables.put("4", token);
     return templateVariables;
   }
 
