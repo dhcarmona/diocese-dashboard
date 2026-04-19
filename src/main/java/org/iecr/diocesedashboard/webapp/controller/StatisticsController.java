@@ -43,12 +43,15 @@ public class StatisticsController {
    * Returns all service templates available for statistics, including link-only templates.
    * This endpoint is available to all authenticated users since reporters are allowed to view
    * statistics for link-only templates even though they cannot submit them directly.
+   * Returns a lightweight summary to avoid loading lazy collections on each template entity.
    *
-   * @return list of all service templates
+   * @return list of all service template summaries
    */
   @GetMapping("/templates")
-  public List<ServiceTemplate> getTemplatesForStatistics() {
-    return serviceTemplateService.findAll();
+  public List<ServiceTemplateSummaryResponse> getTemplatesForStatistics() {
+    return serviceTemplateService.findAll().stream()
+        .map(ServiceTemplateSummaryResponse::from)
+        .toList();
   }
 
   /**

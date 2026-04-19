@@ -206,7 +206,9 @@ class StatisticsControllerTest {
         .andExpect(jsonPath("$.length()").value(2))
         .andExpect(jsonPath("$[0].serviceTemplateName").value("Sunday Mass"))
         .andExpect(jsonPath("$[1].serviceTemplateName").value("Link Only Service"))
-        .andExpect(jsonPath("$[1].linkOnly").value(true));
+        .andExpect(jsonPath("$[1].linkOnly").value(true))
+        .andExpect(jsonPath("$[0].serviceInfoItems").doesNotExist())
+        .andExpect(jsonPath("$[0].sectionHeaders").doesNotExist());
   }
 
   @Test
