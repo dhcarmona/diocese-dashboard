@@ -22,19 +22,24 @@ export default function AppFooter({ showBuildInfo = false }: Readonly<AppFooterP
       component="footer"
       sx={{
         display: 'flex',
+        flexDirection: { xs: 'column', sm: 'row' },
         alignItems: 'center',
         px: 3,
         py: 1.5,
+        gap: { xs: 0.5, sm: 0 },
         bgcolor: 'primary.dark',
       }}
     >
-      <Box sx={{ flex: 1 }} />
+      <Box sx={{ flex: 1, display: { xs: 'none', sm: 'block' } }} />
       <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.7)' }}>
         © {CURRENT_YEAR} Misión Santa Clara de Asís – IECR
       </Typography>
-      <Box sx={{ flex: 1, display: 'flex', justifyContent: 'flex-end' }}>
+      <Box sx={{ flex: 1, display: 'flex', justifyContent: { xs: 'center', sm: 'flex-end' } }}>
         {showBuildInfo && (
-          <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.4)' }}>
+          <Typography
+            variant="caption"
+            sx={{ color: 'rgba(255,255,255,0.4)', whiteSpace: 'nowrap' }}
+          >
             Build {buildLabel}
           </Typography>
         )}
