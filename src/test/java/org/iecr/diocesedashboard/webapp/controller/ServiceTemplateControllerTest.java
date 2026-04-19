@@ -4,7 +4,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.springframework.http.HttpStatus.NOT_FOUND;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -34,7 +33,6 @@ import org.springframework.http.MediaType;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -75,7 +73,7 @@ class ServiceTemplateControllerTest {
   }
 
   private ServiceTemplateRequest buildTemplateRequest(String name) {
-    return new ServiceTemplateRequest(name);
+    return new ServiceTemplateRequest(name, false);
   }
 
   private ReporterLink buildLink(String token) {
@@ -93,7 +91,7 @@ class ServiceTemplateControllerTest {
   // --- GET /api/service-templates ---
 
   @Test
-  @WithMockUser(roles = "ADMIN")
+  @WithMockDashboardUser
   void getAll_asAdmin_returns200WithList() throws Exception {
     when(serviceTemplateService.findAll()).thenReturn(
         List.of(buildTemplate(1L, "Sunday Mass"), buildTemplate(2L, "Vespers")));
@@ -104,14 +102,14 @@ class ServiceTemplateControllerTest {
   }
 
   @Test
-  @WithMockUser(roles = "REPORTER")
-  void getAll_asReporter_returns200WithList() throws Exception {
-    when(serviceTemplateService.findAll()).thenReturn(
-        List.of(buildTemplate(1L, "Sunday Mass"), buildTemplate(2L, "Vespers")));
+  @WithMockDashboardUser(role = UserRole.REPORTER)
+  void getAll_asReporter_returnsOnlyNonLinkOnlyTemplates() throws Exception {
+    when(serviceTemplateService.findAllForReporter()).thenReturn(
+        List.of(buildTemplate(1L, "Sunday Mass")));
 
     mockMvc.perform(get("/api/service-templates"))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.length()").value(2));
+        .andExpect(jsonPath("$.length()").value(1));
   }
 
   @Test
@@ -243,6 +241,8 @@ class ServiceTemplateControllerTest {
   void submit_asReporter_validRequest_returns201() throws Exception {
     ServiceInstance instance = new ServiceInstance();
     instance.setId(42L);
+    when(serviceTemplateService.findById(1L))
+        .thenReturn(Optional.of(buildTemplate(1L, "Sunday Mass")));
     when(serviceSubmissionService.submit(eq(1L), any(ServiceInstanceRequest.class), any()))
         .thenReturn(instance);
     when(reporterLinkService.findNextPendingLinkForReporter(any()))
@@ -263,6 +263,8 @@ class ServiceTemplateControllerTest {
   void submit_asReporterAssignedToMultipleChurches_returns201() throws Exception {
     ServiceInstance instance = new ServiceInstance();
     instance.setId(43L);
+    when(serviceTemplateService.findById(1L))
+        .thenReturn(Optional.of(buildTemplate(1L, "Sunday Mass")));
     when(serviceSubmissionService.submit(eq(1L), any(ServiceInstanceRequest.class), any()))
         .thenReturn(instance);
 
@@ -293,14 +295,29 @@ class ServiceTemplateControllerTest {
   @Test
   @WithMockDashboardUser(role = UserRole.REPORTER, churchName = "Trinity")
   void submit_templateNotFound_returns404() throws Exception {
-    when(serviceSubmissionService.submit(eq(99L), any(ServiceInstanceRequest.class), any()))
-        .thenThrow(new ResponseStatusException(NOT_FOUND, "Template not found"));
+    when(serviceTemplateService.findById(99L)).thenReturn(Optional.empty());
 
     mockMvc.perform(post("/api/service-templates/99/submit")
         .with(csrf())
         .contentType(MediaType.APPLICATION_JSON)
-        .content(objectMapper.writeValueAsString(buildRequest())))
+        .content(objectMapper.writeValueAsString(
+            new ServiceInstanceRequest("Trinity", List.of(1L), LocalDate.of(2024, 1, 14),
+                List.of(new ServiceInstanceRequest.ResponseEntry(1L, "120"))))))
         .andExpect(status().isNotFound());
+  }
+
+  @Test
+  @WithMockDashboardUser(role = UserRole.REPORTER, churchName = "Trinity")
+  void submit_asReporter_linkOnlyTemplate_returns403() throws Exception {
+    ServiceTemplate linkOnlyTemplate = buildTemplate(1L, "Special");
+    linkOnlyTemplate.setLinkOnly(true);
+    when(serviceTemplateService.findById(1L)).thenReturn(Optional.of(linkOnlyTemplate));
+
+    mockMvc.perform(post("/api/service-templates/1/submit")
+        .with(csrf())
+        .contentType(MediaType.APPLICATION_JSON)
+        .content(objectMapper.writeValueAsString(buildRequest())))
+        .andExpect(status().isForbidden());
   }
 
   @Test

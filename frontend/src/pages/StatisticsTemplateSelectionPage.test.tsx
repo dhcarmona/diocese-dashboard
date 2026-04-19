@@ -31,8 +31,8 @@ describe('StatisticsTemplateSelectionPage', () => {
 
   it('renders a tile for each template after loading', async () => {
     mockedGetServiceTemplates.mockResolvedValueOnce([
-      { id: 1, serviceTemplateName: 'Sunday Eucharist' },
-      { id: 2, serviceTemplateName: 'Morning Prayer' },
+      { id: 1, serviceTemplateName: 'Sunday Eucharist', linkOnly: false },
+      { id: 2, serviceTemplateName: 'Morning Prayer', linkOnly: false },
     ]);
 
     render(
@@ -50,7 +50,7 @@ describe('StatisticsTemplateSelectionPage', () => {
 
   it('links each tile to the correct statistics filter route', async () => {
     mockedGetServiceTemplates.mockResolvedValueOnce([
-      { id: 7, serviceTemplateName: 'Vespers' },
+      { id: 7, serviceTemplateName: 'Vespers', linkOnly: false },
     ]);
 
     render(

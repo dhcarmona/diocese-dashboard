@@ -427,7 +427,9 @@
       "itemTypeLabel": "Tipo",
       "itemRequiredLabel": "Obligatorio",
       "headerTitleLabel": "Título del encabezado",
-      "headerTitlePlaceholder": "Ej. Finanzas"
+      "headerTitlePlaceholder": "Ej. Finanzas",
+      "linkOnlyLabel": "Solo por enlace",
+      "linkOnlyDescription": "Cuando está activado, los reporteros solo pueden enviar esta plantilla a través de un enlace de reportero, no desde su página de inicio."
     },
     "feedback": {
       "created": "Se creó \"{{name}}\".",

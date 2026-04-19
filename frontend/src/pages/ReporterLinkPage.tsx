@@ -386,7 +386,7 @@ export default function ReporterLinkPage() {
       <PageHeader title={link.serviceTemplateName} subtitle={link.churchName} />
 
       <ServiceTemplateBanner
-        template={{ id: link.serviceTemplateId, serviceTemplateName: link.serviceTemplateName, bannerUrl }}
+        template={{ id: link.serviceTemplateId, serviceTemplateName: link.serviceTemplateName, linkOnly: false, bannerUrl }}
         sx={{ mb: 2 }}
       />
 

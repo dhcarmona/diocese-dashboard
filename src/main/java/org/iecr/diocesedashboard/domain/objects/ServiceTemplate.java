@@ -33,6 +33,9 @@ public class ServiceTemplate {
   @JdbcTypeCode(SqlTypes.VARCHAR)
   private ServiceTemplateType templateType;
 
+  @Column(nullable = false)
+  private boolean linkOnly;
+
   @Transient
   @JsonProperty(access = JsonProperty.Access.READ_ONLY)
   private String bannerUrl;
@@ -74,6 +77,14 @@ public class ServiceTemplate {
 
   public void setTemplateType(ServiceTemplateType templateType) {
     this.templateType = templateType;
+  }
+
+  public boolean isLinkOnly() {
+    return linkOnly;
+  }
+
+  public void setLinkOnly(boolean linkOnly) {
+    this.linkOnly = linkOnly;
   }
 
   public String getBannerUrl() {

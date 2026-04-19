@@ -41,6 +41,7 @@ import ListItemText from '@mui/material/ListItemText';
 import MenuItem from '@mui/material/MenuItem';
 import Select from '@mui/material/Select';
 import Stack from '@mui/material/Stack';
+import Switch from '@mui/material/Switch';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import { type FormEvent, useEffect, useMemo, useState } from 'react';
@@ -309,6 +310,7 @@ export default function ServiceTemplateManagementPage() {
   const [selectedTemplate, setSelectedTemplate] = useState<ServiceTemplate | null>(null);
   const [formMode, setFormMode] = useState<FormMode>('create');
   const [draftName, setDraftName] = useState('');
+  const [draftLinkOnly, setDraftLinkOnly] = useState(false);
   const [templateItems, setTemplateItems] = useState<TemplateItem[]>([]);
   const [infoItemDraft, setInfoItemDraft] = useState<InfoItemDraft>(defaultInfoItemDraft);
   const [editingItemId, setEditingItemId] = useState<number | null>(null);
@@ -367,6 +369,7 @@ export default function ServiceTemplateManagementPage() {
     setSelectedTemplateId(null);
     setSelectedTemplate(null);
     setDraftName('');
+    setDraftLinkOnly(false);
     setTemplateItems([]);
     setInfoItemDraft(defaultInfoItemDraft);
     setEditingItemId(null);
@@ -391,6 +394,7 @@ export default function ServiceTemplateManagementPage() {
       const full = await getServiceTemplateById(template.id);
       setSelectedTemplate(full);
       setDraftName(full.serviceTemplateName);
+      setDraftLinkOnly(full.linkOnly);
       setTemplateItems(buildTemplateItems(full.serviceInfoItems ?? [], full.sectionHeaders ?? []));
     } catch {
       setFeedback({ severity: 'error', message: t('serviceTemplates.list.loadError') });
@@ -412,7 +416,7 @@ export default function ServiceTemplateManagementPage() {
     setSubmitting(true);
     setFeedback(null);
 
-    const draft: ServiceTemplateDraft = { serviceTemplateName: trimmedName };
+    const draft: ServiceTemplateDraft = { serviceTemplateName: trimmedName, linkOnly: draftLinkOnly };
 
     try {
       if (selectedTemplate) {
@@ -709,6 +713,22 @@ export default function ServiceTemplateManagementPage() {
                 autoComplete="off"
                 fullWidth
               />
+
+              <Box>
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={draftLinkOnly}
+                      onChange={(e) => setDraftLinkOnly(e.target.checked)}
+                      disabled={submitting}
+                    />
+                  }
+                  label={t('serviceTemplates.form.linkOnlyLabel')}
+                />
+                <Typography variant="body2" color="text.secondary">
+                  {t('serviceTemplates.form.linkOnlyDescription')}
+                </Typography>
+              </Box>
 
               <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
                 <Button

@@ -31,6 +31,15 @@ public class ServiceTemplateService {
   }
 
   /**
+   * Returns service templates accessible to reporter users (link-only templates excluded).
+   *
+   * @return list of non-link-only service templates
+   */
+  public List<ServiceTemplate> findAllForReporter() {
+    return repository.findByLinkOnlyFalse().stream().map(this::attachBanner).toList();
+  }
+
+  /**
    * Returns the service template with the given ID, with banner URL attached.
    *
    * @param id the template ID

@@ -427,7 +427,9 @@
       "itemTypeLabel": "Type",
       "itemRequiredLabel": "Required",
       "headerTitleLabel": "Header title",
-      "headerTitlePlaceholder": "e.g. Finance"
+      "headerTitlePlaceholder": "e.g. Finance",
+      "linkOnlyLabel": "Link only",
+      "linkOnlyDescription": "When enabled, reporters can only submit this template via a reporter link, not from their home page."
     },
     "feedback": {
       "created": "\"{{name}}\" was created.",

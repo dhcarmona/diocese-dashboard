@@ -54,6 +54,21 @@ class ServiceTemplateServiceTest {
   }
 
   @Test
+  void findAllForReporter_returnsOnlyNonLinkOnlyTemplatesWithBannerUrls() {
+    ServiceTemplate t1 = buildTemplate("Sunday Mass");
+    when(repository.findByLinkOnlyFalse()).thenReturn(List.of(t1));
+    when(portraitService.buildServiceTemplateBannerUrl("Sunday Mass"))
+        .thenReturn("/api/portraits/service-templates?name=Sunday+Mass");
+
+    List<ServiceTemplate> result = serviceTemplateService.findAllForReporter();
+
+    assertThat(result).hasSize(1);
+    assertThat(result.get(0).getBannerUrl())
+        .isEqualTo("/api/portraits/service-templates?name=Sunday+Mass");
+    verify(repository).findByLinkOnlyFalse();
+  }
+
+  @Test
   void findById_returnsTemplateWithBannerUrl_whenExists() {
     ServiceTemplate template = buildTemplate("Sunday Mass");
     when(repository.findById(1L)).thenReturn(Optional.of(template));

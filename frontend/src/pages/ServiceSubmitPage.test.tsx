@@ -34,6 +34,7 @@ const mockedSubmit = vi.mocked(submitServiceInstance);
 const TEMPLATE: ServiceTemplate = {
   id: 1,
   serviceTemplateName: 'Sunday Eucharist',
+  linkOnly: false,
   serviceInfoItems: [
     { id: 10, title: 'Attendance', serviceInfoItemType: 'NUMERICAL', required: true },
     { id: 11, title: 'Notes', serviceInfoItemType: 'STRING', required: false },

@@ -19,8 +19,8 @@ describe('TemplateSelectionPage', () => {
 
   it('renders service template tiles after loading', async () => {
     mockedGetServiceTemplates.mockResolvedValueOnce([
-      { id: 1, serviceTemplateName: 'Sunday Eucharist' } as ServiceTemplate,
-      { id: 2, serviceTemplateName: 'Morning Prayer' } as ServiceTemplate,
+      { id: 1, serviceTemplateName: 'Sunday Eucharist', linkOnly: false } as ServiceTemplate,
+      { id: 2, serviceTemplateName: 'Morning Prayer', linkOnly: false } as ServiceTemplate,
     ]);
 
     render(
