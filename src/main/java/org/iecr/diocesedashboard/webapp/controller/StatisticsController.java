@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
+import java.util.List;
 
 /** REST controller that exposes aggregate statistics for service instances. */
 @RestController
@@ -36,6 +37,18 @@ public class StatisticsController {
     this.statisticsService = statisticsService;
     this.serviceTemplateService = serviceTemplateService;
     this.churchService = churchService;
+  }
+
+  /**
+   * Returns all service templates available for statistics, including link-only templates.
+   * This endpoint is available to all authenticated users since reporters are allowed to view
+   * statistics for link-only templates even though they cannot submit them directly.
+   *
+   * @return list of all service templates
+   */
+  @GetMapping("/templates")
+  public List<ServiceTemplate> getTemplatesForStatistics() {
+    return serviceTemplateService.findAll();
   }
 
   /**

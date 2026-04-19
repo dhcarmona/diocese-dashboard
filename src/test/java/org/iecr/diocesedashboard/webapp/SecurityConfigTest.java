@@ -324,6 +324,12 @@ class SecurityConfigTest {
   }
 
   @Test
+  void apiStatisticsTemplates_anonymous_returns401() throws Exception {
+    mockMvc.perform(get("/api/statistics/templates"))
+        .andExpect(status().isUnauthorized());
+  }
+
+  @Test
   void statisticsFrontendRoute_anonymous_returns200() throws Exception {
     mockMvc.perform(get("/statistics")).andExpect(status().isOk());
   }
