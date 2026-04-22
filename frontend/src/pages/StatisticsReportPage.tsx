@@ -230,7 +230,7 @@ export default function StatisticsReportPage() {
                   <Table size="small">
                     <TableHead>
                       <TableRow>
-                        <TableCell />
+                        <TableCell aria-hidden="true" role="presentation" />
                         <TableCell><strong>{t('statistics.report.celebrant')}</strong></TableCell>
                         <TableCell align="right"><strong>{t('statistics.report.services')}</strong></TableCell>
                       </TableRow>
@@ -240,6 +240,7 @@ export default function StatisticsReportPage() {
                         <TableRow key={stat.celebrantId}>
                           <TableCell sx={{ pr: 0 }}>
                             <Box
+                              aria-hidden="true"
                               sx={{
                                 width: 14,
                                 height: 14,
