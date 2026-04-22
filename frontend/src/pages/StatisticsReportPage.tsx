@@ -20,7 +20,6 @@ import {
   BarChart,
   CartesianGrid,
   Cell,
-  Legend,
   Pie,
   PieChart,
   ResponsiveContainer,
@@ -212,7 +211,7 @@ export default function StatisticsReportPage() {
                       nameKey="celebrantName"
                       cx="50%"
                       cy="50%"
-                      outerRadius={110}
+                      outerRadius={130}
                       labelLine={false}
                     >
                       {report.celebrantStats.map((entry, index) => (
@@ -225,20 +224,30 @@ export default function StatisticsReportPage() {
                     <Tooltip
                       formatter={(val, name) => [Number(val ?? 0), String(name ?? '')]}
                     />
-                    <Legend />
                   </PieChart>
                 </ResponsiveContainer>
                 <Box>
                   <Table size="small">
                     <TableHead>
                       <TableRow>
+                        <TableCell />
                         <TableCell><strong>{t('statistics.report.celebrant')}</strong></TableCell>
                         <TableCell align="right"><strong>{t('statistics.report.services')}</strong></TableCell>
                       </TableRow>
                     </TableHead>
                     <TableBody>
-                      {report.celebrantStats.map((stat) => (
+                      {report.celebrantStats.map((stat, index) => (
                         <TableRow key={stat.celebrantId}>
+                          <TableCell sx={{ pr: 0 }}>
+                            <Box
+                              sx={{
+                                width: 14,
+                                height: 14,
+                                borderRadius: '3px',
+                                bgcolor: CHART_COLORS[index % CHART_COLORS.length],
+                              }}
+                            />
+                          </TableCell>
                           <TableCell>{stat.celebrantName}</TableCell>
                           <TableCell align="right">{stat.serviceCount}</TableCell>
                         </TableRow>
