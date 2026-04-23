@@ -199,6 +199,12 @@ describe('ReporterLinkPage', () => {
     );
 
     await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeInTheDocument();
+    });
+
+    await user.click(screen.getByRole('button', { name: /yes, submit/i }));
+
+    await waitFor(() => {
       expect(mockedSubmitViaReporterLinkPublic).toHaveBeenCalledWith('test-token', {
         celebrantIds: [],
         responses: [
