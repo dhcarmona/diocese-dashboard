@@ -228,7 +228,13 @@
     "fixedDateNotice": "This report will be recorded for {{date}}.",
     "notYetActiveSubtitle": "This link is not yet active.",
     "notYetActive": "This report link will be available starting {{date}}. Please come back on that date.",
-    "noCelebrationButton": "Press here if there was no celebration"
+    "noCelebrationButton": "Press here if there was no celebration",
+    "noCelebrationDialog": {
+      "title": "No Celebration",
+      "body": "This will report there was no celebration for this date. Are you sure? Press No to continue filling this report.",
+      "yes": "Yes, submit",
+      "no": "No, go back"
+    }
   },
   "celebrants": {
     "subtitle": "Add, update, and remove celebrants.",

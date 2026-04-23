@@ -5,6 +5,11 @@ import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Chip from '@mui/material/Chip';
 import CircularProgress from '@mui/material/CircularProgress';
+import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import DialogContentText from '@mui/material/DialogContentText';
+import DialogTitle from '@mui/material/DialogTitle';
 import Divider from '@mui/material/Divider';
 import InputAdornment from '@mui/material/InputAdornment';
 import Stack from '@mui/material/Stack';
@@ -93,6 +98,7 @@ export default function ReporterLinkPage() {
   const [focusedItemId, setFocusedItemId] = useState<number | null>(null);
   const [openingNextPendingLink, setOpeningNextPendingLink] = useState(false);
   const [openNextPendingLinkError, setOpenNextPendingLinkError] = useState(false);
+  const [noCelebrationDialogOpen, setNoCelebrationDialogOpen] = useState(false);
   const showHomeButton = status === 'authenticated';
 
   useEffect(() => {
@@ -448,12 +454,41 @@ export default function ReporterLinkPage() {
               type="button"
               variant="contained"
               color="warning"
-              onClick={() => void handleNoCelebration()}
+              onClick={() => setNoCelebrationDialogOpen(true)}
               disabled={submitting}
             >
               {t('reporterLink.noCelebrationButton')}
             </Button>
           )}
+
+          <Dialog
+            open={noCelebrationDialogOpen}
+            onClose={() => setNoCelebrationDialogOpen(false)}
+          >
+            <DialogTitle>{t('reporterLink.noCelebrationDialog.title')}</DialogTitle>
+            <DialogContent>
+              <DialogContentText>
+                {t('reporterLink.noCelebrationDialog.body')}
+              </DialogContentText>
+            </DialogContent>
+            <DialogActions>
+              <Button
+                onClick={() => setNoCelebrationDialogOpen(false)}
+                variant="contained"
+              >
+                {t('reporterLink.noCelebrationDialog.no')}
+              </Button>
+              <Button
+                onClick={() => {
+                  setNoCelebrationDialogOpen(false);
+                  void handleNoCelebration();
+                }}
+                color="warning"
+              >
+                {t('reporterLink.noCelebrationDialog.yes')}
+              </Button>
+            </DialogActions>
+          </Dialog>
 
           <TextField
             label={t('submitService.fields.date')}
