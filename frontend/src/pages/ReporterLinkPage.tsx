@@ -445,6 +445,7 @@ export default function ReporterLinkPage() {
 
           {showNoCelebrationButton && (
             <Button
+              type="button"
               variant="contained"
               color="warning"
               onClick={() => void handleNoCelebration()}
