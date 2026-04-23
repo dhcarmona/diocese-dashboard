@@ -1,4 +1,5 @@
 import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import i18n from 'i18next';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { vi } from 'vitest';
@@ -7,6 +8,10 @@ import StatisticsReportPage from './StatisticsReportPage';
 
 vi.mock('../api/statistics', () => ({
   getStatistics: vi.fn(),
+}));
+
+vi.mock('../utils/statisticsPdf', () => ({
+  downloadStatisticsPdf: vi.fn().mockResolvedValue(undefined),
 }));
 
 vi.mock('recharts', () => ({
@@ -215,5 +220,31 @@ describe('StatisticsReportPage', () => {
       expect(screen.getByText('Reports to Fill')).toBeInTheDocument();
     });
     expect(screen.queryByRole('columnheader', { name: 'Church' })).not.toBeInTheDocument();
+  });
+
+  it('shows the Download as PDF button when report is loaded', async () => {
+    mockedGetStatistics.mockResolvedValueOnce(sampleReport);
+    renderPage();
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Download as PDF' })).toBeInTheDocument();
+    });
+  });
+
+  it('calls downloadStatisticsPdf when the PDF button is clicked', async () => {
+    const { downloadStatisticsPdf } = await import('../utils/statisticsPdf');
+    const mockedDownload = vi.mocked(downloadStatisticsPdf);
+    mockedGetStatistics.mockResolvedValueOnce(sampleReport);
+    renderPage();
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Download as PDF' })).toBeInTheDocument();
+    });
+
+    await userEvent.click(screen.getByRole('button', { name: 'Download as PDF' }));
+
+    await waitFor(() => {
+      expect(mockedDownload).toHaveBeenCalledOnce();
+    });
   });
 });

@@ -575,6 +575,7 @@
         "link": "Link"
       },
       "backToFilter": "Change Filters",
+      "downloadPdf": "Download as PDF",
       "itemTypes": {
         "NUMERICAL": "count",
         "DOLLARS": "USD",
