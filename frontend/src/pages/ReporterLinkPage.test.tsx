@@ -85,6 +85,132 @@ describe('ReporterLinkPage', () => {
     await i18n.changeLanguage('en');
   });
 
+  it('shows the no-celebration button when no required STRING items exist', async () => {
+    mockedGetReporterLinkPublic.mockResolvedValue({
+      id: 1,
+      token: 'test-token',
+      churchName: 'Trinity Church',
+      serviceTemplateId: 10,
+      serviceTemplateName: 'Sunday Eucharist',
+      activeDate: '2024-04-14',
+      serviceInfoItems: [
+        { id: 1, title: 'Attendance', required: true, serviceInfoItemType: 'NUMERICAL', sortOrder: 1 },
+      ],
+      sectionHeaders: [],
+      celebrants: [],
+    });
+
+    renderPage();
+
+    await waitFor(() => {
+      expect(screen.getByText('Sunday Eucharist')).toBeInTheDocument();
+    });
+
+    expect(
+      screen.getByRole('button', { name: /press here if there was no celebration/i }),
+    ).toBeInTheDocument();
+  });
+
+  it('hides the no-celebration button when a required STRING item exists', async () => {
+    mockedGetReporterLinkPublic.mockResolvedValue({
+      id: 1,
+      token: 'test-token',
+      churchName: 'Trinity Church',
+      serviceTemplateId: 10,
+      serviceTemplateName: 'Sunday Eucharist',
+      activeDate: '2024-04-14',
+      serviceInfoItems: [
+        { id: 1, title: 'Attendance', required: true, serviceInfoItemType: 'NUMERICAL', sortOrder: 1 },
+        { id: 2, title: 'Notes', required: true, serviceInfoItemType: 'STRING', sortOrder: 2 },
+      ],
+      sectionHeaders: [],
+      celebrants: [],
+    });
+
+    renderPage();
+
+    await waitFor(() => {
+      expect(screen.getByText('Sunday Eucharist')).toBeInTheDocument();
+    });
+
+    expect(
+      screen.queryByRole('button', { name: /press here if there was no celebration/i }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('still shows the no-celebration button when a non-required STRING item exists', async () => {
+    mockedGetReporterLinkPublic.mockResolvedValue({
+      id: 1,
+      token: 'test-token',
+      churchName: 'Trinity Church',
+      serviceTemplateId: 10,
+      serviceTemplateName: 'Sunday Eucharist',
+      activeDate: '2024-04-14',
+      serviceInfoItems: [
+        { id: 2, title: 'Notes', required: false, serviceInfoItemType: 'STRING', sortOrder: 1 },
+      ],
+      sectionHeaders: [],
+      celebrants: [],
+    });
+
+    renderPage();
+
+    await waitFor(() => {
+      expect(screen.getByText('Sunday Eucharist')).toBeInTheDocument();
+    });
+
+    expect(
+      screen.getByRole('button', { name: /press here if there was no celebration/i }),
+    ).toBeInTheDocument();
+  });
+
+  it('submits zeroes for all numeric/money items and empty for strings when no-celebration clicked', async () => {
+    mockedGetReporterLinkPublic.mockResolvedValue({
+      id: 1,
+      token: 'test-token',
+      churchName: 'Trinity Church',
+      serviceTemplateId: 10,
+      serviceTemplateName: 'Sunday Eucharist',
+      activeDate: '2024-04-14',
+      serviceInfoItems: [
+        { id: 1, title: 'Attendance', required: true, serviceInfoItemType: 'NUMERICAL', sortOrder: 1 },
+        { id: 2, title: 'Offering', required: false, serviceInfoItemType: 'DOLLARS', sortOrder: 2 },
+        { id: 3, title: 'Notes', required: false, serviceInfoItemType: 'STRING', sortOrder: 3 },
+      ],
+      sectionHeaders: [],
+      celebrants: [],
+    });
+    mockedSubmitViaReporterLinkPublic.mockResolvedValue({
+      serviceInstanceId: 5,
+      nextReporterLinkToken: null,
+      nextReporterLinkFollowUpToken: null,
+      nextReporterLinkActiveDate: null,
+    });
+
+    const user = userEvent.setup();
+    renderPage();
+
+    await waitFor(() => {
+      expect(screen.getByText('Sunday Eucharist')).toBeInTheDocument();
+    });
+
+    await user.click(
+      screen.getByRole('button', { name: /press here if there was no celebration/i }),
+    );
+
+    await waitFor(() => {
+      expect(mockedSubmitViaReporterLinkPublic).toHaveBeenCalledWith('test-token', {
+        celebrantIds: [],
+        responses: [
+          { serviceInfoItemId: 1, responseValue: '0' },
+          { serviceInfoItemId: 2, responseValue: '0' },
+        ],
+      });
+    });
+
+    expect(screen.getByText('Report Submitted')).toBeInTheDocument();
+  });
+
   it('offers the next pending reporter link after a public submission', async () => {
     mockedGetReporterLinkPublic.mockResolvedValue({
       id: 1,

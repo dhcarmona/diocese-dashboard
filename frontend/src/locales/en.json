@@ -227,7 +227,8 @@
     "backHome": "Back to Home",
     "fixedDateNotice": "This report will be recorded for {{date}}.",
     "notYetActiveSubtitle": "This link is not yet active.",
-    "notYetActive": "This report link will be available starting {{date}}. Please come back on that date."
+    "notYetActive": "This report link will be available starting {{date}}. Please come back on that date.",
+    "noCelebrationButton": "Press here if there was no celebration"
   },
   "celebrants": {
     "subtitle": "Add, update, and remove celebrants.",

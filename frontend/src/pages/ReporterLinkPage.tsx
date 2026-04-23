@@ -255,6 +255,14 @@ export default function ReporterLinkPage() {
   const formattedActiveDate = formatDate(link.activeDate, i18n.resolvedLanguage);
   const isNotYetActive = activeDateObj.isAfter(today);
 
+  const infoItemsOnly = templateItems.filter(
+    (item): item is InfoTemplateItem => item.kind === 'INFO_ITEM',
+  );
+  const hasRequiredStringItem = infoItemsOnly.some(
+    (item) => item.serviceInfoItemType === 'STRING' && item.required,
+  );
+  const showNoCelebrationButton = !hasRequiredStringItem;
+
   if (isNotYetActive) {
     return (
       <AppShell>
@@ -332,6 +340,40 @@ export default function ReporterLinkPage() {
     }
   }
 
+  async function handleNoCelebration() {
+    if (!link) return;
+
+    const responseEntries = infoItemsOnly
+      .filter((item) => item.serviceInfoItemType !== 'STRING')
+      .map((item) => ({
+        serviceInfoItemId: item.id,
+        responseValue: '0',
+      }));
+
+    setSubmitting(true);
+    setSubmitError(false);
+
+    try {
+      if (status === 'authenticated') {
+        const result = await submitViaReporterLink(link.token, {
+          celebrantIds: [],
+          responses: responseEntries,
+        });
+        setSubmissionResult(result);
+      } else {
+        const result = await submitViaReporterLinkPublic(link.token, {
+          celebrantIds: [],
+          responses: responseEntries,
+        });
+        setSubmissionResult(result);
+      }
+    } catch {
+      setSubmitError(true);
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     if (!link) return;
@@ -400,6 +442,17 @@ export default function ReporterLinkPage() {
           <Alert severity="info">
             {t('reporterLink.fixedDateNotice', { date: formattedActiveDate })}
           </Alert>
+
+          {showNoCelebrationButton && (
+            <Button
+              variant="contained"
+              color="warning"
+              onClick={() => void handleNoCelebration()}
+              disabled={submitting}
+            >
+              {t('reporterLink.noCelebrationButton')}
+            </Button>
+          )}
 
           <TextField
             label={t('submitService.fields.date')}
