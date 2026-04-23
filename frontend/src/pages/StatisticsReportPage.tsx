@@ -148,10 +148,6 @@ export default function StatisticsReportPage() {
     try {
       await downloadStatisticsPdf(report, chartContentRef.current, {
         templateName: report.templateName,
-        churchDisplay,
-        dateRange: `${formatDate(startDate, i18n.resolvedLanguage)} – ${formatDate(endDate, i18n.resolvedLanguage)}`,
-        totalServicesLabel: t('statistics.report.totalServices'),
-        totalServicesCount: report.totalServiceCount,
         pendingLinksTitle: t('statistics.report.pendingLinksTitle'),
         pendingLinksSubtitle: t('statistics.report.pendingLinksSubtitle'),
         noPendingLinks: t('statistics.report.noPendingLinks'),
@@ -209,14 +205,14 @@ export default function StatisticsReportPage() {
           <div ref={chartContentRef}>
             {/* Report meta */}
             <Paper elevation={2} sx={{ p: 3, mb: 4 }}>
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
-                <Box>
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3, justifyContent: 'center' }}>
+                <Box sx={{ textAlign: 'center' }}>
                   <Typography variant="overline" color="text.secondary">
                     {t('statistics.filter.churchLabel')}
                   </Typography>
                   <Typography variant="h6" fontWeight={700}>{churchDisplay}</Typography>
                 </Box>
-                <Box>
+                <Box sx={{ textAlign: 'center' }}>
                   <Typography variant="overline" color="text.secondary">
                     {t('statistics.report.dateRangeLabel')}
                   </Typography>
@@ -225,7 +221,7 @@ export default function StatisticsReportPage() {
                     {formatDate(endDate, i18n.resolvedLanguage)}
                   </Typography>
                 </Box>
-                <Box>
+                <Box sx={{ textAlign: 'center' }}>
                   <Typography variant="overline" color="text.secondary">
                     {t('statistics.report.totalServices')}
                   </Typography>
@@ -235,14 +231,14 @@ export default function StatisticsReportPage() {
             </Paper>
 
             {/* Celebrant pie chart */}
-            <Paper elevation={2} sx={{ p: 3, mb: 4 }}>
+            <Paper elevation={2} sx={{ p: 3, mb: 4, textAlign: 'center' }}>
               <Typography variant="h6" fontWeight={700} gutterBottom>
                 {t('statistics.report.celebrantsTitle')}
               </Typography>
               {report.celebrantStats.length === 0 ? (
                 <Typography color="text.secondary">{t('statistics.report.noCelebrants')}</Typography>
               ) : (
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 2 }}>
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: 2 }}>
                   <ResponsiveContainer width={280} height={280}>
                     <PieChart>
                       <Pie

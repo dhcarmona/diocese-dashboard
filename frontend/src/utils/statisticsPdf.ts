@@ -11,10 +11,6 @@ const BRAND_BLUE: [number, number, number] = [28, 58, 110];
 
 export interface PdfLabels {
   templateName: string;
-  churchDisplay: string;
-  dateRange: string;
-  totalServicesLabel: string;
-  totalServicesCount: number;
   pendingLinksTitle: string;
   pendingLinksSubtitle: string;
   noPendingLinks: string;
@@ -26,10 +22,15 @@ export interface PdfLabels {
 
 async function fetchLogoDataUrl(): Promise<string> {
   const resp = await fetch('/logo.png');
+  if (!resp.ok) {
+    throw new Error(`Failed to fetch logo: ${resp.status} ${resp.statusText}`);
+  }
   const blob = await resp.blob();
-  return new Promise<string>((resolve) => {
+  return new Promise<string>((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => { resolve(reader.result as string); };
+    reader.onerror = () => { reject(new Error('Failed to read logo file')); };
+    reader.onabort = () => { reject(new Error('Logo file read was aborted')); };
     reader.readAsDataURL(blob);
   });
 }
@@ -44,7 +45,8 @@ async function loadImageElement(src: string): Promise<HTMLImageElement> {
 }
 
 /**
- * Renders the chart content element into the PDF, splitting across pages if needed.
+ * Renders the chart content element into the PDF page by page, capturing one
+ * page-sized slice at a time so memory usage stays bounded on long reports.
  * Returns the Y position after the last rendered slice.
  */
 async function renderChartContent(
@@ -52,41 +54,49 @@ async function renderChartContent(
   el: HTMLElement,
   startY: number,
 ): Promise<number> {
-  const canvas = await html2canvas(el, {
-    scale: 2,
+  const RENDER_SCALE = 2;
+  const sourceW = Math.max(1, el.scrollWidth);
+  const sourceH = Math.max(1, el.scrollHeight);
+  // CSS pixels per mm in the PDF
+  const sourcePxPerMm = sourceW / CONTENT_W;
+
+  const baseOptions = {
+    scale: RENDER_SCALE,
     useCORS: true,
     logging: false,
     backgroundColor: '#ffffff',
-  });
+    width: sourceW,
+    windowWidth: Math.max(document.documentElement.clientWidth, sourceW),
+    windowHeight: Math.max(window.innerHeight, sourceH),
+    scrollX: 0,
+    scrollY: 0,
+  };
 
-  const pxPerMm = canvas.width / CONTENT_W;
   let srcY = 0;
   let yPos = startY;
-  let firstSlice = true;
 
-  while (srcY < canvas.height) {
-    const availMm = firstSlice
-      ? PAGE_H - MARGIN - yPos - MARGIN
-      : PAGE_H - 2 * MARGIN;
-    const slicePx = Math.min(Math.round(availMm * pxPerMm), canvas.height - srcY);
-    const sliceMm = slicePx / pxPerMm;
+  while (srcY < sourceH) {
+    let availMm = PAGE_H - yPos - MARGIN;
 
-    const sliceCanvas = document.createElement('canvas');
-    sliceCanvas.width = canvas.width;
-    sliceCanvas.height = slicePx;
-    const ctx = sliceCanvas.getContext('2d');
-    if (!ctx) throw new Error('Could not get 2D context');
-    ctx.drawImage(canvas, 0, -srcY);
-
-    if (!firstSlice) {
+    if (availMm < 5) {
       pdf.addPage();
       yPos = MARGIN;
+      availMm = PAGE_H - 2 * MARGIN;
     }
+
+    // Source CSS pixels that fit into the available PDF height
+    const slicePx = Math.min(
+      Math.max(1, Math.round(availMm * sourcePxPerMm)),
+      sourceH - srcY,
+    );
+    const sliceMm = slicePx / sourcePxPerMm;
+
+    // Capture only this slice of the element; avoids a single giant canvas
+    const sliceCanvas = await html2canvas(el, { ...baseOptions, y: srcY, height: slicePx });
 
     pdf.addImage(sliceCanvas.toDataURL('image/png'), 'PNG', MARGIN, yPos, CONTENT_W, sliceMm);
     yPos += sliceMm;
     srcY += slicePx;
-    firstSlice = false;
   }
 
   return yPos;
@@ -111,35 +121,26 @@ export async function downloadStatisticsPdf(
     const logoImg = await loadImageElement(logoDataUrl);
     const aspect = logoImg.naturalWidth / logoImg.naturalHeight;
     const logoW = Math.min(logoH * aspect, 55);
-    pdf.addImage(logoDataUrl, 'PNG', MARGIN, yPos, logoW, logoH);
 
-    // Title vertically centered next to the logo
+    // Measure title width so the logo+title block can be centered together
     pdf.setFontSize(20);
     pdf.setFont('helvetica', 'bold');
+    const titleWidth = pdf.getTextWidth(labels.templateName);
+    const blockW = logoW + 5 + titleWidth;
+    const blockX = (PAGE_W - blockW) / 2;
+
+    pdf.addImage(logoDataUrl, 'PNG', blockX, yPos, logoW, logoH);
     pdf.setTextColor(...BRAND_BLUE);
-    const titleX = MARGIN + logoW + 5;
-    const titleY = yPos + logoH / 2 + 3.5; // center on logo height (cap-height offset ~3.5mm)
-    pdf.text(labels.templateName, titleX, titleY);
+    pdf.text(labels.templateName, blockX + logoW + 5, yPos + logoH / 2 + 3.5);
   } catch {
     // Logo failed to load – render title without it
     pdf.setFontSize(20);
     pdf.setFont('helvetica', 'bold');
     pdf.setTextColor(...BRAND_BLUE);
-    pdf.text(labels.templateName, MARGIN, yPos + logoH / 2 + 3.5);
+    pdf.text(labels.templateName, PAGE_W / 2, yPos + logoH / 2 + 3.5, { align: 'center' });
   }
 
   yPos += logoH + 5;
-
-  pdf.setFontSize(10);
-  pdf.setFont('helvetica', 'normal');
-  pdf.setTextColor(80, 80, 80);
-  const subtitle = [
-    labels.churchDisplay,
-    labels.dateRange,
-    `${labels.totalServicesLabel}: ${labels.totalServicesCount}`,
-  ].join('  ·  ');
-  pdf.text(subtitle, MARGIN, yPos);
-  yPos += 5;
 
   pdf.setDrawColor(200);
   pdf.setLineWidth(0.3);
