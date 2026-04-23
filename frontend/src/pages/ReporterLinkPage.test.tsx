@@ -164,7 +164,7 @@ describe('ReporterLinkPage', () => {
     ).toBeInTheDocument();
   });
 
-  it('submits zeroes for all numeric/money items and empty for strings when no-celebration clicked', async () => {
+  it('submits zeroes for numeric/money items and omits strings when no-celebration clicked', async () => {
     mockedGetReporterLinkPublic.mockResolvedValue({
       id: 1,
       token: 'test-token',
