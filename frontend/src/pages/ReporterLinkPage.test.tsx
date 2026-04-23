@@ -217,6 +217,45 @@ describe('ReporterLinkPage', () => {
     expect(screen.getByText('Report Submitted')).toBeInTheDocument();
   });
 
+  it('cancelling the no-celebration dialog closes it and does not submit', async () => {
+    mockedGetReporterLinkPublic.mockResolvedValue({
+      id: 1,
+      token: 'test-token',
+      churchName: 'Trinity Church',
+      serviceTemplateId: 10,
+      serviceTemplateName: 'Sunday Eucharist',
+      activeDate: '2024-04-14',
+      serviceInfoItems: [
+        { id: 1, title: 'Attendance', required: true, serviceInfoItemType: 'NUMERICAL', sortOrder: 1 },
+      ],
+      sectionHeaders: [],
+      celebrants: [],
+    });
+
+    const user = userEvent.setup();
+    renderPage();
+
+    await waitFor(() => {
+      expect(screen.getByText('Sunday Eucharist')).toBeInTheDocument();
+    });
+
+    await user.click(
+      screen.getByRole('button', { name: /press here if there was no celebration/i }),
+    );
+
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeInTheDocument();
+    });
+
+    await user.click(screen.getByRole('button', { name: /no, go back/i }));
+
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    });
+
+    expect(mockedSubmitViaReporterLinkPublic).not.toHaveBeenCalled();
+  });
+
   it('offers the next pending reporter link after a public submission', async () => {
     mockedGetReporterLinkPublic.mockResolvedValue({
       id: 1,

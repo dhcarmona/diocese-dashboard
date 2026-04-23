@@ -464,10 +464,14 @@ export default function ReporterLinkPage() {
           <Dialog
             open={noCelebrationDialogOpen}
             onClose={() => setNoCelebrationDialogOpen(false)}
+            aria-labelledby="no-celebration-dialog-title"
+            aria-describedby="no-celebration-dialog-description"
           >
-            <DialogTitle>{t('reporterLink.noCelebrationDialog.title')}</DialogTitle>
+            <DialogTitle id="no-celebration-dialog-title">
+              {t('reporterLink.noCelebrationDialog.title')}
+            </DialogTitle>
             <DialogContent>
-              <DialogContentText>
+              <DialogContentText id="no-celebration-dialog-description">
                 {t('reporterLink.noCelebrationDialog.body')}
               </DialogContentText>
             </DialogContent>
