@@ -575,6 +575,7 @@
         "link": "Enlace"
       },
       "backToFilter": "Cambiar Filtros",
+      "downloadPdf": "Descargar como PDF",
       "itemTypes": {
         "NUMERICAL": "cantidad",
         "DOLLARS": "USD",

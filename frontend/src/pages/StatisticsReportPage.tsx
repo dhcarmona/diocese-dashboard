@@ -12,7 +12,7 @@ import TableCell from '@mui/material/TableCell';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Typography from '@mui/material/Typography';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import {
@@ -30,6 +30,7 @@ import {
 import { getStatistics, type AggregatedItem, type StatisticsReport } from '../api/statistics';
 import PageHeader from '../components/PageHeader';
 import { formatDate } from '../utils/dateFormatting';
+import { downloadStatisticsPdf } from '../utils/statisticsPdf';
 
 const CHART_COLORS = [
   '#1C3A6E', '#2E6DB4', '#4A9FD4', '#7BBFDB', '#AED6E8',
@@ -85,7 +86,7 @@ function ItemSection({ item, totalLabel, trendLabel }: Readonly<ItemSectionProps
               <Tooltip
                 formatter={(val) => [formatValue(Number(val ?? 0), item.itemType), item.itemTitle]}
               />
-              <Bar dataKey="value" fill="#1C3A6E" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="value" fill="#1C3A6E" radius={[4, 4, 0, 0]} isAnimationActive={false} />
             </BarChart>
           </ResponsiveContainer>
         </Box>
@@ -107,6 +108,9 @@ export default function StatisticsReportPage() {
   const [report, setReport] = useState<StatisticsReport | null>(null);
   const [loading, setLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
+  const [pdfGenerating, setPdfGenerating] = useState(false);
+
+  const chartContentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!templateId || !startDate || !endDate) return;
@@ -138,6 +142,29 @@ export default function StatisticsReportPage() {
     ? t('statistics.report.global')
     : (report?.churchName ?? churchName ?? '');
 
+  async function handleDownloadPdf() {
+    if (!report || !chartContentRef.current) return;
+    setPdfGenerating(true);
+    try {
+      await downloadStatisticsPdf(report, chartContentRef.current, {
+        templateName: report.templateName,
+        churchDisplay,
+        dateRange: `${formatDate(startDate, i18n.resolvedLanguage)} – ${formatDate(endDate, i18n.resolvedLanguage)}`,
+        totalServicesLabel: t('statistics.report.totalServices'),
+        totalServicesCount: report.totalServiceCount,
+        pendingLinksTitle: t('statistics.report.pendingLinksTitle'),
+        pendingLinksSubtitle: t('statistics.report.pendingLinksSubtitle'),
+        noPendingLinks: t('statistics.report.noPendingLinks'),
+        reporterHeader: t('statistics.report.pendingLink.reporter'),
+        churchHeader: t('statistics.report.pendingLink.church'),
+        activeDateHeader: t('statistics.report.pendingLink.activeDate'),
+        linkHeader: t('statistics.report.pendingLink.link'),
+      });
+    } finally {
+      setPdfGenerating(false);
+    }
+  }
+
   return (
     <>
       <PageHeader
@@ -167,138 +194,153 @@ export default function StatisticsReportPage() {
 
       {!loading && !hasError && report && (
         <Box>
-          {/* Report meta */}
-          <Paper elevation={2} sx={{ p: 3, mb: 4 }}>
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
-              <Box>
-                <Typography variant="overline" color="text.secondary">
-                  {t('statistics.filter.churchLabel')}
-                </Typography>
-                <Typography variant="h6" fontWeight={700}>{churchDisplay}</Typography>
-              </Box>
-              <Box>
-                <Typography variant="overline" color="text.secondary">
-                  {t('statistics.report.dateRangeLabel')}
-                </Typography>
-                <Typography variant="h6" fontWeight={700}>
-                  {formatDate(startDate, i18n.resolvedLanguage)} –{' '}
-                  {formatDate(endDate, i18n.resolvedLanguage)}
-                </Typography>
-              </Box>
-              <Box>
-                <Typography variant="overline" color="text.secondary">
-                  {t('statistics.report.totalServices')}
-                </Typography>
-                <Typography variant="h6" fontWeight={700}>{report.totalServiceCount}</Typography>
-              </Box>
-            </Box>
-          </Paper>
+          <Button
+            variant="contained"
+            size="small"
+            sx={{ mb: 3 }}
+            disabled={pdfGenerating}
+            onClick={() => void handleDownloadPdf()}
+          >
+            {pdfGenerating ? <CircularProgress size={18} sx={{ mr: 1 }} /> : null}
+            {t('statistics.report.downloadPdf')}
+          </Button>
 
-          {/* Celebrant pie chart */}
-          <Paper elevation={2} sx={{ p: 3, mb: 4 }}>
-            <Typography variant="h6" fontWeight={700} gutterBottom>
-              {t('statistics.report.celebrantsTitle')}
-            </Typography>
-            {report.celebrantStats.length === 0 ? (
-              <Typography color="text.secondary">{t('statistics.report.noCelebrants')}</Typography>
-            ) : (
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 2 }}>
-                <ResponsiveContainer width={280} height={280}>
-                  <PieChart>
-                    <Pie
-                      data={report.celebrantStats}
-                      dataKey="serviceCount"
-                      nameKey="celebrantName"
-                      cx="50%"
-                      cy="50%"
-                      outerRadius={130}
-                      labelLine={false}
-                    >
-                      {report.celebrantStats.map((entry, index) => (
-                        <Cell
-                          key={entry.celebrantId}
-                          fill={CHART_COLORS[index % CHART_COLORS.length]}
-                        />
-                      ))}
-                    </Pie>
-                    <Tooltip
-                      formatter={(val, name) => [Number(val ?? 0), String(name ?? '')]}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
+          {/* Chart content captured for PDF (excludes the pending links section) */}
+          <div ref={chartContentRef}>
+            {/* Report meta */}
+            <Paper elevation={2} sx={{ p: 3, mb: 4 }}>
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
                 <Box>
-                  <Table size="small">
-                    <TableHead>
-                      <TableRow>
-                        <TableCell aria-hidden="true" role="presentation" />
-                        <TableCell><strong>{t('statistics.report.celebrant')}</strong></TableCell>
-                        <TableCell align="right"><strong>{t('statistics.report.services')}</strong></TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {report.celebrantStats.map((stat, index) => (
-                        <TableRow key={stat.celebrantId}>
-                          <TableCell sx={{ pr: 0 }}>
-                            <Box
-                              aria-hidden="true"
-                              sx={{
-                                width: 14,
-                                height: 14,
-                                borderRadius: '3px',
-                                bgcolor: CHART_COLORS[index % CHART_COLORS.length],
-                              }}
-                            />
-                          </TableCell>
-                          <TableCell>{stat.celebrantName}</TableCell>
-                          <TableCell align="right">{stat.serviceCount}</TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                  <Typography variant="overline" color="text.secondary">
+                    {t('statistics.filter.churchLabel')}
+                  </Typography>
+                  <Typography variant="h6" fontWeight={700}>{churchDisplay}</Typography>
+                </Box>
+                <Box>
+                  <Typography variant="overline" color="text.secondary">
+                    {t('statistics.report.dateRangeLabel')}
+                  </Typography>
+                  <Typography variant="h6" fontWeight={700}>
+                    {formatDate(startDate, i18n.resolvedLanguage)} –{' '}
+                    {formatDate(endDate, i18n.resolvedLanguage)}
+                  </Typography>
+                </Box>
+                <Box>
+                  <Typography variant="overline" color="text.secondary">
+                    {t('statistics.report.totalServices')}
+                  </Typography>
+                  <Typography variant="h6" fontWeight={700}>{report.totalServiceCount}</Typography>
                 </Box>
               </Box>
+            </Paper>
+
+            {/* Celebrant pie chart */}
+            <Paper elevation={2} sx={{ p: 3, mb: 4 }}>
+              <Typography variant="h6" fontWeight={700} gutterBottom>
+                {t('statistics.report.celebrantsTitle')}
+              </Typography>
+              {report.celebrantStats.length === 0 ? (
+                <Typography color="text.secondary">{t('statistics.report.noCelebrants')}</Typography>
+              ) : (
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 2 }}>
+                  <ResponsiveContainer width={280} height={280}>
+                    <PieChart>
+                      <Pie
+                        data={report.celebrantStats}
+                        dataKey="serviceCount"
+                        nameKey="celebrantName"
+                        cx="50%"
+                        cy="50%"
+                        outerRadius={130}
+                        labelLine={false}
+                        isAnimationActive={false}
+                      >
+                        {report.celebrantStats.map((entry, index) => (
+                          <Cell
+                            key={entry.celebrantId}
+                            fill={CHART_COLORS[index % CHART_COLORS.length]}
+                          />
+                        ))}
+                      </Pie>
+                      <Tooltip
+                        formatter={(val, name) => [Number(val ?? 0), String(name ?? '')]}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                  <Box>
+                    <Table size="small">
+                      <TableHead>
+                        <TableRow>
+                          <TableCell aria-hidden="true" role="presentation" />
+                          <TableCell><strong>{t('statistics.report.celebrant')}</strong></TableCell>
+                          <TableCell align="right"><strong>{t('statistics.report.services')}</strong></TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {report.celebrantStats.map((stat, index) => (
+                          <TableRow key={stat.celebrantId}>
+                            <TableCell sx={{ pr: 0 }}>
+                              <Box
+                                aria-hidden="true"
+                                sx={{
+                                  width: 14,
+                                  height: 14,
+                                  borderRadius: '3px',
+                                  bgcolor: CHART_COLORS[index % CHART_COLORS.length],
+                                }}
+                              />
+                            </TableCell>
+                            <TableCell>{stat.celebrantName}</TableCell>
+                            <TableCell align="right">{stat.serviceCount}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </Box>
+                </Box>
+              )}
+            </Paper>
+
+            {/* Numerical items */}
+            {report.numericalItems.length > 0 && (
+              <Paper elevation={2} sx={{ p: 3, mb: 4 }}>
+                <Typography variant="h5" fontWeight={700} gutterBottom>
+                  {t('statistics.report.numericalTitle')}
+                </Typography>
+                <Divider sx={{ mb: 3 }} />
+                {report.numericalItems.map((item) => (
+                  <ItemSection
+                    key={item.itemId}
+                    item={item}
+                    totalLabel={t('statistics.report.total')}
+                    trendLabel={t('statistics.report.timeSeriesTitle')}
+                  />
+                ))}
+              </Paper>
             )}
-          </Paper>
 
-          {/* Numerical items */}
-          {report.numericalItems.length > 0 && (
-            <Paper elevation={2} sx={{ p: 3, mb: 4 }}>
-              <Typography variant="h5" fontWeight={700} gutterBottom>
-                {t('statistics.report.numericalTitle')}
-              </Typography>
-              <Divider sx={{ mb: 3 }} />
-              {report.numericalItems.map((item) => (
-                <ItemSection
-                  key={item.itemId}
-                  item={item}
-                  totalLabel={t('statistics.report.total')}
-                  trendLabel={t('statistics.report.timeSeriesTitle')}
-                />
-              ))}
-            </Paper>
-          )}
+            {/* Money items */}
+            {report.moneyItems.length > 0 && (
+              <Paper elevation={2} sx={{ p: 3, mb: 4 }}>
+                <Typography variant="h5" fontWeight={700} gutterBottom>
+                  {t('statistics.report.moneyTitle')}
+                </Typography>
+                <Divider sx={{ mb: 3 }} />
+                {report.moneyItems.map((item) => (
+                  <ItemSection
+                    key={item.itemId}
+                    item={item}
+                    totalLabel={t('statistics.report.total')}
+                    trendLabel={t('statistics.report.timeSeriesTitle')}
+                  />
+                ))}
+              </Paper>
+            )}
 
-          {/* Money items */}
-          {report.moneyItems.length > 0 && (
-            <Paper elevation={2} sx={{ p: 3, mb: 4 }}>
-              <Typography variant="h5" fontWeight={700} gutterBottom>
-                {t('statistics.report.moneyTitle')}
-              </Typography>
-              <Divider sx={{ mb: 3 }} />
-              {report.moneyItems.map((item) => (
-                <ItemSection
-                  key={item.itemId}
-                  item={item}
-                  totalLabel={t('statistics.report.total')}
-                  trendLabel={t('statistics.report.timeSeriesTitle')}
-                />
-              ))}
-            </Paper>
-          )}
-
-          {report.numericalItems.length === 0 && report.moneyItems.length === 0 && (
-            <Alert severity="info" sx={{ mb: 4 }}>{t('statistics.report.noItems')}</Alert>
-          )}
+            {report.numericalItems.length === 0 && report.moneyItems.length === 0 && (
+              <Alert severity="info" sx={{ mb: 4 }}>{t('statistics.report.noItems')}</Alert>
+            )}
+          </div>
 
           {/* Pending reporter links */}
           <Paper elevation={2} sx={{ p: 3, mb: 4 }}>
