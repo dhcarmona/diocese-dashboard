@@ -498,7 +498,10 @@
       "actions": "Acciones"
     },
     "viewDetails": "Ver detalles",
-    "unknownReporter": "Desconocido"
+    "unknownReporter": "Desconocido",
+    "search": "Buscar reportes…",
+    "noSearchResults": "Ningún reporte coincide con la búsqueda.",
+    "clearSearch": "Limpiar búsqueda"
   },
   "reportDetail": {
     "title": "Detalles del reporte",
