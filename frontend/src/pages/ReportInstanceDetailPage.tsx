@@ -266,7 +266,7 @@ export default function ReportInstanceDetailPage() {
       <Box
         component="form"
         noValidate
-        onSubmit={(e) => handleSaveClick(e)}
+        onSubmit={(e) => { if (!isReadOnly) handleSaveClick(e); else e.preventDefault(); }}
         sx={{ maxWidth: 640 }}
       >
         <Stack spacing={3}>

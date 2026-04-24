@@ -3,13 +3,13 @@ import i18n from 'i18next';
 import { MemoryRouter } from 'react-router-dom';
 import { vi } from 'vitest';
 import { getServiceTemplatesForViewing } from '../api/serviceTemplates';
-import AdminReportTemplateSelectionPage from './AdminReportTemplateSelectionPage';
+import ReportTemplateSelectionPage from './ReportTemplateSelectionPage';
 
 vi.mock('../api/serviceTemplates', () => ({
   getServiceTemplatesForViewing: vi.fn(),
 }));
 
-describe('AdminReportTemplateSelectionPage', () => {
+describe('ReportTemplateSelectionPage', () => {
   const mockedGetServiceTemplates = vi.mocked(getServiceTemplatesForViewing);
 
   beforeEach(async () => {
@@ -22,7 +22,7 @@ describe('AdminReportTemplateSelectionPage', () => {
 
     render(
       <MemoryRouter>
-        <AdminReportTemplateSelectionPage />
+        <ReportTemplateSelectionPage />
       </MemoryRouter>,
     );
 
@@ -37,7 +37,7 @@ describe('AdminReportTemplateSelectionPage', () => {
 
     render(
       <MemoryRouter>
-        <AdminReportTemplateSelectionPage />
+        <ReportTemplateSelectionPage />
       </MemoryRouter>,
     );
 
@@ -57,7 +57,7 @@ describe('AdminReportTemplateSelectionPage', () => {
 
     render(
       <MemoryRouter>
-        <AdminReportTemplateSelectionPage />
+        <ReportTemplateSelectionPage />
       </MemoryRouter>,
     );
 
@@ -73,7 +73,7 @@ describe('AdminReportTemplateSelectionPage', () => {
 
     render(
       <MemoryRouter>
-        <AdminReportTemplateSelectionPage />
+        <ReportTemplateSelectionPage />
       </MemoryRouter>,
     );
 
