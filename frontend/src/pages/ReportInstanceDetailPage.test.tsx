@@ -10,6 +10,7 @@ import {
   getInstanceDetail,
   updateInstance,
 } from '../api/serviceInstances';
+import { AuthContext, type AuthContextValue } from '../auth/auth-context';
 import ReportInstanceDetailPage from './ReportInstanceDetailPage';
 
 vi.mock('../api/serviceInstances', () => ({
@@ -22,22 +23,44 @@ vi.mock('../api/celebrants', () => ({
   getCelebrants: vi.fn(),
 }));
 
-function renderPage(templateId = '10', instanceId = '1') {
+function makeAuthValue(role: 'ADMIN' | 'REPORTER' = 'ADMIN'): AuthContextValue {
+  return {
+    user: {
+      id: 1,
+      username: role === 'ADMIN' ? 'admin' : 'reporter',
+      role,
+      preferredLanguage: 'en',
+      assignedChurchNames: role === 'REPORTER' ? ['Trinity Church'] : [],
+    },
+    status: 'authenticated',
+    authErrorKey: null,
+    signIn: async () => {},
+    reporterSignIn: async () => {},
+    redeemToken: async () => {},
+    signOut: async () => {},
+    refreshUser: async () => null,
+    updatePreferredLanguage: async () => {},
+  };
+}
+
+function renderPage(templateId = '10', instanceId = '1', role: 'ADMIN' | 'REPORTER' = 'ADMIN') {
   render(
-    <MemoryRouter
-      initialEntries={[`/reports/view/individual/${templateId}/${instanceId}`]}
-    >
-      <Routes>
-        <Route
-          path="/reports/view/individual/:templateId/:instanceId"
-          element={<ReportInstanceDetailPage />}
-        />
-        <Route
-          path="/reports/view/individual/:templateId"
-          element={<div>Reports List Page</div>}
-        />
-      </Routes>
-    </MemoryRouter>,
+    <AuthContext.Provider value={makeAuthValue(role)}>
+      <MemoryRouter
+        initialEntries={[`/reports/view/individual/${templateId}/${instanceId}`]}
+      >
+        <Routes>
+          <Route
+            path="/reports/view/individual/:templateId/:instanceId"
+            element={<ReportInstanceDetailPage />}
+          />
+          <Route
+            path="/reports/view/individual/:templateId"
+            element={<div>Reports List Page</div>}
+          />
+        </Routes>
+      </MemoryRouter>
+    </AuthContext.Provider>,
   );
 }
 
@@ -343,5 +366,52 @@ describe('ReportInstanceDetailPage', () => {
         screen.getByText('We could not delete the report. Please try again.'),
       ).toBeInTheDocument();
     });
+  });
+});
+
+describe('ReportInstanceDetailPage (reporter read-only)', () => {
+  const mockedGetInstanceDetail = vi.mocked(getInstanceDetail);
+  const mockedGetCelebrants = vi.mocked(getCelebrants);
+
+  beforeEach(async () => {
+    mockedGetInstanceDetail.mockReset();
+    mockedGetCelebrants.mockReset();
+    mockedGetCelebrants.mockResolvedValue([
+      { id: 1, name: 'Fr. Alice' },
+      { id: 2, name: 'Fr. John' },
+    ]);
+    await i18n.changeLanguage('en');
+  });
+
+  it('hides save and delete buttons for reporter users', async () => {
+    mockedGetInstanceDetail.mockResolvedValueOnce(DETAIL);
+
+    renderPage('10', '1', 'REPORTER');
+
+    await screen.findByText('Sunday Eucharist');
+
+    expect(screen.queryByRole('button', { name: /save changes/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /delete report/i })).not.toBeInTheDocument();
+  });
+
+  it('shows back-to-list button for reporter users', async () => {
+    mockedGetInstanceDetail.mockResolvedValueOnce(DETAIL);
+
+    renderPage('10', '1', 'REPORTER');
+
+    await screen.findByText('Sunday Eucharist');
+
+    expect(screen.getByRole('link', { name: /back to list/i })).toBeInTheDocument();
+  });
+
+  it('shows report data in read-only fields for reporter users', async () => {
+    mockedGetInstanceDetail.mockResolvedValueOnce(DETAIL);
+
+    renderPage('10', '1', 'REPORTER');
+
+    await screen.findByText('Sunday Eucharist');
+
+    const field = screen.getByLabelText(/attendance/i);
+    expect(field).toHaveAttribute('readonly');
   });
 });

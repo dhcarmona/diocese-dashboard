@@ -74,6 +74,10 @@
         "title": "See Reports",
         "description": "View submitted reports, gather statistics and more."
       },
+      "reports": {
+        "title": "Reports",
+        "description": "View submitted reports and statistics."
+      },
       "whatsappLog": {
         "title": "WhatsApp Message Log",
         "description": "View all WhatsApp messages sent by the system."

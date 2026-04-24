@@ -90,14 +90,19 @@ public class ServiceInstanceController {
     DashboardUser user = ((DashboardUserDetails) auth.getPrincipal()).getDashboardUser();
     List<ServiceInstance> instances;
     if (templateId != null) {
-      if (user.getRole() != UserRole.ADMIN) {
-        throw new ResponseStatusException(HttpStatus.FORBIDDEN,
-            "Template filter is only available to ADMIN users");
-      }
       ServiceTemplate template = serviceTemplateService.findById(templateId)
           .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
               "Template not found"));
-      instances = serviceInstanceService.findByServiceTemplate(template);
+      if (user.getRole() == UserRole.ADMIN) {
+        instances = serviceInstanceService.findByServiceTemplate(template);
+      } else {
+        if (user.getAssignedChurches().isEmpty()) {
+          throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+              "Reporter account has no churches assigned");
+        }
+        instances = serviceInstanceService.findByServiceTemplateAndChurches(
+            template, user.getAssignedChurches());
+      }
     } else if (user.getRole() == UserRole.REPORTER) {
       if (user.getAssignedChurches().isEmpty()) {
         throw new ResponseStatusException(HttpStatus.FORBIDDEN,

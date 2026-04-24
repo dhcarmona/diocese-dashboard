@@ -17,6 +17,12 @@ export default function ReportsHubPage() {
           to="/reports/view/individual"
           imageUrl={tileArtwork.report}
         />
+        <ActionTile
+          title={t('reportsHub.tiles.statistics.title')}
+          description={t('reportsHub.tiles.statistics.description')}
+          to="/statistics"
+          imageUrl={tileArtwork.viewReports}
+        />
       </TileGrid>
     </>
   );

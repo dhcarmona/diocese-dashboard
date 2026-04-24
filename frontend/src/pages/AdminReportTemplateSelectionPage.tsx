@@ -4,7 +4,7 @@ import CircularProgress from '@mui/material/CircularProgress';
 import Typography from '@mui/material/Typography';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { getServiceTemplates, type ServiceTemplateSummary } from '../api/serviceTemplates';
+import { getServiceTemplatesForViewing, type ServiceTemplateSummary } from '../api/serviceTemplates';
 import ActionTile from '../components/ActionTile';
 import PageHeader from '../components/PageHeader';
 import TileGrid from '../components/TileGrid';
@@ -23,7 +23,7 @@ export default function AdminReportTemplateSelectionPage() {
       setLoading(true);
       setHasError(false);
       try {
-        const loadedTemplates = await getServiceTemplates();
+        const loadedTemplates = await getServiceTemplatesForViewing();
         if (active) {
           setTemplates(loadedTemplates);
         }

@@ -25,6 +25,7 @@ import {
   getInstanceDetail,
   updateInstance,
 } from '../api/serviceInstances';
+import { useAuth } from '../auth/auth-context';
 import PageHeader from '../components/PageHeader';
 import { formatDate } from '../utils/dateFormatting';
 import { formatMoneyDisplay, parseMoneyInput } from '../utils/moneyFormatting';
@@ -44,6 +45,8 @@ export default function ReportInstanceDetailPage() {
   }>();
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const isReadOnly = user?.role === 'REPORTER';
 
   const [detail, setDetail] = useState<ServiceInstanceDetail | null>(null);
   const [responses, setResponses] = useState<Record<number, string>>({});
@@ -234,6 +237,8 @@ export default function ReportInstanceDetailPage() {
         getOptionLabel={(option) => option.name}
         value={selectedCelebrants}
         onChange={(_e, newValue) => setSelectedCelebrants(newValue)}
+        readOnly={isReadOnly}
+        disableClearable={isReadOnly}
         renderTags={(value, getTagProps) =>
           value.map((option, index) => {
             const { key, ...tagProps } = getTagProps({ index });
@@ -276,7 +281,7 @@ export default function ReportInstanceDetailPage() {
                 key={r.serviceInfoItemId}
                 label={r.serviceInfoItemTitle}
                 helperText={r.serviceInfoItemDescription ?? undefined}
-                required={r.required ?? false}
+                required={!isReadOnly && (r.required ?? false)}
                 value={
                   isMoney && focusedItemId !== r.serviceInfoItemId
                     ? formatMoneyDisplay(rawValue)
@@ -288,15 +293,17 @@ export default function ReportInstanceDetailPage() {
                     isMoney ? parseMoneyInput(e.target.value) : e.target.value,
                   )
                 }
-                onFocus={isMoney ? () => setFocusedItemId(r.serviceInfoItemId) : undefined}
-                onBlur={isMoney ? () => setFocusedItemId(null) : undefined}
+                onFocus={isMoney && !isReadOnly ? () => setFocusedItemId(r.serviceInfoItemId) : undefined}
+                onBlur={isMoney && !isReadOnly ? () => setFocusedItemId(null) : undefined}
                 type={isNumeric && !isMoney ? 'number' : 'text'}
                 inputProps={
-                  isMoney
-                    ? { inputMode: 'decimal' }
-                    : isNumeric
-                      ? { min: 0, step: 'any' }
-                      : undefined
+                  isReadOnly
+                    ? { readOnly: true }
+                    : isMoney
+                      ? { inputMode: 'decimal' }
+                      : isNumeric
+                        ? { min: 0, step: 'any' }
+                        : undefined
                 }
                 InputProps={
                   adornment
@@ -323,31 +330,35 @@ export default function ReportInstanceDetailPage() {
           )}
 
           <Stack direction="row" spacing={2} flexWrap="wrap">
-            <Button
-              type="submit"
-              variant="contained"
-              size="large"
-              disabled={saving || deleting}
-            >
-              {saving ? (
-                <CircularProgress size={22} color="inherit" />
-              ) : (
-                t('reportDetail.actions.save')
-              )}
-            </Button>
-            <Button
-              variant="outlined"
-              color="error"
-              size="large"
-              disabled={saving || deleting}
-              onClick={handleDeleteClick}
-            >
-              {deleting ? (
-                <CircularProgress size={22} color="inherit" />
-              ) : (
-                t('reportDetail.actions.delete')
-              )}
-            </Button>
+            {!isReadOnly && (
+              <Button
+                type="submit"
+                variant="contained"
+                size="large"
+                disabled={saving || deleting}
+              >
+                {saving ? (
+                  <CircularProgress size={22} color="inherit" />
+                ) : (
+                  t('reportDetail.actions.save')
+                )}
+              </Button>
+            )}
+            {!isReadOnly && (
+              <Button
+                variant="outlined"
+                color="error"
+                size="large"
+                disabled={saving || deleting}
+                onClick={handleDeleteClick}
+              >
+                {deleting ? (
+                  <CircularProgress size={22} color="inherit" />
+                ) : (
+                  t('reportDetail.actions.delete')
+                )}
+              </Button>
+            )}
             <Button component={RouterLink} to={listPath} variant="text" size="large">
               {t('reportDetail.backToList')}
             </Button>

@@ -26,10 +26,10 @@ export default function HomePage() {
       imageUrl: tileArtwork.report,
     },
     {
-      id: 'statistics',
-      title: t('home.tiles.statistics.title'),
-      description: t('home.tiles.statistics.description'),
-      to: '/statistics',
+      id: 'reports',
+      title: t('home.tiles.reports.title'),
+      description: t('home.tiles.reports.description'),
+      to: '/reports/view',
       imageUrl: tileArtwork.viewReports,
     },
   ];
@@ -69,13 +69,6 @@ export default function HomePage() {
       description: t('home.tiles.createReporterLinks.description'),
       to: '/reporter-links/manage',
       imageUrl: tileArtwork.links,
-    },
-    {
-      id: 'see-reports',
-      title: t('home.tiles.seeReports.title'),
-      description: t('home.tiles.seeReports.description'),
-      to: '/reports/view',
-      imageUrl: tileArtwork.viewReports,
     },
     {
       id: 'whatsapp-log',

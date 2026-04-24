@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -46,15 +47,19 @@ public class ServiceTemplateController {
 
   /**
    * Returns all service templates. Admins receive the full list; reporters receive only
-   * templates that are not marked as link-only.
+   * templates that are not marked as link-only, unless {@code forViewing} is true (used
+   * by the "view reports" section), in which case reporters receive the full list too.
    *
-   * @param auth the current authentication
+   * @param forViewing when true, link-only templates are included for reporter users
+   * @param auth       the current authentication
    * @return list of service templates visible to the caller
    */
   @GetMapping
-  public List<ServiceTemplate> getAll(Authentication auth) {
+  public List<ServiceTemplate> getAll(
+      @RequestParam(required = false, defaultValue = "false") boolean forViewing,
+      Authentication auth) {
     DashboardUser user = ((DashboardUserDetails) auth.getPrincipal()).getDashboardUser();
-    if (user.getRole() == UserRole.REPORTER) {
+    if (user.getRole() == UserRole.REPORTER && !forViewing) {
       return serviceTemplateService.findAllForReporter();
     }
     return serviceTemplateService.findAll();
