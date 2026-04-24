@@ -100,6 +100,44 @@ class ServiceInfoItemResponseRepositoryTest {
   }
 
   @Test
+  void findByServiceInstanceInWithItems_returnsResponsesWithItemsLoaded() {
+    ServiceInfoItemResponse response = buildResponse();
+    response.setResponseValue("42");
+    entityManager.persist(response);
+    entityManager.flush();
+    entityManager.clear();
+
+    List<ServiceInfoItemResponse> result =
+        serviceInfoItemResponseRepository.findByServiceInstanceInWithItems(
+            List.of(serviceInstance));
+
+    assertThat(result).hasSize(1);
+    assertThat(result.get(0).getResponseValue()).isEqualTo("42");
+    assertThat(result.get(0).getServiceInfoItem()).isNotNull();
+    assertThat(result.get(0).getServiceInfoItem().getTitle()).isEqualTo("q1");
+  }
+
+  @Test
+  void findByServiceInstanceInWithItems_returnsEmptyForUnrelatedInstance() {
+    ServiceInstance other = new ServiceInstance();
+    other.setChurch(entityManager.find(
+        org.iecr.diocesedashboard.domain.objects.Church.class, "St. Mary"));
+    other.setServiceTemplate(entityManager.find(
+        org.iecr.diocesedashboard.domain.objects.ServiceTemplate.class,
+        serviceInstance.getServiceTemplate().getId()));
+    entityManager.persist(other);
+
+    entityManager.persist(buildResponse());
+    entityManager.flush();
+    entityManager.clear();
+
+    List<ServiceInfoItemResponse> result =
+        serviceInfoItemResponseRepository.findByServiceInstanceInWithItems(List.of(other));
+
+    assertThat(result).isEmpty();
+  }
+
+  @Test
   void deleteById_removesEntity() {
     ServiceInfoItemResponse response = entityManager.persistFlushFind(buildResponse());
 

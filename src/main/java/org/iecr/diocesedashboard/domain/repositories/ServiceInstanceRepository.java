@@ -28,11 +28,25 @@ public interface ServiceInstanceRepository extends JpaRepository<ServiceInstance
   List<ServiceInstance> findByServiceTemplateAndChurchAndServiceDateBetween(
       ServiceTemplate template, Church church, LocalDate start, LocalDate end);
 
+  @Query("SELECT DISTINCT i FROM ServiceInstance i LEFT JOIN FETCH i.celebrants "
+      + "WHERE i.serviceTemplate = :template AND i.church = :church "
+      + "AND i.serviceDate BETWEEN :start AND :end")
+  List<ServiceInstance> findByTemplateAndChurchAndDateRangeWithCelebrants(
+      @Param("template") ServiceTemplate template, @Param("church") Church church,
+      @Param("start") LocalDate start, @Param("end") LocalDate end);
+
   List<ServiceInstance> findByServiceTemplateAndChurchInAndServiceDateBetween(
       ServiceTemplate template, Iterable<Church> churches, LocalDate start, LocalDate end);
 
   List<ServiceInstance> findByServiceTemplateAndServiceDateBetween(
       ServiceTemplate template, LocalDate start, LocalDate end);
+
+  @Query("SELECT DISTINCT i FROM ServiceInstance i LEFT JOIN FETCH i.celebrants "
+      + "WHERE i.serviceTemplate = :template "
+      + "AND i.serviceDate BETWEEN :start AND :end")
+  List<ServiceInstance> findByTemplateAndDateRangeWithCelebrants(
+      @Param("template") ServiceTemplate template,
+      @Param("start") LocalDate start, @Param("end") LocalDate end);
 
   boolean existsByChurchAndServiceTemplateAndServiceDate(
       Church church, ServiceTemplate template, LocalDate serviceDate);

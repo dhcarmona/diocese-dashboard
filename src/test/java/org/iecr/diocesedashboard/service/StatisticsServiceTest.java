@@ -109,11 +109,11 @@ class StatisticsServiceTest {
     ServiceInstance inst1 = buildInstance(LocalDate.of(2024, 3, 10));
     ServiceInstance inst2 = buildInstance(LocalDate.of(2024, 6, 5));
 
-    when(instanceRepository.findByServiceTemplateAndChurchAndServiceDateBetween(
+    when(instanceRepository.findByTemplateAndChurchAndDateRangeWithCelebrants(
         template, church, START, END)).thenReturn(List.of(inst1, inst2));
     when(reporterLinkRepository.findByChurchAndServiceTemplate(church, template))
         .thenReturn(List.of());
-    when(responseRepository.findByServiceInstanceIn(List.of(inst1, inst2))).thenReturn(List.of());
+    when(responseRepository.findByServiceInstanceInWithItems(List.of(inst1, inst2))).thenReturn(List.of());
 
     StatisticsResponse result = statisticsService.computeForChurch(template, church, START, END,
         null);
@@ -127,11 +127,11 @@ class StatisticsServiceTest {
   void computeForChurch_aggregatesNumericalItemsAndIgnoresString() {
     ServiceInstance inst = buildInstance(LocalDate.of(2024, 3, 10));
 
-    when(instanceRepository.findByServiceTemplateAndChurchAndServiceDateBetween(
+    when(instanceRepository.findByTemplateAndChurchAndDateRangeWithCelebrants(
         template, church, START, END)).thenReturn(List.of(inst));
     when(reporterLinkRepository.findByChurchAndServiceTemplate(church, template))
         .thenReturn(List.of());
-    when(responseRepository.findByServiceInstanceIn(List.of(inst))).thenReturn(List.of(
+    when(responseRepository.findByServiceInstanceInWithItems(List.of(inst))).thenReturn(List.of(
         buildResponse(numericalItem, inst, "120"),
         buildResponse(moneyItem, inst, "500.50"),
         buildResponse(stringItem, inst, "some notes")
@@ -154,11 +154,11 @@ class StatisticsServiceTest {
     ServiceInstance inst1 = buildInstance(LocalDate.of(2024, 1, 7));
     ServiceInstance inst2 = buildInstance(LocalDate.of(2024, 1, 14));
 
-    when(instanceRepository.findByServiceTemplateAndChurchAndServiceDateBetween(
+    when(instanceRepository.findByTemplateAndChurchAndDateRangeWithCelebrants(
         template, church, START, END)).thenReturn(List.of(inst1, inst2));
     when(reporterLinkRepository.findByChurchAndServiceTemplate(church, template))
         .thenReturn(List.of());
-    when(responseRepository.findByServiceInstanceIn(anyList())).thenReturn(List.of(
+    when(responseRepository.findByServiceInstanceInWithItems(anyList())).thenReturn(List.of(
         buildResponse(numericalItem, inst1, "80"),
         buildResponse(numericalItem, inst2, "95")
     ));
@@ -186,11 +186,11 @@ class StatisticsServiceTest {
     ServiceInstance inst3 = buildInstance(LocalDate.of(2024, 1, 21));
     inst3.setCelebrants(Set.of(bob));
 
-    when(instanceRepository.findByServiceTemplateAndChurchAndServiceDateBetween(
+    when(instanceRepository.findByTemplateAndChurchAndDateRangeWithCelebrants(
         template, church, START, END)).thenReturn(List.of(inst1, inst2, inst3));
     when(reporterLinkRepository.findByChurchAndServiceTemplate(church, template))
         .thenReturn(List.of());
-    when(responseRepository.findByServiceInstanceIn(anyList())).thenReturn(List.of());
+    when(responseRepository.findByServiceInstanceInWithItems(anyList())).thenReturn(List.of());
 
     StatisticsResponse result = statisticsService.computeForChurch(template, church, START, END,
         null);
@@ -215,7 +215,7 @@ class StatisticsServiceTest {
     ReporterLink futureLink = buildLink(reporter, future);
     ReporterLink pastLink = buildLink(reporter, past);
 
-    when(instanceRepository.findByServiceTemplateAndChurchAndServiceDateBetween(
+    when(instanceRepository.findByTemplateAndChurchAndDateRangeWithCelebrants(
         template, church, START, END)).thenReturn(List.of());
     when(reporterLinkRepository.findByChurchAndServiceTemplate(church, template))
         .thenReturn(List.of(futureLink, pastLink));
@@ -229,7 +229,7 @@ class StatisticsServiceTest {
 
   @Test
   void computeGlobal_setsGlobalFlagAndNullChurchName() {
-    when(instanceRepository.findByServiceTemplateAndServiceDateBetween(template, START, END))
+    when(instanceRepository.findByTemplateAndDateRangeWithCelebrants(template, START, END))
         .thenReturn(List.of());
     when(churchService.findAll()).thenReturn(List.of(church));
     when(reporterLinkRepository.findByChurchInAndServiceTemplate(List.of(church), template))
@@ -244,11 +244,11 @@ class StatisticsServiceTest {
   @Test
   void computeForChurch_toleratesBlankResponseValue() {
     ServiceInstance inst = buildInstance(LocalDate.of(2024, 5, 1));
-    when(instanceRepository.findByServiceTemplateAndChurchAndServiceDateBetween(
+    when(instanceRepository.findByTemplateAndChurchAndDateRangeWithCelebrants(
         template, church, START, END)).thenReturn(List.of(inst));
     when(reporterLinkRepository.findByChurchAndServiceTemplate(church, template))
         .thenReturn(List.of());
-    when(responseRepository.findByServiceInstanceIn(List.of(inst))).thenReturn(
+    when(responseRepository.findByServiceInstanceInWithItems(List.of(inst))).thenReturn(
         List.of(buildResponse(numericalItem, inst, ""),
             buildResponse(numericalItem, inst, "not-a-number")));
 
@@ -269,7 +269,7 @@ class StatisticsServiceTest {
     ReporterLink link2 = buildLink(reporter, today.plusDays(3));
     ReporterLink link3 = buildLink(reporter, today.plusDays(21));
 
-    when(instanceRepository.findByServiceTemplateAndChurchAndServiceDateBetween(
+    when(instanceRepository.findByTemplateAndChurchAndDateRangeWithCelebrants(
         template, church, START, END)).thenReturn(List.of());
     when(reporterLinkRepository.findByChurchAndServiceTemplate(church, template))
         .thenReturn(List.of(link1, link2, link3));
@@ -288,11 +288,11 @@ class StatisticsServiceTest {
     ServiceInstance inst = buildInstance(LocalDate.of(2024, 3, 10));
     inst.setCelebrants(null);
 
-    when(instanceRepository.findByServiceTemplateAndChurchAndServiceDateBetween(
+    when(instanceRepository.findByTemplateAndChurchAndDateRangeWithCelebrants(
         template, church, START, END)).thenReturn(List.of(inst));
     when(reporterLinkRepository.findByChurchAndServiceTemplate(church, template))
         .thenReturn(List.of());
-    when(responseRepository.findByServiceInstanceIn(List.of(inst))).thenReturn(List.of());
+    when(responseRepository.findByServiceInstanceInWithItems(List.of(inst))).thenReturn(List.of());
 
     StatisticsResponse result = statisticsService.computeForChurch(template, church, START, END,
         null);
@@ -306,11 +306,11 @@ class StatisticsServiceTest {
     ServiceInstance instJan = buildInstance(LocalDate.of(2024, 1, 1));
     ServiceInstance instFeb = buildInstance(LocalDate.of(2024, 2, 1));
 
-    when(instanceRepository.findByServiceTemplateAndChurchAndServiceDateBetween(
+    when(instanceRepository.findByTemplateAndChurchAndDateRangeWithCelebrants(
         template, church, START, END)).thenReturn(List.of(instMar, instJan, instFeb));
     when(reporterLinkRepository.findByChurchAndServiceTemplate(church, template))
         .thenReturn(List.of());
-    when(responseRepository.findByServiceInstanceIn(anyList())).thenReturn(List.of(
+    when(responseRepository.findByServiceInstanceInWithItems(anyList())).thenReturn(List.of(
         buildResponse(numericalItem, instMar, "10"),
         buildResponse(numericalItem, instJan, "10"),
         buildResponse(numericalItem, instFeb, "10")
@@ -338,12 +338,12 @@ class StatisticsServiceTest {
     inst2.setServiceTemplate(template);
     inst2.setServiceDate(LocalDate.of(2024, 2, 4));
 
-    when(instanceRepository.findByServiceTemplateAndServiceDateBetween(template, START, END))
+    when(instanceRepository.findByTemplateAndDateRangeWithCelebrants(template, START, END))
         .thenReturn(List.of(inst1, inst2));
     when(churchService.findAll()).thenReturn(List.of(church, church2));
     when(reporterLinkRepository.findByChurchInAndServiceTemplate(
         List.of(church, church2), template)).thenReturn(List.of());
-    when(responseRepository.findByServiceInstanceIn(anyList())).thenReturn(List.of(
+    when(responseRepository.findByServiceInstanceInWithItems(anyList())).thenReturn(List.of(
         buildResponse(numericalItem, inst1, "50"),
         buildResponse(numericalItem, inst2, "50")
     ));
@@ -368,7 +368,7 @@ class StatisticsServiceTest {
     ReporterLink link1 = buildLink(rep1, LocalDate.of(2025, 6, 1));
     ReporterLink link2 = buildLink(rep2, LocalDate.of(2025, 6, 8));
 
-    when(instanceRepository.findByServiceTemplateAndChurchAndServiceDateBetween(
+    when(instanceRepository.findByTemplateAndChurchAndDateRangeWithCelebrants(
         template, church, START, END)).thenReturn(List.of());
     when(reporterLinkRepository.findByChurchAndServiceTemplate(church, template))
         .thenReturn(List.of(link1, link2));

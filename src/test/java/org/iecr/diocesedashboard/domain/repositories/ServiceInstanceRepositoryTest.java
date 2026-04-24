@@ -242,4 +242,80 @@ class ServiceInstanceRepositoryTest {
     assertThat(loaded.getCelebrants()).isNotEmpty();
     assertThat(loaded.getCelebrants()).extracting(Celebrant::getName).containsExactly("Rev. Alice");
   }
+
+  @Test
+  void findByTemplateAndChurchAndDateRangeWithCelebrants_returnsCelebrantsInSingleQuery() {
+    Celebrant celebrant = new Celebrant();
+    celebrant.setName("Rev. Bob");
+    entityManager.persist(celebrant);
+
+    ServiceInstance instance = buildInstance();
+    instance.setServiceDate(LocalDate.of(2024, 6, 15));
+    instance.setCelebrants(Set.of(celebrant));
+    entityManager.persist(instance);
+    entityManager.flush();
+    entityManager.clear();
+
+    List<ServiceInstance> result =
+        serviceInstanceRepository.findByTemplateAndChurchAndDateRangeWithCelebrants(
+            template, church,
+            LocalDate.of(2024, 1, 1), LocalDate.of(2024, 12, 31));
+
+    assertThat(result).hasSize(1);
+    assertThat(result.get(0).getCelebrants())
+        .extracting(Celebrant::getName).containsExactly("Rev. Bob");
+  }
+
+  @Test
+  void findByTemplateAndChurchAndDateRangeWithCelebrants_excludesOutOfRange() {
+    ServiceInstance inRange = buildInstance();
+    inRange.setServiceDate(LocalDate.of(2024, 6, 15));
+    entityManager.persist(inRange);
+
+    ServiceInstance outOfRange = buildInstance();
+    outOfRange.setServiceDate(LocalDate.of(2023, 12, 31));
+    entityManager.persist(outOfRange);
+    entityManager.flush();
+    entityManager.clear();
+
+    List<ServiceInstance> result =
+        serviceInstanceRepository.findByTemplateAndChurchAndDateRangeWithCelebrants(
+            template, church,
+            LocalDate.of(2024, 1, 1), LocalDate.of(2024, 12, 31));
+
+    assertThat(result).hasSize(1);
+    assertThat(result.get(0).getServiceDate()).isEqualTo(LocalDate.of(2024, 6, 15));
+  }
+
+  @Test
+  void findByTemplateAndDateRangeWithCelebrants_coversAllChurches() {
+    Church other = new Church();
+    other.setName("Other Parish");
+    entityManager.persist(other);
+
+    Celebrant c1 = new Celebrant();
+    c1.setName("Rev. Carol");
+    entityManager.persist(c1);
+
+    ServiceInstance first = buildInstance();
+    first.setServiceDate(LocalDate.of(2024, 3, 1));
+    first.setCelebrants(Set.of(c1));
+    entityManager.persist(first);
+
+    ServiceInstance second = new ServiceInstance();
+    second.setChurch(other);
+    second.setServiceTemplate(template);
+    second.setServiceDate(LocalDate.of(2024, 3, 8));
+    entityManager.persist(second);
+
+    entityManager.flush();
+    entityManager.clear();
+
+    List<ServiceInstance> result =
+        serviceInstanceRepository.findByTemplateAndDateRangeWithCelebrants(
+            template,
+            LocalDate.of(2024, 1, 1), LocalDate.of(2024, 12, 31));
+
+    assertThat(result).hasSize(2);
+  }
 }
