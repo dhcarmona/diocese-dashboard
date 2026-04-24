@@ -1,3 +1,4 @@
+import CloseOutlinedIcon from '@mui/icons-material/CloseOutlined';
 import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined';
 import Alert from '@mui/material/Alert';
 import Box from '@mui/material/Box';
@@ -119,26 +120,24 @@ export default function ReportInstancesListPage() {
             onChange={(e) => setSearchTerm(e.target.value)}
             size="small"
             sx={{ mt: 2, width: { xs: '100%', sm: 360 } }}
-            slotProps={{
-              input: {
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <SearchOutlinedIcon fontSize="small" />
-                  </InputAdornment>
-                ),
-                endAdornment: searchTerm ? (
-                  <InputAdornment position="end">
-                    <IconButton
-                      aria-label={t('reportsList.clearSearch')}
-                      edge="end"
-                      size="small"
-                      onClick={() => setSearchTerm('')}
-                    >
-                      ✕
-                    </IconButton>
-                  </InputAdornment>
-                ) : undefined,
-              },
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchOutlinedIcon fontSize="small" />
+                </InputAdornment>
+              ),
+              endAdornment: searchTerm ? (
+                <InputAdornment position="end">
+                  <IconButton
+                    aria-label={t('reportsList.clearSearch')}
+                    edge="end"
+                    size="small"
+                    onClick={() => setSearchTerm('')}
+                  >
+                    <CloseOutlinedIcon fontSize="small" />
+                  </IconButton>
+                </InputAdornment>
+              ) : undefined,
             }}
           />
 
