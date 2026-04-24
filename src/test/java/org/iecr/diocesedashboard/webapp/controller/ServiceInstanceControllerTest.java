@@ -249,7 +249,26 @@ class ServiceInstanceControllerTest {
 
   @Test
   @WithMockDashboardUser(role = UserRole.REPORTER, churchName = "Trinity")
-  void getAll_withTemplateId_asReporter_returns403() throws Exception {
+  void getAll_withTemplateId_asReporter_returnsInstancesForOwnChurches() throws Exception {
+    ServiceTemplate template = new ServiceTemplate();
+    template.setId(10L);
+    when(serviceTemplateService.findById(10L)).thenReturn(Optional.of(template));
+    when(serviceInstanceService.findByServiceTemplateAndChurches(eq(template), any()))
+        .thenReturn(List.of(buildInstanceForChurch(1L, "Trinity")));
+
+    mockMvc.perform(get("/api/service-instances").param("templateId", "10"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.length()").value(1))
+        .andExpect(jsonPath("$[0].id").value(1));
+  }
+
+  @Test
+  @WithMockDashboardUser(role = UserRole.REPORTER)
+  void getAll_withTemplateId_asReporterWithNoChurches_returns403() throws Exception {
+    ServiceTemplate template = new ServiceTemplate();
+    template.setId(10L);
+    when(serviceTemplateService.findById(10L)).thenReturn(Optional.of(template));
+
     mockMvc.perform(get("/api/service-instances").param("templateId", "10"))
         .andExpect(status().isForbidden());
   }

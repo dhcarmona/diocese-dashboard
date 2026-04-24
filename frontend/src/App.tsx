@@ -136,6 +136,19 @@ function AppRoutes() {
           <Route path="/statistics" element={<StatisticsTemplateSelectionPage />} />
           <Route path="/statistics/:templateId" element={<StatisticsFilterPage />} />
           <Route path="/statistics/:templateId/report" element={<StatisticsReportPage />} />
+          <Route path="/reports/view" element={<ReportsHubPage />} />
+          <Route
+            path="/reports/view/individual"
+            element={<AdminReportTemplateSelectionPage />}
+          />
+          <Route
+            path="/reports/view/individual/:templateId"
+            element={<ReportInstancesListPage />}
+          />
+          <Route
+            path="/reports/view/individual/:templateId/:instanceId"
+            element={<ReportInstanceDetailPage />}
+          />
           <Route element={<AdminRoute />}>
             <Route
               path="/service-templates/manage"
@@ -160,19 +173,6 @@ function AppRoutes() {
             <Route
               path="/whatsapp-logs"
               element={<WhatsAppMessageLogPage />}
-            />
-            <Route path="/reports/view" element={<ReportsHubPage />} />
-            <Route
-              path="/reports/view/individual"
-              element={<AdminReportTemplateSelectionPage />}
-            />
-            <Route
-              path="/reports/view/individual/:templateId"
-              element={<ReportInstancesListPage />}
-            />
-            <Route
-              path="/reports/view/individual/:templateId/:instanceId"
-              element={<ReportInstanceDetailPage />}
             />
           </Route>
         </Route>

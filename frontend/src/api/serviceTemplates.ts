@@ -46,6 +46,13 @@ export async function getServiceTemplates(): Promise<ServiceTemplate[]> {
   return response.data;
 }
 
+export async function getServiceTemplatesForViewing(): Promise<ServiceTemplate[]> {
+  const response = await api.get<ServiceTemplate[]>('/api/service-templates', {
+    params: { forViewing: true },
+  });
+  return response.data;
+}
+
 export async function getServiceTemplateById(id: number): Promise<ServiceTemplate> {
   const response = await api.get<ServiceTemplate>(`/api/service-templates/${id}`);
   return response.data;

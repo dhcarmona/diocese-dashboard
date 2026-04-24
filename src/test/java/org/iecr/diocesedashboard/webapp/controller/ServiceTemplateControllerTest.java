@@ -113,6 +113,17 @@ class ServiceTemplateControllerTest {
   }
 
   @Test
+  @WithMockDashboardUser(role = UserRole.REPORTER)
+  void getAll_asReporter_withForViewing_returnsAllTemplates() throws Exception {
+    when(serviceTemplateService.findAll()).thenReturn(
+        List.of(buildTemplate(1L, "Sunday Mass"), buildTemplate(2L, "Link-only Service")));
+
+    mockMvc.perform(get("/api/service-templates").param("forViewing", "true"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.length()").value(2));
+  }
+
+  @Test
   @WithMockUser(roles = "USER")
   void getAll_asUser_returns403() throws Exception {
     mockMvc.perform(get("/api/service-templates"))

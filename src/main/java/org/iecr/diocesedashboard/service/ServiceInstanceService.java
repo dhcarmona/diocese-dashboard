@@ -35,6 +35,12 @@ public class ServiceInstanceService {
     return repository.findByServiceTemplate(template);
   }
 
+  /** Returns instances matching the given template that belong to any of the given churches. */
+  public List<ServiceInstance> findByServiceTemplateAndChurches(
+      ServiceTemplate template, Iterable<Church> churches) {
+    return repository.findByServiceTemplateAndChurchIn(template, churches);
+  }
+
   public Optional<ServiceInstance> findByIdWithCelebrants(Long id) {
     return repository.findByIdWithCelebrants(id);
   }

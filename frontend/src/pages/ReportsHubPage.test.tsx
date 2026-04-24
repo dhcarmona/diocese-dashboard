@@ -28,4 +28,15 @@ describe('ReportsHubPage', () => {
     const link = screen.getByRole('link', { name: /individual report/i });
     expect(link).toHaveAttribute('href', '/reports/view/individual');
   });
+
+  it('renders a link to the statistics page', () => {
+    render(
+      <MemoryRouter>
+        <ReportsHubPage />
+      </MemoryRouter>,
+    );
+
+    const link = screen.getByRole('link', { name: /statistics/i });
+    expect(link).toHaveAttribute('href', '/statistics');
+  });
 });

@@ -48,13 +48,13 @@ describe('HomePage', () => {
     expect(screen.queryByRole('link', { name: /manage churches/i })).not.toBeInTheDocument();
   });
 
-  it('shows the statistics tile for reporters', () => {
+  it('shows the reports tile for reporters', () => {
     renderHomePage({});
 
-    expect(screen.getByRole('link', { name: /statistics/i })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /statistics/i })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: /^reports$/i })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /^reports$/i })).toHaveAttribute(
       'href',
-      '/statistics',
+      '/reports/view',
     );
   });
 
@@ -77,7 +77,7 @@ describe('HomePage', () => {
     expect(screen.getByRole('link', { name: /create reporter links/i })).toBeInTheDocument();
   });
 
-  it('shows the statistics tile for admins', () => {
+  it('shows the reports tile for admins', () => {
     renderHomePage({
       user: {
         id: 2,
@@ -88,6 +88,6 @@ describe('HomePage', () => {
       },
     });
 
-    expect(screen.getByRole('link', { name: /statistics/i })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /^reports$/i })).toBeInTheDocument();
   });
 });

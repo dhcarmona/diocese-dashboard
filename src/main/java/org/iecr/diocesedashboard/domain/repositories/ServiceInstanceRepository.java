@@ -22,6 +22,9 @@ public interface ServiceInstanceRepository extends JpaRepository<ServiceInstance
 
   List<ServiceInstance> findByServiceTemplate(ServiceTemplate template);
 
+  List<ServiceInstance> findByServiceTemplateAndChurchIn(
+      ServiceTemplate template, Iterable<Church> churches);
+
   List<ServiceInstance> findByServiceTemplateAndChurchAndServiceDateBetween(
       ServiceTemplate template, Church church, LocalDate start, LocalDate end);
 

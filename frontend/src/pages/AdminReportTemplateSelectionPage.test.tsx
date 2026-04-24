@@ -2,15 +2,15 @@ import { render, screen, waitFor } from '@testing-library/react';
 import i18n from 'i18next';
 import { MemoryRouter } from 'react-router-dom';
 import { vi } from 'vitest';
-import { getServiceTemplates } from '../api/serviceTemplates';
+import { getServiceTemplatesForViewing } from '../api/serviceTemplates';
 import AdminReportTemplateSelectionPage from './AdminReportTemplateSelectionPage';
 
 vi.mock('../api/serviceTemplates', () => ({
-  getServiceTemplates: vi.fn(),
+  getServiceTemplatesForViewing: vi.fn(),
 }));
 
 describe('AdminReportTemplateSelectionPage', () => {
-  const mockedGetServiceTemplates = vi.mocked(getServiceTemplates);
+  const mockedGetServiceTemplates = vi.mocked(getServiceTemplatesForViewing);
 
   beforeEach(async () => {
     mockedGetServiceTemplates.mockReset();

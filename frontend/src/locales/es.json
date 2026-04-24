@@ -74,6 +74,10 @@
         "title": "Ver reportes",
         "description": "Consulte los reportes enviados, obtenga estadísticas y más."
       },
+      "reports": {
+        "title": "Reportes",
+        "description": "Consulte los reportes enviados y estadísticas."
+      },
       "whatsappLog": {
         "title": "Registro de mensajes de WhatsApp",
         "description": "Consulte todos los mensajes de WhatsApp enviados por el sistema."
