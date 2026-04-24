@@ -1,7 +1,10 @@
+import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined';
 import Alert from '@mui/material/Alert';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import CircularProgress from '@mui/material/CircularProgress';
+import IconButton from '@mui/material/IconButton';
+import InputAdornment from '@mui/material/InputAdornment';
 import Paper from '@mui/material/Paper';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
@@ -9,8 +12,9 @@ import TableCell from '@mui/material/TableCell';
 import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
+import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link as RouterLink, useParams } from 'react-router-dom';
 import {
@@ -28,6 +32,7 @@ export default function ReportInstancesListPage() {
   const [templateName, setTemplateName] = useState('');
   const [loading, setLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     const parsedId = Number(templateId);
@@ -66,6 +71,27 @@ export default function ReportInstancesListPage() {
     ? t('reportsList.subtitle', { templateName })
     : t('reportsList.title');
 
+  const normalizedSearch = searchTerm.trim().toLocaleLowerCase();
+  const filteredInstances = useMemo(() => {
+    if (!normalizedSearch) return instances;
+    return instances.filter((inst) => {
+      const reporter = inst.submittedByFullName ?? inst.submittedByUsername ?? '';
+      const formattedDate = formatDate(inst.serviceDate, i18n.resolvedLanguage);
+      const formattedSubmittedAt = inst.submittedAt != null
+        ? formatDateTime(inst.submittedAt, i18n.resolvedLanguage)
+        : '';
+      return [
+        inst.churchName,
+        inst.templateName,
+        inst.serviceDate,
+        formattedDate,
+        reporter,
+        formattedSubmittedAt,
+        inst.submittedAt ?? '',
+      ].some((field) => field.toLocaleLowerCase().includes(normalizedSearch));
+    });
+  }, [instances, normalizedSearch, i18n.resolvedLanguage]);
+
   return (
     <>
       <PageHeader title={t('reportsList.title')} subtitle={subtitle} />
@@ -86,51 +112,90 @@ export default function ReportInstancesListPage() {
       )}
 
       {!loading && !hasError && instances.length > 0 && (
-        <TableContainer component={Paper} sx={{ mt: 2 }}>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>{t('reportsList.columns.date')}</TableCell>
-                <TableCell>{t('reportsList.columns.church')}</TableCell>
-                <TableCell>{t('reportsList.columns.reporter')}</TableCell>
-                {instances.some((i) => i.submittedAt != null) && (
-                  <TableCell>{t('reportsList.columns.submittedAt')}</TableCell>
-                )}
-                <TableCell>{t('reportsList.columns.actions')}</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {instances.map((instance) => (
-                <TableRow key={instance.id} hover>
-                  <TableCell>{formatDate(instance.serviceDate, i18n.resolvedLanguage)}</TableCell>
-                  <TableCell>{instance.churchName}</TableCell>
-                  <TableCell>
-                    {instance.submittedByFullName
-                      ?? instance.submittedByUsername
-                      ?? t('reportsList.unknownReporter')}
-                  </TableCell>
-                  {instances.some((i) => i.submittedAt != null) && (
-                    <TableCell>
-                      {instance.submittedAt != null
-                        ? formatDateTime(instance.submittedAt, i18n.resolvedLanguage)
-                        : '—'}
-                    </TableCell>
-                  )}
-                  <TableCell>
-                    <Button
-                      component={RouterLink}
-                      to={`/reports/view/individual/${templateId ?? ''}/${instance.id}`}
-                      variant="outlined"
+        <>
+          <TextField
+            label={t('reportsList.search')}
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            size="small"
+            sx={{ mt: 2, width: { xs: '100%', sm: 360 } }}
+            slotProps={{
+              input: {
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchOutlinedIcon fontSize="small" />
+                  </InputAdornment>
+                ),
+                endAdornment: searchTerm ? (
+                  <InputAdornment position="end">
+                    <IconButton
+                      aria-label={t('reportsList.clearSearch')}
+                      edge="end"
                       size="small"
+                      onClick={() => setSearchTerm('')}
                     >
-                      {t('reportsList.viewDetails')}
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
+                      ✕
+                    </IconButton>
+                  </InputAdornment>
+                ) : undefined,
+              },
+            }}
+          />
+
+          {filteredInstances.length === 0 && (
+            <Alert severity="info" sx={{ mt: 2 }}>
+              {t('reportsList.noSearchResults')}
+            </Alert>
+          )}
+
+          {filteredInstances.length > 0 && (
+            <TableContainer component={Paper} sx={{ mt: 2 }}>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>{t('reportsList.columns.date')}</TableCell>
+                    <TableCell>{t('reportsList.columns.church')}</TableCell>
+                    <TableCell>{t('reportsList.columns.reporter')}</TableCell>
+                    {instances.some((i) => i.submittedAt != null) && (
+                      <TableCell>{t('reportsList.columns.submittedAt')}</TableCell>
+                    )}
+                    <TableCell>{t('reportsList.columns.actions')}</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {filteredInstances.map((instance) => (
+                    <TableRow key={instance.id} hover>
+                      <TableCell>{formatDate(instance.serviceDate, i18n.resolvedLanguage)}</TableCell>
+                      <TableCell>{instance.churchName}</TableCell>
+                      <TableCell>
+                        {instance.submittedByFullName
+                          ?? instance.submittedByUsername
+                          ?? t('reportsList.unknownReporter')}
+                      </TableCell>
+                      {instances.some((i) => i.submittedAt != null) && (
+                        <TableCell>
+                          {instance.submittedAt != null
+                            ? formatDateTime(instance.submittedAt, i18n.resolvedLanguage)
+                            : '—'}
+                        </TableCell>
+                      )}
+                      <TableCell>
+                        <Button
+                          component={RouterLink}
+                          to={`/reports/view/individual/${templateId ?? ''}/${instance.id}`}
+                          variant="outlined"
+                          size="small"
+                        >
+                          {t('reportsList.viewDetails')}
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          )}
+        </>
       )}
     </>
   );

@@ -1,4 +1,5 @@
 import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import i18n from 'i18next';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { vi } from 'vitest';
@@ -149,5 +150,92 @@ describe('ReportInstancesListPage', () => {
     await waitFor(() => {
       expect(screen.getByText('We could not load the reports.')).toBeInTheDocument();
     });
+  });
+
+  it('renders a search input when instances are loaded', async () => {
+    mockedGetInstancesByTemplate.mockResolvedValueOnce([BASE_INSTANCE]);
+
+    renderWithTemplateId();
+
+    await waitFor(() => {
+      expect(screen.getByLabelText('Search reports…')).toBeInTheDocument();
+    });
+  });
+
+  it('filters rows by church name', async () => {
+    mockedGetInstancesByTemplate.mockResolvedValueOnce([
+      BASE_INSTANCE,
+      { ...BASE_INSTANCE, id: 2, churchName: 'St. Paul', submittedByFullName: 'Ana Perez' },
+    ]);
+
+    renderWithTemplateId();
+
+    const input = await screen.findByLabelText('Search reports…');
+    await userEvent.type(input, 'Trinity');
+
+    expect(screen.getByText('Trinity Church')).toBeInTheDocument();
+    expect(screen.queryByText('St. Paul')).not.toBeInTheDocument();
+  });
+
+  it('filters rows by reporter name', async () => {
+    mockedGetInstancesByTemplate.mockResolvedValueOnce([
+      BASE_INSTANCE,
+      { ...BASE_INSTANCE, id: 2, churchName: 'St. Paul', submittedByFullName: 'Ana Perez' },
+    ]);
+
+    renderWithTemplateId();
+
+    const input = await screen.findByLabelText('Search reports…');
+    await userEvent.type(input, 'Ana');
+
+    expect(screen.getByText('St. Paul')).toBeInTheDocument();
+    expect(screen.queryByText('Trinity Church')).not.toBeInTheDocument();
+  });
+
+  it('filters rows by service date', async () => {
+    mockedGetInstancesByTemplate.mockResolvedValueOnce([
+      BASE_INSTANCE,
+      { ...BASE_INSTANCE, id: 2, serviceDate: '2026-03-20', churchName: 'St. Paul' },
+    ]);
+
+    renderWithTemplateId();
+
+    const input = await screen.findByLabelText('Search reports…');
+    await userEvent.type(input, '2026-01');
+
+    expect(screen.getByText('Trinity Church')).toBeInTheDocument();
+    expect(screen.queryByText('St. Paul')).not.toBeInTheDocument();
+  });
+
+  it('shows no-search-results message when filter matches nothing', async () => {
+    mockedGetInstancesByTemplate.mockResolvedValueOnce([BASE_INSTANCE]);
+
+    renderWithTemplateId();
+
+    const input = await screen.findByLabelText('Search reports…');
+    await userEvent.type(input, 'zzznomatch');
+
+    expect(screen.getByText('No reports match your search.')).toBeInTheDocument();
+    expect(screen.queryByRole('table')).not.toBeInTheDocument();
+  });
+
+  it('clears search when the clear button is clicked', async () => {
+    mockedGetInstancesByTemplate.mockResolvedValueOnce([
+      BASE_INSTANCE,
+      { ...BASE_INSTANCE, id: 2, churchName: 'St. Paul', submittedByFullName: 'Ana Perez' },
+    ]);
+
+    renderWithTemplateId();
+
+    const input = await screen.findByLabelText('Search reports…');
+    await userEvent.type(input, 'Trinity');
+
+    expect(screen.queryByText('St. Paul')).not.toBeInTheDocument();
+
+    const clearBtn = screen.getByRole('button', { name: /clear search/i });
+    await userEvent.click(clearBtn);
+
+    expect(screen.getByText('Trinity Church')).toBeInTheDocument();
+    expect(screen.getByText('St. Paul')).toBeInTheDocument();
   });
 });
