@@ -10,7 +10,7 @@ import PageHeader from '../components/PageHeader';
 import TileGrid from '../components/TileGrid';
 import { tileArtwork } from '../components/tileArtwork';
 
-export default function AdminReportTemplateSelectionPage() {
+export default function ReportTemplateSelectionPage() {
   const { t } = useTranslation();
   const [templates, setTemplates] = useState<ServiceTemplateSummary[]>([]);
   const [loading, setLoading] = useState(true);

@@ -18,7 +18,7 @@ import ChurchManagementPage from './pages/ChurchManagementPage';
 import LoginPage from './pages/LoginPage';
 import CelebrantManagementPage from './pages/CelebrantManagementPage';
 import HomePage from './pages/HomePage';
-import AdminReportTemplateSelectionPage from './pages/AdminReportTemplateSelectionPage';
+import ReportTemplateSelectionPage from './pages/ReportTemplateSelectionPage';
 import ReportInstanceDetailPage from './pages/ReportInstanceDetailPage';
 import ReportInstancesListPage from './pages/ReportInstancesListPage';
 import ReporterLinkManagementPage from './pages/ReporterLinkManagementPage';
@@ -139,7 +139,7 @@ function AppRoutes() {
           <Route path="/reports/view" element={<ReportsHubPage />} />
           <Route
             path="/reports/view/individual"
-            element={<AdminReportTemplateSelectionPage />}
+            element={<ReportTemplateSelectionPage />}
           />
           <Route
             path="/reports/view/individual/:templateId"
