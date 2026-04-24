@@ -62,7 +62,7 @@ public class StatisticsService {
   public StatisticsResponse computeForChurch(ServiceTemplate template, Church church,
       LocalDate startDate, LocalDate endDate, Long reporterUserId) {
     List<ServiceInstance> instances =
-        instanceRepository.findByServiceTemplateAndChurchAndServiceDateBetween(
+        instanceRepository.findByTemplateAndChurchAndDateRangeWithCelebrants(
             template, church, startDate, endDate);
     List<ReporterLink> links =
         reporterLinkRepository.findByChurchAndServiceTemplate(church, template);
@@ -82,7 +82,7 @@ public class StatisticsService {
   public StatisticsResponse computeGlobal(ServiceTemplate template,
       LocalDate startDate, LocalDate endDate) {
     List<ServiceInstance> instances =
-        instanceRepository.findByServiceTemplateAndServiceDateBetween(
+        instanceRepository.findByTemplateAndDateRangeWithCelebrants(
             template, startDate, endDate);
     List<Church> allChurches = churchService.findAll();
     List<ReporterLink> links =
@@ -165,7 +165,7 @@ public class StatisticsService {
     Map<Long, Map<LocalDate, Double>> result = new HashMap<>();
 
     List<ServiceInfoItemResponse> allResponses =
-        responseRepository.findByServiceInstanceIn(instances);
+        responseRepository.findByServiceInstanceInWithItems(instances);
     for (ServiceInfoItemResponse response : allResponses) {
       ServiceInfoItem item = response.getServiceInfoItem();
       ServiceInfoItemType type = item.getServiceInfoItemType();
