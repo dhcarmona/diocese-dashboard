@@ -13,6 +13,10 @@ interface State {
  * Top-level React error boundary. Catches rendering crashes that would otherwise
  * unmount the React tree and leave the user with a blank page. Renders a minimal
  * fallback UI and reports the error to the backend log.
+ *
+ * <p>Fallback text is intentionally hard-coded in Spanish because this app targets
+ * a single Spanish-speaking diocese and class components cannot use React hooks
+ * (including {@code useTranslation}).
  */
 export class ErrorBoundary extends Component<Props, State> {
   constructor(props: Props) {

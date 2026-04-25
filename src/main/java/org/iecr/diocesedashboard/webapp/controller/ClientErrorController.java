@@ -22,8 +22,9 @@ public class ClientErrorController {
 
   /**
    * Logs a client-side JavaScript error.
-   * The endpoint is open to unauthenticated browsers but CSRF-protected, ensuring that
-   * only browsers with a valid session (i.e., users who have loaded the app) can submit reports.
+   * The endpoint is open to unauthenticated browsers and uses CSRF protection to help
+   * mitigate cross-site request forgery from other sites. A valid CSRF token does not
+   * authenticate the caller or prove that the user previously loaded the application.
    *
    * @param request the error details captured by the browser
    */
@@ -31,6 +32,17 @@ public class ClientErrorController {
   @ResponseStatus(HttpStatus.NO_CONTENT)
   public void reportError(@RequestBody @Valid ClientErrorRequest request) {
     log.warn("Client-side error [url={}] [ua={}]: {} | Stack: {}",
-        request.url(), request.userAgent(), request.message(), request.stack());
+        sanitizeForLog(request.url()), sanitizeForLog(request.userAgent()),
+        sanitizeForLog(request.message()), sanitizeForLog(request.stack()));
+  }
+
+  private String sanitizeForLog(String value) {
+    if (value == null) {
+      return null;
+    }
+    return value.replace('\r', ' ')
+        .replace('\n', ' ')
+        .replaceAll("[\\p{Cntrl}&&[^\t]]", "?")
+        .replace('\t', ' ');
   }
 }

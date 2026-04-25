@@ -244,7 +244,7 @@ class ServiceInstanceRepositoryTest {
   }
 
   @Test
-  void findByTemplateAndChurchAndDateRangeWithCelebrants_returnsCelebrantsInSingleQuery() {
+  void findByTemplateAndChurchAndDateRangeWithCelebrants_returnsCelebrantsEagerlyLoaded() {
     Celebrant celebrant = new Celebrant();
     celebrant.setName("Rev. Bob");
     entityManager.persist(celebrant);
