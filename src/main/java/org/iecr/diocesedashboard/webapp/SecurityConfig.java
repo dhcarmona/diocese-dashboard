@@ -124,6 +124,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/auth/me").hasAnyRole("ADMIN", "REPORTER")
                 .requestMatchers(HttpMethod.PUT, "/api/auth/me/language")
                 .hasAnyRole("ADMIN", "REPORTER")
+                .requestMatchers(HttpMethod.POST, "/api/client-errors").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/portraits/service-templates").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/portraits/**").hasAnyRole("ADMIN", "REPORTER")
                 .requestMatchers(HttpMethod.GET, "/api/churches").hasAnyRole("ADMIN", "REPORTER")
