@@ -102,6 +102,12 @@ export default function ReporterLinkPage() {
   const showHomeButton = status === 'authenticated';
 
   useEffect(() => {
+    if (submissionResult) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, [submissionResult]);
+
+  useEffect(() => {
     if (status === 'loading' || status === 'error' || !token) return;
 
     let active = true;

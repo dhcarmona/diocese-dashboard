@@ -17,6 +17,7 @@ import org.iecr.diocesedashboard.service.ReporterMagicLinkService;
 import org.iecr.diocesedashboard.service.ReporterOtpService;
 import org.iecr.diocesedashboard.service.UserService;
 import org.iecr.diocesedashboard.webapp.controller.AuthController;
+import org.iecr.diocesedashboard.webapp.controller.ClientErrorController;
 import org.iecr.diocesedashboard.webapp.controller.FrontendController;
 import org.iecr.diocesedashboard.webapp.controller.PortraitController;
 import org.junit.jupiter.api.BeforeEach;
@@ -35,7 +36,8 @@ import org.springframework.test.web.servlet.MvcResult;
  * Integration tests for {@link SecurityConfig} authorization rules, login/logout
  * behavior, static asset access, and CSRF enforcement.
  */
-@WebMvcTest({FrontendController.class, AuthController.class, PortraitController.class})
+@WebMvcTest({FrontendController.class, AuthController.class, PortraitController.class,
+    ClientErrorController.class})
 @Import(SecurityConfig.class)
 class SecurityConfigTest {
 
@@ -308,6 +310,36 @@ class SecurityConfigTest {
         .session(session)
         .header(csrfPayload.get("headerName").asText(), csrfPayload.get("token").asText()))
         .andExpect(status().isOk());
+  }
+
+  // ---------------------------------------------------------------------------
+  // Client error reporting endpoint security
+  // ---------------------------------------------------------------------------
+
+  @Test
+  void clientErrors_withCsrfToken_unauthenticated_returns204() throws Exception {
+    MvcResult csrfResult = mockMvc.perform(get("/api/auth/csrf"))
+        .andExpect(status().isOk())
+        .andReturn();
+    MockHttpSession session = (MockHttpSession) csrfResult.getRequest().getSession(false);
+    JsonNode csrfPayload = objectMapper.readTree(csrfResult.getResponse().getContentAsString());
+
+    mockMvc.perform(post("/api/client-errors")
+        .session(session)
+        .header(csrfPayload.get("headerName").asText(), csrfPayload.get("token").asText())
+        .contentType("application/json")
+        .content("{\"message\":\"Test error\",\"stack\":null,\"url\":\"/r/abc\","
+            + "\"userAgent\":\"Chrome/Android\"}"))
+        .andExpect(status().isNoContent());
+  }
+
+  @Test
+  void clientErrors_withoutCsrfToken_returns403() throws Exception {
+    mockMvc.perform(post("/api/client-errors")
+        .contentType("application/json")
+        .content("{\"message\":\"Test error\",\"stack\":null,\"url\":\"/r/abc\","
+            + "\"userAgent\":\"Chrome/Android\"}"))
+        .andExpect(status().isForbidden());
   }
 
   // ---------------------------------------------------------------------------

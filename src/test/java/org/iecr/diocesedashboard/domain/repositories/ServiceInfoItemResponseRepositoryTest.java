@@ -121,9 +121,9 @@ class ServiceInfoItemResponseRepositoryTest {
   void findByServiceInstanceInWithItems_returnsEmptyForUnrelatedInstance() {
     ServiceInstance other = new ServiceInstance();
     other.setChurch(entityManager.find(
-        org.iecr.diocesedashboard.domain.objects.Church.class, "St. Mary"));
+        Church.class, "St. Mary"));
     other.setServiceTemplate(entityManager.find(
-        org.iecr.diocesedashboard.domain.objects.ServiceTemplate.class,
+        ServiceTemplate.class,
         serviceInstance.getServiceTemplate().getId()));
     entityManager.persist(other);
 
