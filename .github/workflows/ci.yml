@@ -27,7 +27,6 @@ jobs:
           SPRING_DATASOURCE_DRIVER_CLASS_NAME: org.h2.Driver
           SPRING_DATASOURCE_USERNAME: sa
           SPRING_DATASOURCE_PASSWORD: ""
-          SPRING_JPA_HIBERNATE_DDL_AUTO: create-drop
           SPRING_JPA_DATABASE_PLATFORM: org.hibernate.dialect.H2Dialect
           # Satisfy required env vars (unused by H2 config above)
           POSTGRESQL_PORT: "5432"
