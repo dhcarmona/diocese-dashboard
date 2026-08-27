@@ -2,9 +2,11 @@ package org.iecr.diocesedashboard.webapp.controller;
 
 import org.iecr.diocesedashboard.domain.objects.Church;
 import org.iecr.diocesedashboard.domain.objects.DashboardUser;
+import org.iecr.diocesedashboard.domain.objects.ServiceInfoItem;
 import org.iecr.diocesedashboard.domain.objects.ServiceTemplate;
 import org.iecr.diocesedashboard.domain.objects.UserRole;
 import org.iecr.diocesedashboard.service.ChurchService;
+import org.iecr.diocesedashboard.service.ServiceInfoItemService;
 import org.iecr.diocesedashboard.service.ServiceTemplateService;
 import org.iecr.diocesedashboard.service.StatisticsService;
 import org.iecr.diocesedashboard.webapp.DashboardUserDetails;
@@ -29,14 +31,17 @@ public class StatisticsController {
   private final StatisticsService statisticsService;
   private final ServiceTemplateService serviceTemplateService;
   private final ChurchService churchService;
+  private final ServiceInfoItemService serviceInfoItemService;
 
   @Autowired
   public StatisticsController(StatisticsService statisticsService,
       ServiceTemplateService serviceTemplateService,
-      ChurchService churchService) {
+      ChurchService churchService,
+      ServiceInfoItemService serviceInfoItemService) {
     this.statisticsService = statisticsService;
     this.serviceTemplateService = serviceTemplateService;
     this.churchService = churchService;
+    this.serviceInfoItemService = serviceInfoItemService;
   }
 
   /**
@@ -99,5 +104,47 @@ public class StatisticsController {
 
     Long reporterUserId = user.getRole() == UserRole.REPORTER ? user.getId() : null;
     return statisticsService.computeForChurch(template, church, startDate, endDate, reporterUserId);
+  }
+
+  /**
+   * Returns drill-down detail for a specific bar in a statistics chart.
+   * Shows which service instances contributed to the aggregate value for a given item and date.
+   * ADMIN only.
+   *
+   * @param templateId the service template
+   * @param itemId     the service info item
+   * @param date       the exact service date of the bar
+   * @param churchName optional church filter; omit for a global drill-down
+   * @return the drill-down detail response
+   */
+  @GetMapping("/drill-down")
+  public ChartDrillDownResponse getDrillDown(
+      @RequestParam Long templateId,
+      @RequestParam Long itemId,
+      @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+      @RequestParam(required = false) String churchName) {
+
+    ServiceTemplate template = serviceTemplateService.findById(templateId)
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+            "Template not found: " + templateId));
+
+    ServiceInfoItem item = serviceInfoItemService.findById(itemId)
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+            "Item not found: " + itemId));
+
+    if (item.getServiceTemplate() == null
+        || !item.getServiceTemplate().getId().equals(templateId)) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+          "Item does not belong to the given template");
+    }
+
+    Church church = null;
+    if (churchName != null) {
+      church = churchService.findById(churchName)
+          .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+              "Church not found: " + churchName));
+    }
+
+    return statisticsService.computeDrillDown(template, item, date, church);
   }
 }

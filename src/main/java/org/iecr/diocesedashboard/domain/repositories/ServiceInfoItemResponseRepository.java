@@ -1,5 +1,6 @@
 package org.iecr.diocesedashboard.domain.repositories;
 
+import org.iecr.diocesedashboard.domain.objects.ServiceInfoItem;
 import org.iecr.diocesedashboard.domain.objects.ServiceInfoItemResponse;
 import org.iecr.diocesedashboard.domain.objects.ServiceInstance;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -20,6 +21,16 @@ public interface ServiceInfoItemResponseRepository
       + "WHERE r.serviceInstance IN :instances")
   List<ServiceInfoItemResponse> findByServiceInstanceInWithItems(
       @Param("instances") List<ServiceInstance> instances);
+
+  @Query("SELECT r FROM ServiceInfoItemResponse r "
+      + "JOIN FETCH r.serviceInstance si "
+      + "JOIN FETCH si.church "
+      + "LEFT JOIN FETCH si.submittedBy "
+      + "WHERE r.serviceInstance IN :instances "
+      + "AND r.serviceInfoItem = :item")
+  List<ServiceInfoItemResponse> findByServiceInstancesAndItem(
+      @Param("instances") List<ServiceInstance> instances,
+      @Param("item") ServiceInfoItem item);
 
   void deleteByServiceInstance(ServiceInstance instance);
 }

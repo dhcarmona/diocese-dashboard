@@ -10,9 +10,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.iecr.diocesedashboard.domain.objects.Church;
+import org.iecr.diocesedashboard.domain.objects.ServiceInfoItem;
+import org.iecr.diocesedashboard.domain.objects.ServiceInfoItemType;
 import org.iecr.diocesedashboard.domain.objects.ServiceTemplate;
 import org.iecr.diocesedashboard.domain.objects.UserRole;
 import org.iecr.diocesedashboard.service.ChurchService;
+import org.iecr.diocesedashboard.service.ServiceInfoItemService;
 import org.iecr.diocesedashboard.service.ServiceTemplateService;
 import org.iecr.diocesedashboard.service.StatisticsService;
 import org.iecr.diocesedashboard.webapp.SecurityConfig;
@@ -50,11 +53,15 @@ class StatisticsControllerTest {
   private ChurchService churchService;
 
   @MockBean
+  private ServiceInfoItemService serviceInfoItemService;
+
+  @MockBean
   private UserDetailsService userDetailsService;
 
   private ServiceTemplate template;
   private Church church;
   private StatisticsResponse fakeResponse;
+  private ServiceInfoItem numericalItem;
 
   @BeforeEach
   void setUp() {
@@ -66,6 +73,12 @@ class StatisticsControllerTest {
 
     church = new Church();
     church.setName("Trinity");
+
+    numericalItem = new ServiceInfoItem();
+    numericalItem.setId(10L);
+    numericalItem.setTitle("Attendance");
+    numericalItem.setServiceInfoItemType(ServiceInfoItemType.NUMERICAL);
+    numericalItem.setServiceTemplate(template);
 
     fakeResponse = new StatisticsResponse(
         1L, "Sunday Mass", "Trinity", false,
@@ -225,5 +238,135 @@ class StatisticsControllerTest {
   void getTemplatesForStatistics_unauthenticated_returns401() throws Exception {
     mockMvc.perform(get("/api/statistics/templates"))
         .andExpect(status().isUnauthorized());
+  }
+
+  // --- GET /api/statistics/drill-down ---
+
+  @Test
+  @WithMockDashboardUser(role = UserRole.ADMIN)
+  void getDrillDown_admin_churchScoped_returns200WithRows() throws Exception {
+    ChartDrillDownResponse drillDown = new ChartDrillDownResponse(
+        10L, "Attendance", "NUMERICAL", LocalDate.of(2024, 3, 10),
+        List.of(new ChartDrillDownResponse.DrillDownRow(42L, "Trinity", "alice", "Alice", 30.0)));
+
+    when(serviceTemplateService.findById(1L)).thenReturn(Optional.of(template));
+    when(serviceInfoItemService.findById(10L)).thenReturn(Optional.of(numericalItem));
+    when(churchService.findById("Trinity")).thenReturn(Optional.of(church));
+    when(statisticsService.computeDrillDown(eq(template), eq(numericalItem),
+        eq(LocalDate.of(2024, 3, 10)), eq(church))).thenReturn(drillDown);
+
+    mockMvc.perform(get("/api/statistics/drill-down")
+        .param("templateId", "1")
+        .param("itemId", "10")
+        .param("date", "2024-03-10")
+        .param("churchName", "Trinity"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.itemId").value(10))
+        .andExpect(jsonPath("$.itemTitle").value("Attendance"))
+        .andExpect(jsonPath("$.itemType").value("NUMERICAL"))
+        .andExpect(jsonPath("$.date").value("2024-03-10"))
+        .andExpect(jsonPath("$.rows.length()").value(1))
+        .andExpect(jsonPath("$.rows[0].serviceInstanceId").value(42))
+        .andExpect(jsonPath("$.rows[0].churchName").value("Trinity"))
+        .andExpect(jsonPath("$.rows[0].filledByUsername").value("alice"))
+        .andExpect(jsonPath("$.rows[0].value").value(30.0));
+  }
+
+  @Test
+  @WithMockDashboardUser(role = UserRole.ADMIN)
+  void getDrillDown_admin_global_returns200() throws Exception {
+    ChartDrillDownResponse drillDown = new ChartDrillDownResponse(
+        10L, "Attendance", "NUMERICAL", LocalDate.of(2024, 3, 10), List.of());
+
+    when(serviceTemplateService.findById(1L)).thenReturn(Optional.of(template));
+    when(serviceInfoItemService.findById(10L)).thenReturn(Optional.of(numericalItem));
+    when(statisticsService.computeDrillDown(eq(template), eq(numericalItem),
+        eq(LocalDate.of(2024, 3, 10)), eq(null))).thenReturn(drillDown);
+
+    mockMvc.perform(get("/api/statistics/drill-down")
+        .param("templateId", "1")
+        .param("itemId", "10")
+        .param("date", "2024-03-10"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.rows.length()").value(0));
+  }
+
+  @Test
+  @WithMockDashboardUser(role = UserRole.REPORTER)
+  void getDrillDown_reporter_returns403() throws Exception {
+    mockMvc.perform(get("/api/statistics/drill-down")
+        .param("templateId", "1")
+        .param("itemId", "10")
+        .param("date", "2024-03-10"))
+        .andExpect(status().isForbidden());
+  }
+
+  @Test
+  void getDrillDown_unauthenticated_returns401() throws Exception {
+    mockMvc.perform(get("/api/statistics/drill-down")
+        .param("templateId", "1")
+        .param("itemId", "10")
+        .param("date", "2024-03-10"))
+        .andExpect(status().isUnauthorized());
+  }
+
+  @Test
+  @WithMockDashboardUser(role = UserRole.ADMIN)
+  void getDrillDown_unknownTemplate_returns404() throws Exception {
+    when(serviceTemplateService.findById(99L)).thenReturn(Optional.empty());
+
+    mockMvc.perform(get("/api/statistics/drill-down")
+        .param("templateId", "99")
+        .param("itemId", "10")
+        .param("date", "2024-03-10"))
+        .andExpect(status().isNotFound());
+  }
+
+  @Test
+  @WithMockDashboardUser(role = UserRole.ADMIN)
+  void getDrillDown_unknownItem_returns404() throws Exception {
+    when(serviceTemplateService.findById(1L)).thenReturn(Optional.of(template));
+    when(serviceInfoItemService.findById(99L)).thenReturn(Optional.empty());
+
+    mockMvc.perform(get("/api/statistics/drill-down")
+        .param("templateId", "1")
+        .param("itemId", "99")
+        .param("date", "2024-03-10"))
+        .andExpect(status().isNotFound());
+  }
+
+  @Test
+  @WithMockDashboardUser(role = UserRole.ADMIN)
+  void getDrillDown_itemFromDifferentTemplate_returns400() throws Exception {
+    ServiceTemplate otherTemplate = new ServiceTemplate();
+    otherTemplate.setId(99L);
+
+    ServiceInfoItem foreignItem = new ServiceInfoItem();
+    foreignItem.setId(10L);
+    foreignItem.setServiceTemplate(otherTemplate);
+
+    when(serviceTemplateService.findById(1L)).thenReturn(Optional.of(template));
+    when(serviceInfoItemService.findById(10L)).thenReturn(Optional.of(foreignItem));
+
+    mockMvc.perform(get("/api/statistics/drill-down")
+        .param("templateId", "1")
+        .param("itemId", "10")
+        .param("date", "2024-03-10"))
+        .andExpect(status().isBadRequest());
+  }
+
+  @Test
+  @WithMockDashboardUser(role = UserRole.ADMIN)
+  void getDrillDown_unknownChurch_returns404() throws Exception {
+    when(serviceTemplateService.findById(1L)).thenReturn(Optional.of(template));
+    when(serviceInfoItemService.findById(10L)).thenReturn(Optional.of(numericalItem));
+    when(churchService.findById("Unknown")).thenReturn(Optional.empty());
+
+    mockMvc.perform(get("/api/statistics/drill-down")
+        .param("templateId", "1")
+        .param("itemId", "10")
+        .param("date", "2024-03-10")
+        .param("churchName", "Unknown"))
+        .andExpect(status().isNotFound());
   }
 }

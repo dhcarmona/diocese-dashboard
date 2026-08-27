@@ -2,6 +2,7 @@ package org.iecr.diocesedashboard.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 import org.iecr.diocesedashboard.domain.objects.Celebrant;
@@ -17,6 +18,7 @@ import org.iecr.diocesedashboard.domain.objects.UserRole;
 import org.iecr.diocesedashboard.domain.repositories.ReporterLinkRepository;
 import org.iecr.diocesedashboard.domain.repositories.ServiceInfoItemResponseRepository;
 import org.iecr.diocesedashboard.domain.repositories.ServiceInstanceRepository;
+import org.iecr.diocesedashboard.webapp.controller.ChartDrillDownResponse;
 import org.iecr.diocesedashboard.webapp.controller.StatisticsResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -389,5 +391,126 @@ class StatisticsServiceTest {
     link.setServiceTemplate(template);
     link.setActiveDate(activeDate);
     return link;
+  }
+
+  // --- computeDrillDown tests ---
+
+  @Test
+  void computeDrillDown_churchScoped_returnsNonZeroRowsSortedDescending() {
+    ServiceInstance inst1 = buildInstance(LocalDate.of(2024, 3, 10));
+    inst1.setId(1L);
+    ServiceInstance inst2 = buildInstance(LocalDate.of(2024, 3, 10));
+    inst2.setId(2L);
+
+    DashboardUser user1 = new DashboardUser();
+    user1.setUsername("alice");
+    user1.setFullName("Alice Smith");
+    inst1.setSubmittedBy(user1);
+
+    DashboardUser user2 = new DashboardUser();
+    user2.setUsername("bob");
+    inst2.setSubmittedBy(user2);
+
+    LocalDate date = LocalDate.of(2024, 3, 10);
+    when(instanceRepository.findByTemplateAndChurchAndDateRangeWithCelebrants(
+        template, church, date, date)).thenReturn(List.of(inst1, inst2));
+    when(responseRepository.findByServiceInstancesAndItem(List.of(inst1, inst2), numericalItem))
+        .thenReturn(List.of(
+            buildResponse(numericalItem, inst1, "30"),
+            buildResponse(numericalItem, inst2, "70")
+        ));
+
+    ChartDrillDownResponse result =
+        statisticsService.computeDrillDown(template, numericalItem, date, church);
+
+    assertThat(result.itemId()).isEqualTo(10L);
+    assertThat(result.itemTitle()).isEqualTo("Attendance");
+    assertThat(result.itemType()).isEqualTo("NUMERICAL");
+    assertThat(result.date()).isEqualTo(date);
+    assertThat(result.rows()).hasSize(2);
+    // Sorted descending by value
+    assertThat(result.rows().get(0).value()).isEqualTo(70.0);
+    assertThat(result.rows().get(0).churchName()).isEqualTo("Trinity");
+    assertThat(result.rows().get(0).filledByUsername()).isEqualTo("bob");
+    assertThat(result.rows().get(1).value()).isEqualTo(30.0);
+    assertThat(result.rows().get(1).filledByUsername()).isEqualTo("alice");
+    assertThat(result.rows().get(1).filledByFullName()).isEqualTo("Alice Smith");
+  }
+
+  @Test
+  void computeDrillDown_filtersOutZeroAndBlankValues() {
+    ServiceInstance inst1 = buildInstance(LocalDate.of(2024, 3, 10));
+    inst1.setId(1L);
+    ServiceInstance inst2 = buildInstance(LocalDate.of(2024, 3, 10));
+    inst2.setId(2L);
+    ServiceInstance inst3 = buildInstance(LocalDate.of(2024, 3, 10));
+    inst3.setId(3L);
+
+    LocalDate date = LocalDate.of(2024, 3, 10);
+    when(instanceRepository.findByTemplateAndChurchAndDateRangeWithCelebrants(
+        template, church, date, date)).thenReturn(List.of(inst1, inst2, inst3));
+    when(responseRepository.findByServiceInstancesAndItem(anyList(), eq(numericalItem)))
+        .thenReturn(List.of(
+            buildResponse(numericalItem, inst1, "0"),
+            buildResponse(numericalItem, inst2, ""),
+            buildResponse(numericalItem, inst3, "15")
+        ));
+
+    ChartDrillDownResponse result =
+        statisticsService.computeDrillDown(template, numericalItem, date, church);
+
+    assertThat(result.rows()).hasSize(1);
+    assertThat(result.rows().get(0).value()).isEqualTo(15.0);
+  }
+
+  @Test
+  void computeDrillDown_returnsEmptyRowsWhenNoInstancesOnDate() {
+    LocalDate date = LocalDate.of(2024, 3, 10);
+    when(instanceRepository.findByTemplateAndChurchAndDateRangeWithCelebrants(
+        template, church, date, date)).thenReturn(List.of());
+
+    ChartDrillDownResponse result =
+        statisticsService.computeDrillDown(template, numericalItem, date, church);
+
+    assertThat(result.rows()).isEmpty();
+    assertThat(result.itemId()).isEqualTo(10L);
+  }
+
+  @Test
+  void computeDrillDown_global_queriesAllChurches() {
+    ServiceInstance inst1 = buildInstance(LocalDate.of(2024, 5, 5));
+    inst1.setId(1L);
+
+    LocalDate date = LocalDate.of(2024, 5, 5);
+    when(instanceRepository.findByTemplateAndDateRangeWithCelebrants(template, date, date))
+        .thenReturn(List.of(inst1));
+    when(responseRepository.findByServiceInstancesAndItem(List.of(inst1), numericalItem))
+        .thenReturn(List.of(buildResponse(numericalItem, inst1, "25")));
+
+    ChartDrillDownResponse result =
+        statisticsService.computeDrillDown(template, numericalItem, date, null);
+
+    assertThat(result.rows()).hasSize(1);
+    assertThat(result.rows().get(0).value()).isEqualTo(25.0);
+  }
+
+  @Test
+  void computeDrillDown_handlesNullSubmittedBy() {
+    ServiceInstance inst = buildInstance(LocalDate.of(2024, 6, 1));
+    inst.setId(1L);
+    inst.setSubmittedBy(null);
+
+    LocalDate date = LocalDate.of(2024, 6, 1);
+    when(instanceRepository.findByTemplateAndChurchAndDateRangeWithCelebrants(
+        template, church, date, date)).thenReturn(List.of(inst));
+    when(responseRepository.findByServiceInstancesAndItem(List.of(inst), numericalItem))
+        .thenReturn(List.of(buildResponse(numericalItem, inst, "10")));
+
+    ChartDrillDownResponse result =
+        statisticsService.computeDrillDown(template, numericalItem, date, church);
+
+    assertThat(result.rows()).hasSize(1);
+    assertThat(result.rows().get(0).filledByUsername()).isNull();
+    assertThat(result.rows().get(0).filledByFullName()).isNull();
   }
 }

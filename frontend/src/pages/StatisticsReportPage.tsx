@@ -27,7 +27,9 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
+import type { BarRectangleItem } from 'recharts';
 import { getStatistics, type AggregatedItem, type StatisticsReport } from '../api/statistics';
+import { useAuth } from '../auth/auth-context';
 import PageHeader from '../components/PageHeader';
 import { formatDate } from '../utils/dateFormatting';
 import { downloadStatisticsPdf } from '../utils/statisticsPdf';
@@ -47,14 +49,16 @@ interface ItemSectionProps {
   item: AggregatedItem;
   totalLabel: string;
   trendLabel: string;
+  onBarClick?: (date: string) => void;
 }
 
-function ItemSection({ item, totalLabel, trendLabel }: Readonly<ItemSectionProps>) {
+function ItemSection({ item, totalLabel, trendLabel, onBarClick }: Readonly<ItemSectionProps>) {
   const { t, i18n } = useTranslation();
   const unit = t(`statistics.report.itemTypes.${item.itemType}`, { defaultValue: item.itemType });
 
   const barData = item.timeSeriesData.map((pt) => ({
     date: formatDate(pt.date, i18n.resolvedLanguage),
+    rawDate: pt.date,
     value: pt.value,
   }));
 
@@ -86,7 +90,18 @@ function ItemSection({ item, totalLabel, trendLabel }: Readonly<ItemSectionProps
               <Tooltip
                 formatter={(val) => [formatValue(Number(val ?? 0), item.itemType), item.itemTitle]}
               />
-              <Bar dataKey="value" fill="#1C3A6E" radius={[4, 4, 0, 0]} isAnimationActive={false} />
+              <Bar
+                dataKey="value"
+                fill="#1C3A6E"
+                radius={[4, 4, 0, 0]}
+                isAnimationActive={false}
+                cursor={onBarClick ? 'pointer' : undefined}
+                onClick={onBarClick
+                  ? (payload: BarRectangleItem & { rawDate?: string }) => {
+                      if (payload.rawDate) onBarClick(payload.rawDate);
+                    }
+                  : undefined}
+              />
             </BarChart>
           </ResponsiveContainer>
         </Box>
@@ -100,6 +115,8 @@ export default function StatisticsReportPage() {
   const { templateId } = useParams<{ templateId: string }>();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'ADMIN';
 
   const churchName = searchParams.get('churchName') ?? undefined;
   const startDate = searchParams.get('startDate') ?? '';
@@ -141,6 +158,17 @@ export default function StatisticsReportPage() {
   const churchDisplay = report?.global
     ? t('statistics.report.global')
     : (report?.churchName ?? churchName ?? '');
+
+  function buildDrillDownHandler(itemId: number) {
+    if (!isAdmin) return undefined;
+    return (date: string) => {
+      const params = new URLSearchParams({ itemId: String(itemId), date });
+      if (churchName) params.set('churchName', churchName);
+      if (startDate) params.set('startDate', startDate);
+      if (endDate) params.set('endDate', endDate);
+      void navigate(`/statistics/${templateId ?? ''}/drill-down?${params.toString()}`);
+    };
+  }
 
   async function handleDownloadPdf() {
     if (!report || !chartContentRef.current) return;
@@ -310,6 +338,7 @@ export default function StatisticsReportPage() {
                     item={item}
                     totalLabel={t('statistics.report.total')}
                     trendLabel={t('statistics.report.timeSeriesTitle')}
+                    onBarClick={buildDrillDownHandler(item.itemId)}
                   />
                 ))}
               </Paper>
@@ -328,6 +357,7 @@ export default function StatisticsReportPage() {
                     item={item}
                     totalLabel={t('statistics.report.total')}
                     trendLabel={t('statistics.report.timeSeriesTitle')}
+                    onBarClick={buildDrillDownHandler(item.itemId)}
                   />
                 ))}
               </Paper>

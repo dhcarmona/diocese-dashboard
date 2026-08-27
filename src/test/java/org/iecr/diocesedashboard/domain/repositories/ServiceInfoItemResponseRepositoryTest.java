@@ -138,6 +138,85 @@ class ServiceInfoItemResponseRepositoryTest {
   }
 
   @Test
+  void findByServiceInstancesAndItem_returnsMatchingResponse() {
+    ServiceInfoItemResponse response = buildResponse();
+    response.setResponseValue("99");
+    entityManager.persist(response);
+    entityManager.flush();
+    entityManager.clear();
+
+    List<ServiceInfoItemResponse> result =
+        serviceInfoItemResponseRepository.findByServiceInstancesAndItem(
+            List.of(serviceInstance), serviceInfoItem);
+
+    assertThat(result).hasSize(1);
+    assertThat(result.get(0).getResponseValue()).isEqualTo("99");
+    assertThat(result.get(0).getServiceInfoItem().getTitle()).isEqualTo("q1");
+    assertThat(result.get(0).getServiceInstance().getId()).isEqualTo(serviceInstance.getId());
+  }
+
+  @Test
+  void findByServiceInstancesAndItem_excludesResponsesForDifferentItem() {
+    ServiceTemplate template = entityManager.find(
+        ServiceTemplate.class, serviceInfoItem.getServiceTemplate().getId());
+
+    ServiceInfoItem otherItem = new ServiceInfoItem();
+    otherItem.setTitle("q2");
+    otherItem.setServiceTemplate(template);
+    otherItem.setRequired(false);
+    otherItem.setServiceInfoItemType(ServiceInfoItemType.NUMERICAL);
+    ServiceInfoItem persistedOther = entityManager.persist(otherItem);
+
+    ServiceInfoItemResponse r1 = buildResponse();
+    r1.setResponseValue("10");
+    entityManager.persist(r1);
+
+    ServiceInfoItemResponse r2 = new ServiceInfoItemResponse();
+    r2.setServiceInfoItem(persistedOther);
+    r2.setServiceInstance(serviceInstance);
+    r2.setResponseValue("20");
+    entityManager.persist(r2);
+
+    entityManager.flush();
+    entityManager.clear();
+
+    List<ServiceInfoItemResponse> result =
+        serviceInfoItemResponseRepository.findByServiceInstancesAndItem(
+            List.of(serviceInstance), serviceInfoItem);
+
+    assertThat(result).hasSize(1);
+    assertThat(result.get(0).getResponseValue()).isEqualTo("10");
+  }
+
+  @Test
+  void findByServiceInstancesAndItem_excludesResponsesForDifferentInstance() {
+    ServiceInstance otherInstance = new ServiceInstance();
+    otherInstance.setChurch(entityManager.find(Church.class, "St. Mary"));
+    otherInstance.setServiceTemplate(serviceInstance.getServiceTemplate());
+    entityManager.persist(otherInstance);
+
+    ServiceInfoItemResponse r1 = buildResponse();
+    r1.setResponseValue("50");
+    entityManager.persist(r1);
+
+    ServiceInfoItemResponse r2 = new ServiceInfoItemResponse();
+    r2.setServiceInfoItem(serviceInfoItem);
+    r2.setServiceInstance(otherInstance);
+    r2.setResponseValue("100");
+    entityManager.persist(r2);
+
+    entityManager.flush();
+    entityManager.clear();
+
+    List<ServiceInfoItemResponse> result =
+        serviceInfoItemResponseRepository.findByServiceInstancesAndItem(
+            List.of(serviceInstance), serviceInfoItem);
+
+    assertThat(result).hasSize(1);
+    assertThat(result.get(0).getResponseValue()).isEqualTo("50");
+  }
+
+  @Test
   void deleteById_removesEntity() {
     ServiceInfoItemResponse response = entityManager.persistFlushFind(buildResponse());
 
