@@ -92,8 +92,10 @@ function ItemSection({ item, totalLabel, trendLabel, onBarClick }: Readonly<Item
                 isAnimationActive={false}
                 cursor={onBarClick ? 'pointer' : undefined}
                 onClick={onBarClick
-                  ? (payload: BarRectangleItem & { rawDate?: string }) => {
-                      if (payload.rawDate) onBarClick(payload.rawDate);
+                  ? (bar: BarRectangleItem) => {
+                      const rawDate =
+                        (bar.payload as { rawDate?: string } | undefined)?.rawDate;
+                      if (rawDate) onBarClick(rawDate);
                     }
                   : undefined}
               />
