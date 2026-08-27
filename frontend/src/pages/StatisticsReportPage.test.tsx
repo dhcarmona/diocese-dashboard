@@ -6,12 +6,16 @@ import { vi } from 'vitest';
 import { getStatistics, type StatisticsReport } from '../api/statistics';
 import StatisticsReportPage from './StatisticsReportPage';
 
+const { mockUseAuth } = vi.hoisted(() => ({
+  mockUseAuth: vi.fn(() => ({ user: { role: 'REPORTER' as const } })),
+}));
+
 vi.mock('../api/statistics', () => ({
   getStatistics: vi.fn(),
 }));
 
 vi.mock('../auth/auth-context', () => ({
-  useAuth: () => ({ user: { role: 'REPORTER' } }),
+  useAuth: () => mockUseAuth(),
 }));
 
 vi.mock('../utils/statisticsPdf', () => ({
@@ -24,7 +28,12 @@ vi.mock('recharts', () => ({
   Cell: () => null,
   Legend: () => null,
   BarChart: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  Bar: () => <div data-testid="bar" />,
+  Bar: ({ onClick }: { onClick?: (data: object) => void }) => (
+    <button
+      data-testid="bar"
+      onClick={() => onClick?.({ payload: { rawDate: '2024-03-10' } })}
+    />
+  ),
   XAxis: () => null,
   YAxis: () => null,
   CartesianGrid: () => null,
@@ -81,14 +90,29 @@ function renderPage(search = '?churchName=Trinity&startDate=2024-01-01&endDate=2
       <Routes>
         <Route path="/statistics/:templateId/report" element={<StatisticsReportPage />} />
         <Route path="/statistics/:templateId" element={<div>Filter page</div>} />
+        <Route path="/statistics/:templateId/drill-down" element={<div>Drill-down page</div>} />
       </Routes>
     </MemoryRouter>,
   );
 }
 
+const sampleReportWithTimeSeries: StatisticsReport = {
+  ...sampleReport,
+  numericalItems: [
+    {
+      itemId: 1,
+      itemTitle: 'Attendance',
+      itemType: 'NUMERICAL',
+      total: 80,
+      timeSeriesData: [{ date: '2024-03-10', value: 80 }],
+    },
+  ],
+};
+
 describe('StatisticsReportPage', () => {
   beforeEach(async () => {
     mockedGetStatistics.mockReset();
+    mockUseAuth.mockReturnValue({ user: { role: 'REPORTER' as const } });
     await i18n.changeLanguage('en');
   });
 
@@ -250,5 +274,39 @@ describe('StatisticsReportPage', () => {
     await waitFor(() => {
       expect(mockedDownload).toHaveBeenCalledOnce();
     });
+  });
+
+  it('admin clicking a bar navigates to the drill-down page', async () => {
+    const user = userEvent.setup();
+    mockUseAuth.mockReturnValue({ user: { role: 'ADMIN' as const } });
+    mockedGetStatistics.mockResolvedValueOnce(sampleReportWithTimeSeries);
+    renderPage('?churchName=Trinity&startDate=2024-01-01&endDate=2024-12-31');
+
+    await waitFor(() => {
+      expect(screen.getByText('Attendance')).toBeInTheDocument();
+    });
+
+    await user.click(screen.getByTestId('bar'));
+
+    await waitFor(() => {
+      expect(screen.getByText('Drill-down page')).toBeInTheDocument();
+    });
+  });
+
+  it('reporter clicking a bar does not navigate', async () => {
+    const user = userEvent.setup();
+    // mockUseAuth already returns REPORTER from beforeEach
+    mockedGetStatistics.mockResolvedValueOnce(sampleReportWithTimeSeries);
+    renderPage();
+
+    await waitFor(() => {
+      expect(screen.getByText('Attendance')).toBeInTheDocument();
+    });
+
+    await user.click(screen.getByTestId('bar'));
+
+    // Should remain on the report page, not navigate to drill-down
+    expect(screen.queryByText('Drill-down page')).not.toBeInTheDocument();
+    expect(screen.getByText('Attendance')).toBeInTheDocument();
   });
 });
