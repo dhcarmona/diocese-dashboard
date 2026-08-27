@@ -32,18 +32,13 @@ import { getStatistics, type AggregatedItem, type StatisticsReport } from '../ap
 import { useAuth } from '../auth/auth-context';
 import PageHeader from '../components/PageHeader';
 import { formatDate } from '../utils/dateFormatting';
+import { formatStatisticsValue } from '../utils/statisticsFormatting';
 import { downloadStatisticsPdf } from '../utils/statisticsPdf';
 
 const CHART_COLORS = [
   '#1C3A6E', '#2E6DB4', '#4A9FD4', '#7BBFDB', '#AED6E8',
   '#F4A621', '#E07B39', '#C7522A', '#8E3B23', '#5A2314',
 ];
-
-function formatValue(value: number, type: string): string {
-  if (type === 'DOLLARS') return `$${value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-  if (type === 'COLONES') return `₡${value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-  return value.toLocaleString('en-US');
-}
 
 interface ItemSectionProps {
   item: AggregatedItem;
@@ -75,7 +70,7 @@ function ItemSection({ item, totalLabel, trendLabel, onBarClick }: Readonly<Item
         />
       </Typography>
       <Typography variant="body1" sx={{ mb: 2 }}>
-        {totalLabel}: <strong>{formatValue(item.total, item.itemType)}</strong>
+        {totalLabel}: <strong>{formatStatisticsValue(item.total, item.itemType)}</strong>
       </Typography>
       {item.timeSeriesData.length > 0 && (
         <Box>
@@ -88,7 +83,7 @@ function ItemSection({ item, totalLabel, trendLabel, onBarClick }: Readonly<Item
               <XAxis dataKey="date" tick={{ fontSize: 11 }} />
               <YAxis tick={{ fontSize: 11 }} />
               <Tooltip
-                formatter={(val) => [formatValue(Number(val ?? 0), item.itemType), item.itemTitle]}
+                formatter={(val) => [formatStatisticsValue(Number(val ?? 0), item.itemType), item.itemTitle]}
               />
               <Bar
                 dataKey="value"
