@@ -22,6 +22,10 @@ vi.mock('../utils/statisticsPdf', () => ({
   downloadStatisticsPdf: vi.fn().mockResolvedValue(undefined),
 }));
 
+vi.mock('../utils/statisticsExcel', () => ({
+  downloadStatisticsExcel: vi.fn(),
+}));
+
 vi.mock('recharts', () => ({
   PieChart: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
   Pie: () => <div data-testid="pie" />,
@@ -62,6 +66,7 @@ const sampleReport: StatisticsReport = {
       itemType: 'NUMERICAL',
       total: 350,
       timeSeriesData: [],
+      perChurchData: [],
     },
   ],
   moneyItems: [
@@ -71,6 +76,7 @@ const sampleReport: StatisticsReport = {
       itemType: 'DOLLARS',
       total: 5000,
       timeSeriesData: [],
+      perChurchData: [],
     },
   ],
   pendingLinks: [
@@ -105,6 +111,7 @@ const sampleReportWithTimeSeries: StatisticsReport = {
       itemType: 'NUMERICAL',
       total: 80,
       timeSeriesData: [{ date: '2024-03-10', value: 80 }],
+      perChurchData: [],
     },
   ],
 };
@@ -308,5 +315,36 @@ describe('StatisticsReportPage', () => {
     // Should remain on the report page, not navigate to drill-down
     expect(screen.queryByText('Drill-down page')).not.toBeInTheDocument();
     expect(screen.getByText('Attendance')).toBeInTheDocument();
+  });
+
+  it('shows the Download as Excel button when report is loaded', async () => {
+    mockedGetStatistics.mockResolvedValueOnce(sampleReport);
+    renderPage();
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Download as Excel' })).toBeInTheDocument();
+    });
+  });
+
+  it('calls downloadStatisticsExcel when the Excel button is clicked', async () => {
+    const { downloadStatisticsExcel } = await import('../utils/statisticsExcel');
+    const mockedDownload = vi.mocked(downloadStatisticsExcel);
+    mockedGetStatistics.mockResolvedValueOnce(sampleReport);
+    renderPage();
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Download as Excel' })).toBeInTheDocument();
+    });
+
+    await userEvent.click(screen.getByRole('button', { name: 'Download as Excel' }));
+
+    expect(mockedDownload).toHaveBeenCalledOnce();
+    expect(mockedDownload).toHaveBeenCalledWith(sampleReport, expect.objectContaining({
+      churchHeader: 'Church',
+      dateHeader: 'Date',
+      amountHeader: 'Amount',
+      totalsLabel: 'Total',
+      globalChurchName: 'All Churches',
+    }));
   });
 });

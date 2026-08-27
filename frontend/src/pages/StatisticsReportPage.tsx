@@ -34,6 +34,7 @@ import PageHeader from '../components/PageHeader';
 import { formatDate } from '../utils/dateFormatting';
 import { formatStatisticsValue } from '../utils/statisticsFormatting';
 import { downloadStatisticsPdf } from '../utils/statisticsPdf';
+import { downloadStatisticsExcel } from '../utils/statisticsExcel';
 
 const CHART_COLORS = [
   '#1C3A6E', '#2E6DB4', '#4A9FD4', '#7BBFDB', '#AED6E8',
@@ -123,6 +124,7 @@ export default function StatisticsReportPage() {
   const [loading, setLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
   const [pdfGenerating, setPdfGenerating] = useState(false);
+  const [excelGenerating, setExcelGenerating] = useState(false);
 
   const chartContentRef = useRef<HTMLDivElement>(null);
 
@@ -186,6 +188,22 @@ export default function StatisticsReportPage() {
     }
   }
 
+  function handleDownloadExcel() {
+    if (!report) return;
+    setExcelGenerating(true);
+    try {
+      downloadStatisticsExcel(report, {
+        churchHeader: t('statistics.report.excel.churchHeader'),
+        dateHeader: t('statistics.report.excel.dateHeader'),
+        amountHeader: t('statistics.report.excel.amountHeader'),
+        totalsLabel: t('statistics.report.excel.totalsLabel'),
+        globalChurchName: t('statistics.report.excel.globalChurchName'),
+      });
+    } finally {
+      setExcelGenerating(false);
+    }
+  }
+
   return (
     <>
       <PageHeader
@@ -224,6 +242,17 @@ export default function StatisticsReportPage() {
           >
             {pdfGenerating ? <CircularProgress size={18} sx={{ mr: 1 }} /> : null}
             {t('statistics.report.downloadPdf')}
+          </Button>
+
+          <Button
+            variant="outlined"
+            size="small"
+            sx={{ mb: 3, ml: 2 }}
+            disabled={excelGenerating}
+            onClick={() => handleDownloadExcel()}
+          >
+            {excelGenerating ? <CircularProgress size={18} sx={{ mr: 1 }} /> : null}
+            {t('statistics.report.downloadExcel')}
           </Button>
 
           {/* Chart content captured for PDF (excludes the pending links section) */}

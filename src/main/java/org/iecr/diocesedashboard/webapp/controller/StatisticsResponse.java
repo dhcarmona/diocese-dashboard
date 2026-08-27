@@ -29,11 +29,19 @@ List<PendingLink> pendingLinks) {
   String itemTitle,
   String itemType,
   double total,
-  List<TimeSeriesPoint> timeSeriesData) {
+  List<TimeSeriesPoint> timeSeriesData,
+  List<PerChurchPoint> perChurchData) {
   }
 
   /** A single data point in a time-series chart. */
   public record TimeSeriesPoint(LocalDate date, double value) {
+  }
+
+  /**
+   * A single row of per-church data for a global report.
+   * Only populated when the report covers all churches.
+   */
+  public record PerChurchPoint(String churchName, LocalDate date, double value) {
   }
 
   /** A reporter link that has not yet been used (no matching submission exists). */

@@ -590,6 +590,14 @@
       },
       "backToFilter": "Change Filters",
       "downloadPdf": "Download as PDF",
+      "downloadExcel": "Download as Excel",
+      "excel": {
+        "churchHeader": "Church",
+        "dateHeader": "Date",
+        "amountHeader": "Amount",
+        "totalsLabel": "Total",
+        "globalChurchName": "All Churches"
+      },
       "itemTypes": {
         "NUMERICAL": "count",
         "DOLLARS": "USD",

@@ -12,12 +12,19 @@ export interface TimeSeriesPoint {
   value: number;
 }
 
+export interface PerChurchPoint {
+  churchName: string;
+  date: string; // ISO date: YYYY-MM-DD
+  value: number;
+}
+
 export interface AggregatedItem {
   itemId: number;
   itemTitle: string;
   itemType: 'NUMERICAL' | 'DOLLARS' | 'COLONES';
   total: number;
   timeSeriesData: TimeSeriesPoint[];
+  perChurchData: PerChurchPoint[];
 }
 
 export interface PendingLink {

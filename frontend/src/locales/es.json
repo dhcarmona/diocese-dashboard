@@ -590,6 +590,14 @@
       },
       "backToFilter": "Cambiar Filtros",
       "downloadPdf": "Descargar como PDF",
+      "downloadExcel": "Descargar como Excel",
+      "excel": {
+        "churchHeader": "Iglesia",
+        "dateHeader": "Fecha",
+        "amountHeader": "Monto",
+        "totalsLabel": "Total",
+        "globalChurchName": "Todas las Iglesias"
+      },
       "itemTypes": {
         "NUMERICAL": "cantidad",
         "DOLLARS": "USD",

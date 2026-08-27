@@ -17,6 +17,7 @@ import org.iecr.diocesedashboard.webapp.controller.StatisticsResponse;
 import org.iecr.diocesedashboard.webapp.controller.StatisticsResponse.AggregatedItem;
 import org.iecr.diocesedashboard.webapp.controller.StatisticsResponse.CelebrantStat;
 import org.iecr.diocesedashboard.webapp.controller.StatisticsResponse.PendingLink;
+import org.iecr.diocesedashboard.webapp.controller.StatisticsResponse.PerChurchPoint;
 import org.iecr.diocesedashboard.webapp.controller.StatisticsResponse.TimeSeriesPoint;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -109,10 +110,18 @@ public class StatisticsService {
             || i.getServiceInfoItemType() == ServiceInfoItemType.COLONES)
         .toList();
 
-    Map<Long, Map<LocalDate, Double>> perItemPerDate = aggregateByItemAndDate(instances);
+    List<ServiceInfoItemResponse> allResponses = instances.isEmpty()
+        ? List.of()
+        : responseRepository.findByServiceInstanceInWithItems(instances);
 
-    List<AggregatedItem> numAgg = buildAggregatedItems(numericalItems, perItemPerDate);
-    List<AggregatedItem> moneyAgg = buildAggregatedItems(moneyItems, perItemPerDate);
+    Map<Long, Map<LocalDate, Double>> perItemPerDate = aggregateByItemAndDate(allResponses);
+    Map<Long, List<PerChurchPoint>> perItemPerChurch =
+        global ? aggregateByItemChurchAndDate(allResponses) : Map.of();
+
+    List<AggregatedItem> numAgg =
+        buildAggregatedItems(numericalItems, perItemPerDate, perItemPerChurch);
+    List<AggregatedItem> moneyAgg =
+        buildAggregatedItems(moneyItems, perItemPerDate, perItemPerChurch);
 
     List<PendingLink> pendingLinks = links.stream()
         .filter(l -> reporterUserId == null || reporterUserId.equals(l.getReporter().getId()))
@@ -160,18 +169,15 @@ public class StatisticsService {
   }
 
   private Map<Long, Map<LocalDate, Double>> aggregateByItemAndDate(
-      List<ServiceInstance> instances) {
-    if (instances.isEmpty()) {
+      List<ServiceInfoItemResponse> allResponses) {
+    if (allResponses.isEmpty()) {
       return Map.of();
     }
     Map<Long, Map<LocalDate, Double>> result = new HashMap<>();
 
-    List<ServiceInfoItemResponse> allResponses =
-        responseRepository.findByServiceInstanceInWithItems(instances);
     for (ServiceInfoItemResponse response : allResponses) {
       ServiceInfoItem item = response.getServiceInfoItem();
-      ServiceInfoItemType type = item.getServiceInfoItemType();
-      if (type == ServiceInfoItemType.STRING) {
+      if (item.getServiceInfoItemType() == ServiceInfoItemType.STRING) {
         continue;
       }
       LocalDate date = response.getServiceInstance().getServiceDate();
@@ -183,8 +189,46 @@ public class StatisticsService {
     return result;
   }
 
+  private Map<Long, List<PerChurchPoint>> aggregateByItemChurchAndDate(
+      List<ServiceInfoItemResponse> allResponses) {
+    if (allResponses.isEmpty()) {
+      return Map.of();
+    }
+    // itemId -> (church+date key) -> summed value; use a TreeMap to keep dates sorted
+    record ChurchDateKey(String churchName, LocalDate date) implements Comparable<ChurchDateKey> {
+      @Override
+      public int compareTo(ChurchDateKey other) {
+        int dateCompare = this.date.compareTo(other.date);
+        return dateCompare != 0 ? dateCompare : this.churchName.compareTo(other.churchName);
+      }
+    }
+
+    Map<Long, Map<ChurchDateKey, Double>> raw = new HashMap<>();
+    for (ServiceInfoItemResponse response : allResponses) {
+      ServiceInfoItem item = response.getServiceInfoItem();
+      if (item.getServiceInfoItemType() == ServiceInfoItemType.STRING) {
+        continue;
+      }
+      String churchName = response.getServiceInstance().getChurch().getName();
+      LocalDate date = response.getServiceInstance().getServiceDate();
+      double val = parseDouble(response.getResponseValue());
+      raw.computeIfAbsent(item.getId(), k -> new TreeMap<>())
+          .merge(new ChurchDateKey(churchName, date), val, Double::sum);
+    }
+
+    Map<Long, List<PerChurchPoint>> result = new HashMap<>();
+    for (Map.Entry<Long, Map<ChurchDateKey, Double>> entry : raw.entrySet()) {
+      List<PerChurchPoint> points = entry.getValue().entrySet().stream()
+          .map(e -> new PerChurchPoint(e.getKey().churchName(), e.getKey().date(), e.getValue()))
+          .toList();
+      result.put(entry.getKey(), points);
+    }
+    return result;
+  }
+
   private List<AggregatedItem> buildAggregatedItems(List<ServiceInfoItem> items,
-      Map<Long, Map<LocalDate, Double>> perItemPerDate) {
+      Map<Long, Map<LocalDate, Double>> perItemPerDate,
+      Map<Long, List<PerChurchPoint>> perItemPerChurch) {
     List<AggregatedItem> result = new ArrayList<>();
     for (ServiceInfoItem item : items) {
       Map<LocalDate, Double> byDate = perItemPerDate.getOrDefault(item.getId(), Map.of());
@@ -193,12 +237,15 @@ public class StatisticsService {
           .sorted(Map.Entry.comparingByKey())
           .map(e -> new TimeSeriesPoint(e.getKey(), e.getValue()))
           .toList();
+      List<PerChurchPoint> perChurch =
+          perItemPerChurch.getOrDefault(item.getId(), List.of());
       result.add(new AggregatedItem(
           item.getId(),
           item.getTitle(),
           item.getServiceInfoItemType().name(),
           total,
-          series));
+          series,
+          perChurch));
     }
     return result;
   }
