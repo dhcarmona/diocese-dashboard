@@ -18,22 +18,17 @@ import { Link as RouterLink, useNavigate, useParams, useSearchParams } from 'rea
 import { type ChartDrillDown, type DrillDownRow, getDrillDown } from '../api/statistics';
 import PageHeader from '../components/PageHeader';
 import { formatDate } from '../utils/dateFormatting';
+import { formatStatisticsValue } from '../utils/statisticsFormatting';
 
-type SortKey = 'church' | 'filledBy' | 'value';
+type SortKey = 'report' | 'church' | 'filledBy' | 'value';
 type SortDir = 'asc' | 'desc';
-
-function formatValue(value: number, type: string): string {
-  if (type === 'DOLLARS')
-    return `$${value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-  if (type === 'COLONES')
-    return `₡${value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-  return value.toLocaleString('en-US');
-}
 
 function sortRows(rows: DrillDownRow[], key: SortKey, dir: SortDir): DrillDownRow[] {
   return [...rows].sort((a, b) => {
     let cmp = 0;
-    if (key === 'church') {
+    if (key === 'report') {
+      cmp = a.serviceInstanceId - b.serviceInstanceId;
+    } else if (key === 'church') {
       cmp = a.churchName.localeCompare(b.churchName);
     } else if (key === 'filledBy') {
       const aName = a.filledByFullName ?? a.filledByUsername ?? '';
@@ -65,7 +60,11 @@ export default function StatisticsChartDrillDownPage() {
   const [sortDir, setSortDir] = useState<SortDir>('desc');
 
   useEffect(() => {
-    if (!templateId || !itemId || !date) return;
+    if (!templateId || !itemId || !date) {
+      setLoading(false);
+      setHasError(true);
+      return;
+    }
     let active = true;
 
     async function load() {
@@ -103,7 +102,6 @@ export default function StatisticsChartDrillDownPage() {
       setSortDir(key === 'value' ? 'desc' : 'asc');
     }
   }
-
   function buildReportUrl(instanceId: number): string {
     return `/reports/view/individual/${templateId ?? ''}/${instanceId}`;
   }
@@ -175,7 +173,13 @@ export default function StatisticsChartDrillDownPage() {
               <TableHead>
                 <TableRow>
                   <TableCell>
-                    <strong>{t('statistics.drillDown.table.report')}</strong>
+                    <TableSortLabel
+                      active={sortKey === 'report'}
+                      direction={sortKey === 'report' ? sortDir : 'asc'}
+                      onClick={() => handleSort('report')}
+                    >
+                      <strong>{t('statistics.drillDown.table.report')}</strong>
+                    </TableSortLabel>
                   </TableCell>
                   <TableCell>
                     <TableSortLabel
@@ -221,7 +225,7 @@ export default function StatisticsChartDrillDownPage() {
                         : (row.filledByUsername ?? '—')}
                     </TableCell>
                     <TableCell align="right">
-                      {formatValue(row.value, data.itemType)}
+                      {formatStatisticsValue(row.value, data.itemType)}
                     </TableCell>
                   </TableRow>
                 ))}

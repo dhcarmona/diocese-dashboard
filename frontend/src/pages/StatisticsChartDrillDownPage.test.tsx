@@ -162,6 +162,35 @@ describe('StatisticsChartDrillDownPage', () => {
     expect(within(sortedRows[2]).getByText('Trinity')).toBeInTheDocument();
   });
 
+  it('sorts rows by Report column (serviceInstanceId)', async () => {
+    const user = userEvent.setup();
+    mockedGetDrillDown.mockResolvedValueOnce(sampleDrillDown);
+    renderPage();
+
+    await waitFor(() => {
+      expect(screen.getByText('Alice Smith (alice)')).toBeInTheDocument();
+    });
+
+    // Click Report header to sort ascending by serviceInstanceId
+    await user.click(screen.getByText('Report'));
+    const rowsAsc = screen.getAllByRole('row');
+    // Instance 100 (alice) should come before 101 (bob)
+    expect(within(rowsAsc[1]).getByRole('link', { name: '#100' })).toBeInTheDocument();
+    expect(within(rowsAsc[2]).getByRole('link', { name: '#101' })).toBeInTheDocument();
+
+    // Click again to reverse to descending
+    await user.click(screen.getByText('Report'));
+    const rowsDesc = screen.getAllByRole('row');
+    expect(within(rowsDesc[1]).getByRole('link', { name: '#101' })).toBeInTheDocument();
+    expect(within(rowsDesc[2]).getByRole('link', { name: '#100' })).toBeInTheDocument();
+  });
+
+  it('shows error when required params are missing', () => {
+    mockedGetDrillDown.mockResolvedValueOnce(sampleDrillDown);
+    renderPage('');  // no itemId, date, etc.
+    expect(screen.getByText('Failed to load detail. Please try again.')).toBeInTheDocument();
+  });
+
   it('back button navigates to the report with original search params', async () => {
     mockedGetDrillDown.mockResolvedValueOnce(sampleDrillDown);
     renderPage(
