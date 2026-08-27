@@ -31,6 +31,7 @@ import TemplateSelectionPage from './pages/TemplateSelectionPage';
 import StatisticsFilterPage from './pages/StatisticsFilterPage';
 import StatisticsReportPage from './pages/StatisticsReportPage';
 import StatisticsTemplateSelectionPage from './pages/StatisticsTemplateSelectionPage';
+import StatisticsChartDrillDownPage from './pages/StatisticsChartDrillDownPage';
 import WhatsAppMessageLogPage from './pages/WhatsAppMessageLogPage';
 import { getAppDateLocale } from './utils/dateFormatting';
 
@@ -136,6 +137,12 @@ function AppRoutes() {
           <Route path="/statistics" element={<StatisticsTemplateSelectionPage />} />
           <Route path="/statistics/:templateId" element={<StatisticsFilterPage />} />
           <Route path="/statistics/:templateId/report" element={<StatisticsReportPage />} />
+          <Route element={<AdminRoute />}>
+            <Route
+              path="/statistics/:templateId/drill-down"
+              element={<StatisticsChartDrillDownPage />}
+            />
+          </Route>
           <Route path="/reports/view" element={<ReportsHubPage />} />
           <Route
             path="/reports/view/individual"

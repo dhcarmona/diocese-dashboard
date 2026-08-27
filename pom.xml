@@ -175,6 +175,9 @@
 				<artifactId>rewrite-maven-plugin</artifactId>
 				<version>6.12.0</version>
 				<configuration>
+					<jvmOpts>
+						<jvmOpt>-Dopenrewrite.scan.useMemoryMapping=false</jvmOpt>
+					</jvmOpts>
 					<activeRecipes>
 						<recipe>org.openrewrite.staticanalysis.CodeCleanup</recipe>
 						<recipe>org.openrewrite.java.format.AutoFormat</recipe>

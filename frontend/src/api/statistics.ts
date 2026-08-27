@@ -66,3 +66,41 @@ export async function getStatistics(params: StatisticsParams): Promise<Statistic
   const response = await api.get<StatisticsReport>('/api/statistics', { params: queryParams });
   return response.data;
 }
+
+export interface DrillDownRow {
+  serviceInstanceId: number;
+  churchName: string;
+  filledByUsername: string | null;
+  filledByFullName: string | null;
+  value: number;
+}
+
+export interface ChartDrillDown {
+  itemId: number;
+  itemTitle: string;
+  itemType: 'NUMERICAL' | 'DOLLARS' | 'COLONES';
+  date: string; // ISO date
+  rows: DrillDownRow[];
+}
+
+export interface DrillDownParams {
+  templateId: number;
+  itemId: number;
+  date: string; // ISO date
+  churchName?: string;
+}
+
+export async function getDrillDown(params: DrillDownParams): Promise<ChartDrillDown> {
+  const queryParams: Record<string, string> = {
+    templateId: String(params.templateId),
+    itemId: String(params.itemId),
+    date: params.date,
+  };
+  if (params.churchName !== undefined) {
+    queryParams.churchName = params.churchName;
+  }
+  const response = await api.get<ChartDrillDown>('/api/statistics/drill-down', {
+    params: queryParams,
+  });
+  return response.data;
+}

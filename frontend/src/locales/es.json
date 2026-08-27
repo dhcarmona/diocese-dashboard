@@ -595,6 +595,20 @@
         "DOLLARS": "USD",
         "COLONES": "CRC"
       }
+    },
+    "drillDown": {
+      "title": "Detalle del Gráfico",
+      "loading": "Cargando detalle...",
+      "loadError": "No se pudo cargar el detalle. Por favor intente de nuevo.",
+      "backToReport": "Volver al Reporte",
+      "dateLabel": "Fecha",
+      "noRows": "No se encontraron contribuciones para este elemento en esta fecha.",
+      "table": {
+        "report": "Reporte",
+        "church": "Iglesia",
+        "filledBy": "Completado por",
+        "value": "Valor"
+      }
     }
   },
   "scheduleDialog": {

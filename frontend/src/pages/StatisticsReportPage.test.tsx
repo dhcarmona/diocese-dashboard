@@ -10,6 +10,10 @@ vi.mock('../api/statistics', () => ({
   getStatistics: vi.fn(),
 }));
 
+vi.mock('../auth/auth-context', () => ({
+  useAuth: () => ({ user: { role: 'REPORTER' } }),
+}));
+
 vi.mock('../utils/statisticsPdf', () => ({
   downloadStatisticsPdf: vi.fn().mockResolvedValue(undefined),
 }));

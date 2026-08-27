@@ -595,6 +595,20 @@
         "DOLLARS": "USD",
         "COLONES": "CRC"
       }
+    },
+    "drillDown": {
+      "title": "Chart Detail",
+      "loading": "Loading detail...",
+      "loadError": "Failed to load detail. Please try again.",
+      "backToReport": "Back to Report",
+      "dateLabel": "Date",
+      "noRows": "No contributions found for this item on this date.",
+      "table": {
+        "report": "Report",
+        "church": "Church",
+        "filledBy": "Filled By",
+        "value": "Value"
+      }
     }
   },
   "scheduleDialog": {

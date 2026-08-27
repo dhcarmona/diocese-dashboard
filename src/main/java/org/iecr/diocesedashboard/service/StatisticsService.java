@@ -2,6 +2,7 @@ package org.iecr.diocesedashboard.service;
 
 import org.iecr.diocesedashboard.domain.objects.Celebrant;
 import org.iecr.diocesedashboard.domain.objects.Church;
+import org.iecr.diocesedashboard.domain.objects.DashboardUser;
 import org.iecr.diocesedashboard.domain.objects.ReporterLink;
 import org.iecr.diocesedashboard.domain.objects.ServiceInfoItem;
 import org.iecr.diocesedashboard.domain.objects.ServiceInfoItemResponse;
@@ -11,6 +12,7 @@ import org.iecr.diocesedashboard.domain.objects.ServiceTemplate;
 import org.iecr.diocesedashboard.domain.repositories.ReporterLinkRepository;
 import org.iecr.diocesedashboard.domain.repositories.ServiceInfoItemResponseRepository;
 import org.iecr.diocesedashboard.domain.repositories.ServiceInstanceRepository;
+import org.iecr.diocesedashboard.webapp.controller.ChartDrillDownResponse;
 import org.iecr.diocesedashboard.webapp.controller.StatisticsResponse;
 import org.iecr.diocesedashboard.webapp.controller.StatisticsResponse.AggregatedItem;
 import org.iecr.diocesedashboard.webapp.controller.StatisticsResponse.CelebrantStat;
@@ -210,5 +212,57 @@ public class StatisticsService {
     } catch (NumberFormatException e) {
       return 0.0;
     }
+  }
+
+  /**
+   * Returns drill-down detail for a single bar in a statistics chart.
+   * Returns the service instances on the given date that have a non-zero value for the item,
+   * sorted by value descending.
+   *
+   * @param template  the service template
+   * @param item      the service info item (must belong to template)
+   * @param date      the exact service date
+   * @param church    optional church filter; null means all churches
+   * @return the drill-down detail response
+   */
+  @Transactional(readOnly = true)
+  public ChartDrillDownResponse computeDrillDown(ServiceTemplate template, ServiceInfoItem item,
+      LocalDate date, Church church) {
+    List<ServiceInstance> instances;
+    if (church != null) {
+      instances = instanceRepository.findByTemplateAndChurchAndDateRangeWithCelebrants(
+          template, church, date, date);
+    } else {
+      instances = instanceRepository.findByTemplateAndDateRangeWithCelebrants(
+          template, date, date);
+    }
+
+    if (instances.isEmpty()) {
+      return new ChartDrillDownResponse(item.getId(), item.getTitle(),
+          item.getServiceInfoItemType().name(), date, List.of());
+    }
+
+    List<ServiceInfoItemResponse> responses =
+        responseRepository.findByServiceInstancesAndItem(instances, item);
+
+    List<ChartDrillDownResponse.DrillDownRow> rows = responses.stream()
+        .map(r -> {
+          double value = parseDouble(r.getResponseValue());
+          DashboardUser submittedBy = r.getServiceInstance().getSubmittedBy();
+          String username = submittedBy != null ? submittedBy.getUsername() : null;
+          String fullName = submittedBy != null ? submittedBy.getFullName() : null;
+          return new ChartDrillDownResponse.DrillDownRow(
+              r.getServiceInstance().getId(),
+              r.getServiceInstance().getChurch().getName(),
+              username,
+              fullName,
+              value);
+        })
+        .filter(row -> row.value() > 0)
+        .sorted((a, bb) -> Double.compare(bb.value(), a.value()))
+        .toList();
+
+    return new ChartDrillDownResponse(item.getId(), item.getTitle(),
+        item.getServiceInfoItemType().name(), date, rows);
   }
 }
