@@ -7,7 +7,7 @@ import { getStatistics, type StatisticsReport } from '../api/statistics';
 import StatisticsReportPage from './StatisticsReportPage';
 
 const { mockUseAuth } = vi.hoisted(() => ({
-  mockUseAuth: vi.fn(() => ({ user: { role: 'REPORTER' as const } })),
+  mockUseAuth: vi.fn(() => ({ user: { role: 'REPORTER' as 'ADMIN' | 'REPORTER' } })),
 }));
 
 vi.mock('../api/statistics', () => ({
