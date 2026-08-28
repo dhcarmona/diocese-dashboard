@@ -1,7 +1,7 @@
 /// <reference types="vitest/config" />
 import { execSync } from 'child_process'
 import { readFileSync } from 'fs'
-import { resolve } from 'path'
+import { fileURLToPath } from 'url'
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
@@ -18,10 +18,11 @@ function getCommitHash(): string {
 
 function getAppVersion(): string {
   try {
-    const pomPath = resolve(new URL('..', import.meta.url).pathname, 'pom.xml');
-    const pom = readFileSync(pomPath, 'utf-8');
-    // Match the project-level <version>, which appears directly inside <project> before any child elements
-    const match = pom.match(/<project[^>]*>[\s\S]*?<version>([^<]+)<\/version>/);
+    const pomUrl = new URL('../pom.xml', import.meta.url);
+    const pom = readFileSync(fileURLToPath(pomUrl), 'utf-8');
+    // Match the project-level <version>: the first <version> tag that appears before
+    // <dependencies> or <build> sections, scoped inside <project>.
+    const match = pom.match(/<project[^>]*>(?:(?!<(?:dependencies|build|parent)[\s>])[\s\S])*?<version>([^<]+)<\/version>/);
     return match ? match[1] : 'unknown';
   } catch {
     return 'unknown';
