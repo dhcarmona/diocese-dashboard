@@ -14,7 +14,8 @@ interface AppFooterProps {
 export default function AppFooter({ showBuildInfo = false }: Readonly<AppFooterProps>) {
   const { i18n } = useTranslation();
   const buildLabel =
-    `${formatDateTimeAtFixedOffset(__BUILD_TIME__, COSTA_RICA_OFFSET_HOURS, i18n.resolvedLanguage)} `
+    `v${__APP_VERSION__} – `
+    + `${formatDateTimeAtFixedOffset(__BUILD_TIME__, COSTA_RICA_OFFSET_HOURS, i18n.resolvedLanguage)} `
     + `GMT-6 (${__COMMIT_HASH__})`;
 
   return (

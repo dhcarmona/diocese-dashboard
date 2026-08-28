@@ -1,5 +1,7 @@
 /// <reference types="vitest/config" />
 import { execSync } from 'child_process'
+import { readFileSync } from 'fs'
+import { resolve } from 'path'
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
@@ -14,10 +16,22 @@ function getCommitHash(): string {
   }
 }
 
+function getAppVersion(): string {
+  try {
+    const pomPath = resolve(import.meta.dirname, '../pom.xml');
+    const pom = readFileSync(pomPath, 'utf-8');
+    const match = pom.match(/<version>([^<]+)<\/version>/);
+    return match ? match[1] : 'unknown';
+  } catch {
+    return 'unknown';
+  }
+}
+
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
   define: {
+    __APP_VERSION__: JSON.stringify(getAppVersion()),
     __BUILD_TIME__: JSON.stringify(new Date().toISOString()),
     __COMMIT_HASH__: JSON.stringify(getCommitHash()),
   },
