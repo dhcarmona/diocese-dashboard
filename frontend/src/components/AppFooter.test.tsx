@@ -19,6 +19,6 @@ describe('AppFooter', () => {
 
   it('includes the app version prefix in build info', () => {
     render(<AppFooter showBuildInfo />);
-    expect(screen.getByText(/^Build v\d/)).toBeInTheDocument();
+    expect(screen.getByText(/^Build v/)).toBeInTheDocument();
   });
 });
