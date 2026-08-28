@@ -18,9 +18,10 @@ function getCommitHash(): string {
 
 function getAppVersion(): string {
   try {
-    const pomPath = resolve(import.meta.dirname, '../pom.xml');
+    const pomPath = resolve(new URL('..', import.meta.url).pathname, 'pom.xml');
     const pom = readFileSync(pomPath, 'utf-8');
-    const match = pom.match(/<version>([^<]+)<\/version>/);
+    // Match the project-level <version>, which appears directly inside <project> before any child elements
+    const match = pom.match(/<project[^>]*>[\s\S]*?<version>([^<]+)<\/version>/);
     return match ? match[1] : 'unknown';
   } catch {
     return 'unknown';
