@@ -107,6 +107,10 @@ public class SecurityConfig {
                     "/statistics",
                     "/statistics/*",
                     "/statistics/*/*").permitAll()
+                .requestMatchers(HttpMethod.GET,
+                    "/convention-report",
+                    "/convention-report/*",
+                    "/convention-report/*/*").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/reporter-links/public/*").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/reporter-links/public/follow-up/*")
                 .permitAll()
@@ -114,6 +118,9 @@ public class SecurityConfig {
                     "/api/reporter-links/public/*/submit").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/statistics", "/api/statistics/templates")
                 .hasAnyRole("ADMIN", "REPORTER")
+                .requestMatchers(HttpMethod.GET,
+                    "/api/convention-report", "/api/convention-report/templates")
+                .hasRole("ADMIN")
                 .requestMatchers(HttpMethod.GET, "/api/auth/csrf").permitAll()
                 .requestMatchers("/api/auth/login", "/api/auth/logout").permitAll()
                 .requestMatchers(HttpMethod.POST,
