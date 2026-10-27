@@ -481,6 +481,10 @@
       "statistics": {
         "title": "Statistics Report",
         "description": "Generate aggregated statistics for a template and date range."
+      },
+      "conventionReport": {
+        "title": "Convention Report",
+        "description": "Add up numerical and money totals per church across all Sundays in a date range."
       }
     }
   },
@@ -617,6 +621,39 @@
         "filledBy": "Filled By",
         "value": "Value"
       }
+    }
+  },
+  "conventionReport": {
+    "templateSelection": {
+      "title": "Convention Report",
+      "subtitle": "Select a template to generate a convention report.",
+      "loading": "Loading templates...",
+      "loadError": "Failed to load templates. Please try again.",
+      "empty": "No service templates found."
+    },
+    "filter": {
+      "title": "Configure Report",
+      "subtitle": "Choose the date range for the convention report.",
+      "startDateLabel": "Start Date",
+      "endDateLabel": "End Date",
+      "generate": "Generate Report",
+      "validationDateRange": "End date must be after start date."
+    },
+    "report": {
+      "title": "Convention Report",
+      "loading": "Generating report...",
+      "loadError": "Failed to generate the report. Please try again.",
+      "dateRangeLabel": "Date Range",
+      "churchHeader": "Church",
+      "reportCountHeader": "Reports Counted",
+      "noItems": "This template has no numerical or money items to report.",
+      "backToFilter": "Change Filters",
+      "downloadExcel": "Download as Excel",
+      "excel": {
+        "totalsLabel": "Total"
+      },
+      "duplicateNotesTitle": "Multiple reports found for the same Sunday",
+      "duplicateNoteLine": "{{churchName}} had {{count}} reports for {{date}}; only the first one was included."
     }
   },
   "scheduleDialog": {

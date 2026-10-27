@@ -481,6 +481,10 @@
       "statistics": {
         "title": "Reporte Estadístico",
         "description": "Genere estadísticas acumuladas para una plantilla y rango de fechas."
+      },
+      "conventionReport": {
+        "title": "Reporte de Convención",
+        "description": "Sume los totales numéricos y monetarios por iglesia en todos los domingos de un rango de fechas."
       }
     }
   },
@@ -617,6 +621,39 @@
         "filledBy": "Completado por",
         "value": "Valor"
       }
+    }
+  },
+  "conventionReport": {
+    "templateSelection": {
+      "title": "Reporte de Convención",
+      "subtitle": "Seleccione una plantilla para generar un reporte de convención.",
+      "loading": "Cargando plantillas...",
+      "loadError": "No se pudieron cargar las plantillas. Por favor intente de nuevo.",
+      "empty": "No se encontraron plantillas de servicio."
+    },
+    "filter": {
+      "title": "Configurar Reporte",
+      "subtitle": "Elija el rango de fechas para el reporte de convención.",
+      "startDateLabel": "Fecha de Inicio",
+      "endDateLabel": "Fecha de Fin",
+      "generate": "Generar Reporte",
+      "validationDateRange": "La fecha de fin debe ser posterior a la fecha de inicio."
+    },
+    "report": {
+      "title": "Reporte de Convención",
+      "loading": "Generando reporte...",
+      "loadError": "No se pudo generar el reporte. Por favor intente de nuevo.",
+      "dateRangeLabel": "Rango de Fechas",
+      "churchHeader": "Iglesia",
+      "reportCountHeader": "Reportes Contados",
+      "noItems": "Esta plantilla no tiene elementos numéricos o monetarios para reportar.",
+      "backToFilter": "Cambiar Filtros",
+      "downloadExcel": "Descargar como Excel",
+      "excel": {
+        "totalsLabel": "Total"
+      },
+      "duplicateNotesTitle": "Se encontraron varios reportes para el mismo domingo",
+      "duplicateNoteLine": "{{churchName}} tuvo {{count}} reportes para el {{date}}; solo se incluyó el primero."
     }
   },
   "scheduleDialog": {

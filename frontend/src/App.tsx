@@ -32,6 +32,9 @@ import StatisticsFilterPage from './pages/StatisticsFilterPage';
 import StatisticsReportPage from './pages/StatisticsReportPage';
 import StatisticsTemplateSelectionPage from './pages/StatisticsTemplateSelectionPage';
 import StatisticsChartDrillDownPage from './pages/StatisticsChartDrillDownPage';
+import ConventionReportTemplateSelectionPage from './pages/ConventionReportTemplateSelectionPage';
+import ConventionReportFilterPage from './pages/ConventionReportFilterPage';
+import ConventionReportPage from './pages/ConventionReportPage';
 import WhatsAppMessageLogPage from './pages/WhatsAppMessageLogPage';
 import { getAppDateLocale } from './utils/dateFormatting';
 
@@ -141,6 +144,18 @@ function AppRoutes() {
             <Route
               path="/statistics/:templateId/drill-down"
               element={<StatisticsChartDrillDownPage />}
+            />
+            <Route
+              path="/convention-report"
+              element={<ConventionReportTemplateSelectionPage />}
+            />
+            <Route
+              path="/convention-report/:templateId"
+              element={<ConventionReportFilterPage />}
+            />
+            <Route
+              path="/convention-report/:templateId/report"
+              element={<ConventionReportPage />}
             />
           </Route>
           <Route path="/reports/view" element={<ReportsHubPage />} />
